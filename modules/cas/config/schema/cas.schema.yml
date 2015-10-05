@@ -1,0 +1,79 @@
+# Configuration schema for the CAS module
+
+cas.settings:
+  type: mapping
+  label: 'CAS settings'
+  mapping:
+    server:
+      type: mapping
+      label: 'CAS Server'
+      mapping:
+        version:
+          type: string
+          label: 'Version'
+        hostname:
+          type: string
+          label: 'Hostname'
+        port:
+          type: integer
+          label: 'Port'
+        path:
+          type: string
+          label: 'Path'
+        cert:
+          type: string
+          label: 'PEM Cert path'
+    gateway:
+      type: mapping
+      label: 'Gateway Feature'
+      mapping:
+        check_frequency:
+          type: integer
+          label: 'Check Frequency'
+        paths:
+          type: condition.plugin.request_path
+          label: 'Paths'
+    forced_login:
+      type: mapping
+      label: 'Forced Login'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable'
+        paths:
+          type: condition.plugin.request_path
+          label: 'Paths'
+    user_accounts:
+      type: mapping
+      label: 'User Accounts'
+      mapping:
+        auto_register:
+          type: boolean
+          label: 'Auto Register Users'
+    proxy:
+      type: mapping
+      label: 'Proxy'
+      mapping:
+        initialize:
+          type: boolean
+          label: 'Enable'
+        can_be_proxied:
+          type: boolean
+          label: 'Enable'
+        proxy_chains:
+          type: string
+          label: 'Proxy Chains'
+    redirection:
+      type: mapping
+      label: 'Redirection'
+      mapping:
+        logout_destination:
+          type: string
+          label: 'Logout Destination'
+    debugging:
+      type: mapping
+      label: 'Debugging'
+      mapping:
+        log:
+          type: boolean
+          label: 'Log Debug Information'

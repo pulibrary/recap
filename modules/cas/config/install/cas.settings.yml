@@ -1,0 +1,28 @@
+server:
+  version: '2.0'
+  hostname: ''
+  port: 443
+  path: '/'
+  cert: ''
+
+gateway:
+  check_frequency: -2
+  paths: {}
+
+forced_login:
+  enabled: false
+  paths: {}
+
+redirection:
+  logout_destination: ''
+
+proxy:
+  initialize: false
+  can_be_proxied: false
+  chains: {}
+
+user_accounts:
+  auto_register: false
+
+debugging:
+  log: false

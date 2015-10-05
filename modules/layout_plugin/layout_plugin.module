@@ -1,0 +1,21 @@
+<?php
+/**
+ * @file
+ * Hook implementations for Layout Plugin module.
+ */
+
+use \Drupal\layout_plugin\Layout;
+
+/**
+ * Implements hook_theme().
+ */
+function layout_plugin_theme() {
+  return Layout::getThemeImplementations();
+}
+
+/**
+ * Implements hook_library_info_build().
+ */
+function layout_plugin_library_info_build() {
+  return Layout::getLibraryInfo();
+}

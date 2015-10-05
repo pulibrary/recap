@@ -1,0 +1,14 @@
+type: module
+name: Page Manager
+description: 'Provides a way to place blocks on a custom page.'
+package: Layout
+# version: VERSION
+# core: 8.x
+dependencies:
+  - block
+
+# Information added by Drupal.org packaging script on 2015-08-12
+version: '8.x-1.0-alpha14'
+core: '8.x'
+project: 'page_manager'
+datestamp: 1439390641

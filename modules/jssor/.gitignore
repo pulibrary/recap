@@ -1,0 +1,6 @@
+# We absolutely don't want to have the .sass-cache in git.
+.sass-cache
+.sass-cache/*
+
+.idea
+.idea/*

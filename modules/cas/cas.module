@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Provides CAS authentication for Drupal.
+ */
+
+/**
+ * Implements hook_cron().
+ *
+ * Delete stale, unused PGTs.
+ */
+function cas_cron() {
+  // PGTs older than one hour get discarded.
+  db_delete('cas_pgt_storage')
+    ->condition('timestamp', time() - 3600, '<=')
+    ->execute();
+}

@@ -1,0 +1,6 @@
+page_manager_test.page_view:
+  path: '/page-manager-test/{page}'
+  defaults:
+    _controller: '\Drupal\page_manager_test\Controller\PageManagerTestController::helloWorld'
+  requirements:
+    _access: 'TRUE'

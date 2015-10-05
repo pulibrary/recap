@@ -1,0 +1,21 @@
+@font-face {
+    font-family: 'DejaVu Sans';
+    src: url('/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.eot');
+    src: url('/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.eot?#iefix') format('embedded-opentype'),
+         url('/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.woff') format('woff'),
+         url('/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.ttf') format('truetype'),
+         url('/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.svg#svgFontName') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+  font-family: 'Droid Serif';
+  src: url('/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.eot'); /* IE9 Compat Modes */
+  src: url('/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.woff') format('woff'), /* Pretty Modern Browsers */
+       url('/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.ttf')  format('truetype'), /* Safari, Android, iOS */
+       url('/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.svg#svgFontName') format('svg'); /* Legacy iOS */
+}

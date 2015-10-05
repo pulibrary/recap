@@ -1,0 +1,20 @@
+services:
+  cas.subscriber:
+    class: Drupal\cas\Subscriber\CasSubscriber
+    arguments: ['@request_stack', '@current_route_match', '@config.factory',  '@current_user', '@plugin.manager.condition', '@cas.helper']
+    tags:
+      - { name: 'event_subscriber' }
+  cas.helper:
+    class: Drupal\cas\Service\CasHelper
+    arguments: ['@config.factory', '@url_generator', '@database', '@logger.factory']
+  cas.validator:
+    class: Drupal\cas\Service\CasValidator
+    arguments: ['@http_client', '@cas.helper']
+  cas.login:
+    class: Drupal\cas\Service\CasLogin
+    arguments: ['@config.factory', '@entity.manager', '@session_manager', '@database', '@event_dispatcher']
+  cas.logout:
+    class: Drupal\cas\Service\CasLogout
+  cas.proxy_helper:
+    class: Drupal\cas\Service\CasProxyHelper
+    arguments: ['@http_client', '@cas.helper']

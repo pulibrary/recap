@@ -1,0 +1,23 @@
+services:
+  page_manager.current_user_context:
+    class: Drupal\page_manager\EventSubscriber\CurrentUserContext
+    arguments: ['@current_user', '@entity.manager']
+    tags:
+      - { name: 'event_subscriber' }
+  page_manager.route_param_context:
+    class: Drupal\page_manager\EventSubscriber\RouteParamContext
+    arguments: ['@router.route_provider', '@request_stack']
+    tags:
+      - { name: 'event_subscriber' }
+  page_manager.static_context:
+    class: Drupal\page_manager\EventSubscriber\StaticContext
+    arguments: ['@entity.manager']
+    tags:
+      - { name: 'event_subscriber' }
+  page_manager.page_manager_routes:
+    class: Drupal\page_manager\Routing\PageManagerRoutes
+    arguments: ['@entity.manager']
+    tags:
+      - { name: 'event_subscriber' }
+  page_manager.executable_factory:
+    class: Drupal\page_manager\PageExecutableFactory
