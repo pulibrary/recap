@@ -10,7 +10,6 @@ libraries:
  - seven/global-styling
 stylesheets-remove:
   - core/assets/vendor/jquery.ui/themes/base/dialog.css
-  - '@classy/css/layout.css'
 quickedit_stylesheets:
   - css/components/quickedit.css
 regions:
@@ -26,8 +25,8 @@ regions:
 regions_hidden:
   - sidebar_first
 
-# Information added by Drupal.org packaging script on 2015-09-04
-version: '8.0.0-beta15'
+# Information added by Drupal.org packaging script on 2015-10-02
+version: '8.0.0-beta16'
 core: '8.x'
 project: 'drupal'
-datestamp: 1441357641
+datestamp: 1443747403
