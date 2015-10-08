@@ -172,6 +172,7 @@ figure {
 * Address differences between Firefox and other browsers.
 */
 hr {
+  -moz-box-sizing: content-box;
   box-sizing: content-box;
   height: 0; }
 
@@ -299,6 +300,8 @@ input[type='number']::-webkit-outer-spin-button {
 input[type='search'] {
   -webkit-appearance: textfield;
   /* 1 */
+  -moz-box-sizing: content-box;
+  -webkit-box-sizing: content-box;
   /* 2 */
   box-sizing: content-box; }
 
@@ -364,6 +367,7 @@ th {
   /* IE6, IE7 */
   clip: rect(1px, 1px, 1px, 1px);
   padding: 0 !important;
+  margin: 0 !important;
   border: 0 !important;
   height: 1px !important;
   width: 1px !important;
@@ -428,29 +432,18 @@ input[type="text"]:focus {
   .front .l-main {
     padding: 0; } }
 
+ul {
+  margin: 0; }
+
 img,
 media {
   max-width: 100%; }
-
-@font-face {
-  font-family: 'DejaVu Sans';
-  src: url("/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.eot");
-  src: url("/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.eot?#iefix") format("embedded-opentype"), url("/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.woff") format("woff"), url("/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.ttf") format("truetype"), url("/themes/custom/recap/fonts/Dejavu/DejaVuSansCondensed-webfont.svg#svgFontName") format("svg");
-  font-weight: normal;
-  font-style: normal; }
-
-@font-face {
-  font-family: 'Droid Serif';
-  src: url("/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.eot");
-  /* IE9 Compat Modes */
-  src: url("/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.eot?#iefix") format("embedded-opentype"), url("/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.woff2") format("woff2"), url("/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.woff") format("woff"), url("/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.ttf") format("truetype"), url("/themes/custom/recap/fonts/Droid_Serif/droidserif-webfont.svg#svgFontName") format("svg");
-  /* Legacy iOS */ }
 
 html {
   font-size: 14px; }
 
 body {
-  font-family: "Dejavu Sans", "Arial Unicode MS", Helvetica, sans-serif;
+  font-family: "Open Sans", "Arial Unicode MS", Helvetica, sans-serif;
   font-weight: 400;
   line-height: 1.45;
   color: #333; }
@@ -469,7 +462,6 @@ h4 {
   line-height: 1.2; }
 
 h1 {
-  margin-top: 0;
   font-size: 2.074em; }
 
 h2 {
@@ -490,7 +482,100 @@ a:focus {
   outline: thin dotted #83888F; }
 
 a:hover {
-  text-decoration: underline; }
+  text-decoration: none; }
 
 /* generated with grunt-sass-globbing */
+footer {
+  background: #000;
+  padding: 20px 0; }
+  footer ul {
+    margin: 0; }
+
+.members {
+  background: #f5f5f5; }
+
+header {
+  transition: all 0.6s ease 0s;
+  width: 100%;
+  background: #000;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center bottom;
+  position: relative;
+  z-index: 5; }
+  header:after {
+    content: "";
+    display: table;
+    clear: both; }
+
+.separator {
+  background-color: #5f8289;
+  border-color: #5f8289;
+  color: #5f8289;
+  height: 1px;
+  width: 40px;
+  margin-bottom: 30px; }
+
+.banner h1 {
+  text-align: center;
+  font: 150px "Oswald";
+  font-weight: 700;
+  margin: 0;
+  padding: 20px 0 0;
+  position: relative;
+  z-index: 2; }
+
+.banner h2 {
+  font: 300 18px "Vollkorn";
+  font-style: italic;
+  font-weight: bold;
+  margin: 0;
+  position: relative;
+  z-index: 2; }
+
+h2 {
+  font: 300 31px "Open Sans", "Arial Unicode MS", Helvetica, sans-serif;
+  line-height: 52px;
+  text-align: center;
+  margin-top: 0; }
+
+.members {
+  padding: 36px 0 45px; }
+
+.banner {
+  height: 530px;
+  position: relative;
+  background: #fff;
+  background: #d3e1e3;
+  background: -webkit-linear-gradient(legacy-direction(#a4c2c6), #d3e1e3);
+  background: linear-gradient(#a4c2c6, #d3e1e3); }
+  .banner img {
+    position: absolute;
+    bottom: 0;
+    opacity: 0.2;
+    z-index: 1; }
+
+header nav {
+  margin: 0 auto; }
+  header nav ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 5px; }
+    header nav ul li {
+      padding: 15px 0;
+      display: inline-block; }
+    header nav ul li a {
+      margin: 0 12px;
+      padding: 10px 0;
+      color: #fff;
+      font: 300 13px "Open Sans", "Arial Unicode MS", Helvetica, sans-serif;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.1em; }
+      header nav ul li a:hover {
+        border-bottom: #ffffff 6px solid;
+        color: #ffffff; }
+
 /* generated with grunt-sass-globbing */
+
+/*# sourceMappingURL=recap.styles.css.map */

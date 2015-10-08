@@ -1,5 +1,5 @@
-$font-serif: 'Droid Serif', Georgia, Times, serif !default; 
-$font-sans: 'Dejavu Sans', 'Arial Unicode MS', Helvetica, sans-serif !default;
+$font-serif: 'Droid Serif', Georgia, Times, serif !default;
+$font-sans: 'Open Sans', 'Arial Unicode MS', Helvetica, sans-serif !default;
 $font-mono: 'Lucida Console', Monaco, monospace !default;
 $text-color: #000 !default;
 
@@ -12,8 +12,8 @@ $base-font-size: 14px;
 $base-line-height: 23px;
 $base-border-radius: 4px;
 
-$round-to-nearest-half-line: true; // Allows compass to round to  multiples of 0.5x line height 
-$rhythm-unit: "rem"; // Sets rhythm unit to rem. Remove to use default em unit. 
+$round-to-nearest-half-line: true; // Allows compass to round to  multiples of 0.5x line height
+$rhythm-unit: "rem"; // Sets rhythm unit to rem. Remove to use default em unit.
 
 $font-size-base: 1rem;
 $font-size-smaller: 0.875rem;
