@@ -18,8 +18,6 @@ Options -Indexes
 # Follow symbolic links in this directory.
 Options +FollowSymLinks
 
-Options +Indexes
-
 # Set the default handler.
 DirectoryIndex index.php index.html index.htm
 
