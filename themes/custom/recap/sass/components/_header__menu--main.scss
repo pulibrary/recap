@@ -1,27 +1,24 @@
 header nav {
-    // float: left;
     margin: 0 auto;
-
     ul {
         list-style: none;
         margin: 0;
         padding-left: 5px;
+        text-align: center;
         li {
-            // margin-top: 4px;
             padding: 15px 0;
             display: inline-block;
         }
         li a {
             margin: 0 12px;
             padding: 10px 0;
-            color: #fff;
+            color: $black;
             font: 300 13px $font-sans;
             text-decoration: none;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             &:hover {
-              border-bottom: $white 6px solid;
-              color: $white;
+                border-bottom: $white 6px solid;
             }
         }
     }

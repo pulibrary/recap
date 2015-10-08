@@ -1,12 +1,10 @@
 header {
     transition: all 0.6s ease 0s;
     width: 100%;
-    background: #000;
+    background: #B6CED1;
     background-repeat: no-repeat;
     background-attachment: fixed;
     background-position: center bottom;
-    // padding: 10px 0;
-    // box-shadow: 2px 5px 15px rgba(0,0,0,.15);
     @include clearfix();
     position: relative;
     z-index: 5;
@@ -21,45 +19,32 @@ header {
     margin-bottom: 30px;
 }
 
-.banner h1 {
-  text-align: center;
-  font: 150px "Oswald";
-  font-weight: 700;
-  margin:0;
-  padding: 20px 0 0;
-  position: relative;
-  z-index: 2;
-}
-
-.banner h2 {
-  font: 300 18px "Vollkorn";
-  font-style: italic;
-  font-weight: bold;
-  margin: 0;
-  position: relative;
-  z-index: 2;
-}
-h2 {
-  font: 300 31px $font-sans;
-  line-height: 52px;
-  text-align: center;
-  margin-top: 0;
-}
-
-.members {
-  padding: 36px 0 45px;
-}
-
 .banner {
-  height: 530px;
-  position: relative;
-  background: #fff;
-  @include linear-gradient(lighten($blue-3,5), lighten($blue-3, 20));
-  // background-image: url("/themes/custom/recap/images/recap-illustration.jpg");
-  img {
-    position: absolute;
-    bottom: 0;
-    opacity: 0.2;
-    z-index: 1;
-  }
+    height: 530px;
+    position: relative;
+    background: #fff;
+    @include linear-gradient(lighten($blue-3, 5), lighten($blue-3, 20));
+    h1 {
+        text-align: center;
+        font: 150px "Oswald";
+        font-weight: 700;
+        margin: 0;
+        padding: 20px 0 0;
+        position: relative;
+        z-index: 2;
+    }
+    h2 {
+        font: 300 18px "Vollkorn";
+        font-style: italic;
+        font-weight: bold;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+    }
+    img {
+        position: absolute;
+        bottom: 0;
+        opacity: 0.2;
+        z-index: 1;
+    }
 }

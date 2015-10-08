@@ -172,7 +172,6 @@ figure {
 * Address differences between Firefox and other browsers.
 */
 hr {
-  -moz-box-sizing: content-box;
   box-sizing: content-box;
   height: 0; }
 
@@ -300,8 +299,6 @@ input[type='number']::-webkit-outer-spin-button {
 input[type='search'] {
   -webkit-appearance: textfield;
   /* 1 */
-  -moz-box-sizing: content-box;
-  -webkit-box-sizing: content-box;
   /* 2 */
   box-sizing: content-box; }
 
@@ -467,6 +464,12 @@ h1 {
 h2 {
   font-size: 1.728em; }
 
+h2 {
+  font: 300 31px "Open Sans", "Arial Unicode MS", Helvetica, sans-serif;
+  line-height: 52px;
+  text-align: center;
+  margin-top: 0; }
+
 h3 {
   font-size: 1.44em; }
 
@@ -492,12 +495,14 @@ footer {
     margin: 0; }
 
 .members {
-  background: #f5f5f5; }
+  background: #f5f5f5;
+  padding: 36px 0 45px; }
 
 header {
-  transition: all 0.6s ease 0s;
+  -webkit-transition: all 0.6s ease 0s;
+          transition: all 0.6s ease 0s;
   width: 100%;
-  background: #000;
+  background: #B6CED1;
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-position: center bottom;
@@ -516,39 +521,29 @@ header {
   width: 40px;
   margin-bottom: 30px; }
 
-.banner h1 {
-  text-align: center;
-  font: 150px "Oswald";
-  font-weight: 700;
-  margin: 0;
-  padding: 20px 0 0;
-  position: relative;
-  z-index: 2; }
-
-.banner h2 {
-  font: 300 18px "Vollkorn";
-  font-style: italic;
-  font-weight: bold;
-  margin: 0;
-  position: relative;
-  z-index: 2; }
-
-h2 {
-  font: 300 31px "Open Sans", "Arial Unicode MS", Helvetica, sans-serif;
-  line-height: 52px;
-  text-align: center;
-  margin-top: 0; }
-
-.members {
-  padding: 36px 0 45px; }
-
 .banner {
   height: 530px;
   position: relative;
   background: #fff;
   background: #d3e1e3;
   background: -webkit-linear-gradient(legacy-direction(#a4c2c6), #d3e1e3);
+  background: -webkit-linear-gradient(#a4c2c6, #d3e1e3);
   background: linear-gradient(#a4c2c6, #d3e1e3); }
+  .banner h1 {
+    text-align: center;
+    font: 150px "Oswald";
+    font-weight: 700;
+    margin: 0;
+    padding: 20px 0 0;
+    position: relative;
+    z-index: 2; }
+  .banner h2 {
+    font: 300 18px "Vollkorn";
+    font-style: italic;
+    font-weight: bold;
+    margin: 0;
+    position: relative;
+    z-index: 2; }
   .banner img {
     position: absolute;
     bottom: 0;
@@ -560,22 +555,20 @@ header nav {
   header nav ul {
     list-style: none;
     margin: 0;
-    padding-left: 5px; }
+    padding-left: 5px;
+    text-align: center; }
     header nav ul li {
       padding: 15px 0;
       display: inline-block; }
     header nav ul li a {
       margin: 0 12px;
       padding: 10px 0;
-      color: #fff;
+      color: #000000;
       font: 300 13px "Open Sans", "Arial Unicode MS", Helvetica, sans-serif;
       text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.1em; }
       header nav ul li a:hover {
-        border-bottom: #ffffff 6px solid;
-        color: #ffffff; }
+        border-bottom: #ffffff 6px solid; }
 
 /* generated with grunt-sass-globbing */
-
-/*# sourceMappingURL=recap.styles.css.map */

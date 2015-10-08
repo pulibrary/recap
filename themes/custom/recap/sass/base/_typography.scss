@@ -32,6 +32,13 @@ h2 {
     font-size: 1.728em;
 }
 
+h2 {
+  font: 300 31px $font-sans;
+  line-height: 52px;
+  text-align: center;
+  margin-top: 0;
+}
+
 h3 {
     font-size: 1.44em;
 }
