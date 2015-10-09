@@ -489,7 +489,7 @@ a:hover {
 
 /* generated with grunt-sass-globbing */
 footer {
-  background: #000;
+  background: #000000;
   padding: 20px 0; }
   footer ul {
     margin: 0; }
@@ -536,7 +536,8 @@ header {
     margin: 0;
     padding: 20px 0 0;
     position: relative;
-    z-index: 2; }
+    z-index: 2;
+    letter-spacing: 0.05em; }
   .banner h2 {
     font: 300 18px "Vollkorn";
     font-style: italic;
@@ -549,6 +550,22 @@ header {
     bottom: 0;
     opacity: 0.2;
     z-index: 1; }
+
+header.clone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  -webkit-transform: translateY(-100%);
+      -ms-transform: translateY(-100%);
+          transform: translateY(-100%);
+  -webkit-transition: 0.2s -webkit-transform cubic-bezier(0.3, 0.73, 0.3, 0.74);
+          transition: 0.2s transform cubic-bezier(0.3, 0.73, 0.3, 0.74); }
+
+body.down header.clone {
+  -webkit-transform: translateY(0);
+      -ms-transform: translateY(0);
+          transform: translateY(0); }
 
 header nav {
   margin: 0 auto; }
@@ -569,6 +586,7 @@ header nav {
       text-transform: uppercase;
       letter-spacing: 0.1em; }
       header nav ul li a:hover {
-        border-bottom: #ffffff 6px solid; }
+        border-bottom: #5f8289 6px solid;
+        color: #4a656b; }
 
 /* generated with grunt-sass-globbing */

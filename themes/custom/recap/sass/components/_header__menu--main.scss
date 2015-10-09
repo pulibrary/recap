@@ -18,7 +18,8 @@ header nav {
             text-transform: uppercase;
             letter-spacing: 0.1em;
             &:hover {
-                border-bottom: $white 6px solid;
+                border-bottom: $blue-1 6px solid;
+                color: darken($blue-1,10);
             }
         }
     }
