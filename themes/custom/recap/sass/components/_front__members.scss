@@ -1,4 +1,26 @@
 .members {
-  background: #f5f5f5;
-  padding: 36px 0 45px;
+  padding: 36px 0 55px;
+  h2 {
+    font-family: "Oswald";
+    margin-bottom: 36px;
+  }
+  li {
+    display: inline-block;
+    @include span(4 of 12);
+    &:last-child {
+      @include last;
+    }
+  }
+  a {
+    display: block;
+    opacity: 0.7;
+    &:hover {
+      opacity: 1;
+    }
+  }
+  img {
+    display: block;
+    max-height: 65px;
+    margin: 0 auto;
+  }
 }
