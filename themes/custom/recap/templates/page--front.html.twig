@@ -1,4 +1,4 @@
-  <header role="banner">
+  <header role="banner" class="front">
     <div class="layout-container">
     {% if logo %}
       <a href="{{ front_page }}" title="{{ 'Home'|t }}" rel="home">
@@ -63,20 +63,19 @@
         {{ page.sidebar_second }}
       </aside>
     {% endif %}
-    </div>
+  <!--   </div>
     <div class="recent-posts">
       <div class="layout-container">
         <h2>Recent Posts</h2>
       </div>
-    </div>
+  -->   </div>
     <div class="members">
       <div class="layout-container">
-        <h2>Our Members</h2>
-        <hr class="separator">
+        <h2>Members of ReCAP</h2>
         <ul>
-          <li>Columbia University</li>
-          <li>Princeton University</li>
-          <li>New York Public Library</li>
+          <li><a href="http://www.columbia.edu/" target="_blank"><img src="/themes/custom/recap/images/columbia-logo.png" alt="Columbia University"></a></li>
+          <li><a href="http://www.nypl.org/" target="_blank"><img src="/themes/custom/recap/images/nypl-logo.png" alt="New York Public Library"></a></li>
+          <li><a href="http://www.princeton.edu/" target="_blank"><img src="/themes/custom/recap/images/princeton-logo.png" alt="Princeton University"></a></li>
         </ul>
       </div>
     </div>
@@ -85,6 +84,7 @@
   {% if page.footer %}
     <footer role="contentinfo">
       <div class="layout-container">
+      <div class="copyright">&copy; {{ "now"|date("Y") }} ReCAP</div>
       {{ page.footer }}
       </div>
     </footer>

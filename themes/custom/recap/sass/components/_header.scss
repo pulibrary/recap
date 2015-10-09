@@ -32,6 +32,7 @@ header {
         padding: 20px 0 0;
         position: relative;
         z-index: 2;
+        letter-spacing: 0.05em;
     }
     h2 {
         font: 300 18px "Vollkorn";
@@ -39,6 +40,7 @@ header {
         font-weight: bold;
         margin: 0;
         position: relative;
+        text-transform: capitalize;
         z-index: 2;
     }
     img {
@@ -47,4 +49,17 @@ header {
         opacity: 0.2;
         z-index: 1;
     }
+}
+
+header.clone {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    transform: translateY(-100%);
+    transition: 0.2s transform cubic-bezier(.3,.73,.3,.74);
+}
+
+body.down header.clone {
+    transform: translateY(0);
 }

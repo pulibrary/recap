@@ -172,6 +172,7 @@ figure {
 * Address differences between Firefox and other browsers.
 */
 hr {
+  -moz-box-sizing: content-box;
   box-sizing: content-box;
   height: 0; }
 
@@ -299,6 +300,8 @@ input[type='number']::-webkit-outer-spin-button {
 input[type='search'] {
   -webkit-appearance: textfield;
   /* 1 */
+  -moz-box-sizing: content-box;
+  -webkit-box-sizing: content-box;
   /* 2 */
   box-sizing: content-box; }
 
@@ -465,8 +468,9 @@ h2 {
   font-size: 1.728em; }
 
 h2 {
-  font: 300 31px "Open Sans", "Arial Unicode MS", Helvetica, sans-serif;
+  font: 200 31px "Open Sans", "Arial Unicode MS", Helvetica, sans-serif;
   line-height: 52px;
+  text-transform: uppercase;
   text-align: center;
   margin-top: 0; }
 
@@ -489,18 +493,44 @@ a:hover {
 
 /* generated with grunt-sass-globbing */
 footer {
-  background: #000;
-  padding: 20px 0; }
+  background: #000000;
+  padding: 20px 0;
+  color: #ffffff; }
   footer ul {
     margin: 0; }
+  footer .layout-container > div {
+    width: 48.275862069%;
+    float: left;
+    margin-right: 3.4482758621%; }
+    footer .layout-container > div:last-child {
+      float: right;
+      margin-right: 0; }
 
 .members {
-  background: #f5f5f5;
-  padding: 36px 0 45px; }
+  padding: 36px 0 55px; }
+  .members h2 {
+    font-family: "Oswald";
+    margin-bottom: 36px; }
+  .members li {
+    display: inline-block;
+    width: 31.0344827586%;
+    float: left;
+    margin-right: 3.4482758621%; }
+    .members li:last-child {
+      float: right;
+      margin-right: 0; }
+  .members a {
+    display: block;
+    opacity: 0.7; }
+    .members a:hover {
+      opacity: 1; }
+  .members img {
+    display: block;
+    max-height: 65px;
+    margin: 0 auto; }
 
 header {
-  -webkit-transition: all 0.6s ease 0s;
-          transition: all 0.6s ease 0s;
+  transition: all 0.6s ease 0s;
   width: 100%;
   background: #B6CED1;
   background-repeat: no-repeat;
@@ -527,7 +557,6 @@ header {
   background: #fff;
   background: #d3e1e3;
   background: -webkit-linear-gradient(legacy-direction(#a4c2c6), #d3e1e3);
-  background: -webkit-linear-gradient(#a4c2c6, #d3e1e3);
   background: linear-gradient(#a4c2c6, #d3e1e3); }
   .banner h1 {
     text-align: center;
@@ -536,19 +565,32 @@ header {
     margin: 0;
     padding: 20px 0 0;
     position: relative;
-    z-index: 2; }
+    z-index: 2;
+    letter-spacing: 0.05em; }
   .banner h2 {
     font: 300 18px "Vollkorn";
     font-style: italic;
     font-weight: bold;
     margin: 0;
     position: relative;
+    text-transform: capitalize;
     z-index: 2; }
   .banner img {
     position: absolute;
     bottom: 0;
     opacity: 0.2;
     z-index: 1; }
+
+header.clone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(-100%);
+  transition: 0.2s transform cubic-bezier(0.3, 0.73, 0.3, 0.74); }
+
+body.down header.clone {
+  transform: translateY(0); }
 
 header nav {
   margin: 0 auto; }
@@ -569,6 +611,9 @@ header nav {
       text-transform: uppercase;
       letter-spacing: 0.1em; }
       header nav ul li a:hover {
-        border-bottom: #ffffff 6px solid; }
+        border-bottom: #5f8289 6px solid;
+        color: #4a656b; }
 
 /* generated with grunt-sass-globbing */
+
+/*# sourceMappingURL=recap.styles.css.map */
