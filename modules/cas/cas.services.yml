@@ -6,7 +6,7 @@ services:
       - { name: 'event_subscriber' }
   cas.helper:
     class: Drupal\cas\Service\CasHelper
-    arguments: ['@config.factory', '@url_generator', '@database', '@logger.factory']
+    arguments: ['@config.factory', '@url_generator.non_bubbling', '@database', '@logger.factory']
   cas.validator:
     class: Drupal\cas\Service\CasValidator
     arguments: ['@http_client', '@cas.helper']
