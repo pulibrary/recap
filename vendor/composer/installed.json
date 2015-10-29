@@ -1140,7 +1140,7 @@
                 "dev-master": "8.0.x-dev"
             }
         },
-        "installation-source": "dist",
+        "installation-source": "source",
         "autoload": {
             "psr-0": {
                 "Drush": "lib/"
@@ -4053,7 +4053,7 @@
                 "dev-master": "2.2.x-dev"
             }
         },
-        "installation-source": "dist",
+        "installation-source": "source",
         "autoload": {
             "classmap": [
                 "src/"
@@ -4108,7 +4108,7 @@
                 "dev-master": "1.4.x-dev"
             }
         },
-        "installation-source": "dist",
+        "installation-source": "source",
         "autoload": {
             "psr-0": {
                 "Prophecy\\": "src/"
