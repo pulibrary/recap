@@ -15,8 +15,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\cas\Service\CasLogout;
 use Symfony\Component\HttpFoundation\Response;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 class ServiceController implements ContainerInjectionInterface {
+
+  use StringTranslationTrait;
+
   /**
    * @var \Drupal\cas\Service\CasHelper
    */
@@ -128,7 +132,7 @@ class ServiceController implements ContainerInjectionInterface {
     }
     catch (CasValidateException $e) {
       // Validation failed, redirect to homepage and set message.
-      $this->setMessage(t('There was a problem validating your login, please contact a site administrator.'), 'error');
+      $this->setMessage($this->t('There was a problem validating your login, please contact a site administrator.'), 'error');
       $this->handleReturnToParameter($request);
       return RedirectResponse::create($this->urlGenerator->generate('<front>'));
     }
@@ -139,10 +143,10 @@ class ServiceController implements ContainerInjectionInterface {
         $this->casHelper->log("Storing PGT information for this session.");
         $this->casHelper->storePGTSession($cas_validation_info->getPgt());
       }
-      $this->setMessage(t('You have been logged in.'));
+      $this->setMessage($this->t('You have been logged in.'));
     }
     catch (CasLoginException $e) {
-      $this->setMessage(t('There was a problem logging in, please contact a site administrator.'), 'error');
+      $this->setMessage($this->t('There was a problem logging in, please contact a site administrator.'), 'error');
     }
 
     $this->handleReturnToParameter($request);

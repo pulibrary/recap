@@ -8,10 +8,11 @@
 namespace Drupal\Tests\cas\Unit\Controller;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\cas\Controller\ServiceController;
 use Drupal\cas\Exception\CasValidateException;
 use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\CasPropertyBag;
+use Drupal\Tests\cas\Unit\Controller\TestServiceController;
+use Drupal\cas\Controller\ServiceController;
 
 /**
  * ServiceController unit tests.
@@ -102,7 +103,7 @@ class ServiceControllerTest extends UnitTestCase {
 
 
 
-    $this->serviceController = new ServiceController(
+    $this->serviceController = new TestServiceController(
         $this->casHelper,
         $this->casValidator,
         $this->casLogin,
