@@ -23,7 +23,7 @@ use Composer\Installer\InstallerEvents;
 use Composer\Installer\PackageEvent;
 use Composer\Installer\PackageEvents;
 use Composer\IO\IOInterface;
-use Composer\Package\RootPackage;
+use Composer\Package\RootPackageInterface;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
@@ -32,13 +32,17 @@ use Composer\Script\ScriptEvents;
  * Composer plugin that allows merging multiple composer.json files.
  *
  * When installed, this plugin will look for a "merge-plugin" key in the
- * composer configuration's "extra" section. The value of this setting can be
- * either a single value or an array of values. Each value is treated as
- * a glob() pattern identifying additional composer.json style configuration
- * files to merge into the configuration for the current compser execution.
+ * composer configuration's "extra" section. The value for this key is
+ * a set of options configuring the plugin.
  *
- * The "require", "require-dev", "repositories", "extra" and "suggest" sections
- * of the found configuration files will be merged into the root package
+ * An "include" setting is required. The value of this setting can be either
+ * a single value or an array of values. Each value is treated as a glob()
+ * pattern identifying additional composer.json style configuration files to
+ * merge into the configuration for the current compser execution.
+ *
+ * The "autoload", "autoload-dev", "conflict", "provide", "replace",
+ * "repositories", "require", "require-dev", and "suggest" sections of the
+ * found configuration files will be merged into the root package
  * configuration as though they were directly included in the top-level
  * composer.json file.
  *
@@ -48,10 +52,10 @@ use Composer\Script\ScriptEvents;
  * change this default behaviour so that the last-defined version of a package
  * will win, allowing for force-overrides of package defines.
  *
- * By default the "extra" section is not merged. This can be enabled with the
- * 'merge-extra' key by setting it to true. In normal mode, when the same key
- * is found in both the original and the imported extra section, the version
- * in the original config is used and the imported version is skipped. If
+ * By default the "extra" section is not merged. This can be enabled by
+ * setitng the 'merge-extra' key to true. In normal mode, when the same key is
+ * found in both the original and the imported extra section, the version in
+ * the original config is used and the imported version is skipped. If
  * 'replace' mode is active, this behaviour changes so the imported version of
  * the key is used, replacing the version in the original config.
  *
@@ -159,7 +163,7 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
      */
     protected function mergeIncludes(array $includes)
     {
-        $root = $this->state->getRootPackage();
+        $root = $this->composer->getPackage();
         foreach (array_reduce(
             array_map('glob', $includes),
             'array_merge',
@@ -172,20 +176,18 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
     /**
      * Read a JSON file and merge its contents
      *
-     * @param RootPackage $root
+     * @param RootPackageInterface $root
      * @param string $path
      */
-    protected function mergeFile(RootPackage $root, $path)
+    protected function mergeFile(RootPackageInterface $root, $path)
     {
         if (isset($this->loadedFiles[$path])) {
-            $this->logger->debug(
-                "Skipping duplicate <comment>$path</comment>..."
-            );
+            $this->logger->debug("Already merged <comment>$path</comment>");
             return;
         } else {
             $this->loadedFiles[$path] = true;
         }
-        $this->logger->debug("Loading <comment>{$path}</comment>...");
+        $this->logger->info("Loading <comment>{$path}</comment>...");
 
         $package = new ExtraPackage($path, $this->composer, $this->logger);
         $package->mergeInto($root, $this->state);
@@ -206,15 +208,15 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
     public function onDependencySolve(InstallerEvent $event)
     {
         $request = $event->getRequest();
-        foreach ($this->state->getDuplicateLinks('require') as $link) {
-            $this->logger->debug(
+        foreach ($this->state->getDuplicateLinks('requires') as $link) {
+            $this->logger->info(
                 "Adding dependency <comment>{$link}</comment>"
             );
             $request->install($link->getTarget(), $link->getConstraint());
         }
         if ($this->state->isDevMode()) {
-            foreach ($this->state->getDuplicateLinks('require-dev') as $link) {
-                $this->logger->debug(
+            foreach ($this->state->getDuplicateLinks('devRequires') as $link) {
+                $this->logger->info(
                     "Adding dev dependency <comment>{$link}</comment>"
                 );
                 $request->install($link->getTarget(), $link->getConstraint());
@@ -234,7 +236,7 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
         if ($op instanceof InstallOperation) {
             $package = $op->getPackage()->getName();
             if ($package === self::PACKAGE_NAME) {
-                $this->logger->debug('composer-merge-plugin installed');
+                $this->logger->info('composer-merge-plugin installed');
                 $this->state->setFirstInstall(true);
                 $this->state->setLocked(
                     $event->getComposer()->getLocker()->isLocked()
@@ -255,7 +257,7 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
         // @codeCoverageIgnoreStart
         if ($this->state->isFirstInstall()) {
             $this->state->setFirstInstall(false);
-            $this->logger->debug(
+            $this->logger->info(
                 '<comment>' .
                 'Running additional update to apply merge settings' .
                 '</comment>'
