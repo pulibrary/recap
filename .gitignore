@@ -9,7 +9,7 @@
 
 # Ignore core and vendor when managing dependencies with Composer.
 # core
-# vendor
+vendor
 
 # Ignore configuration files that may contain sensitive information.
 sites/*/settings*.php
