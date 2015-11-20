@@ -240,7 +240,8 @@ select {
 *    `input` and others.
 */
 button,
-html input[type='button'], input[type='reset'],
+html input[type='button'],
+input[type='reset'],
 input[type='submit'] {
   -webkit-appearance: button;
   /* 2 */
@@ -594,15 +595,16 @@ body.down header.clone {
 
 header nav {
   margin: 0 auto; }
-  header nav ul {
+  header nav > ul {
     list-style: none;
     margin: 0;
     padding-left: 5px;
     text-align: center; }
-    header nav ul li {
+    header nav > ul > li {
       padding: 15px 0;
-      display: inline-block; }
-    header nav ul li a {
+      display: inline-block;
+      position: relative; }
+    header nav > ul li a {
       margin: 0 12px;
       padding: 10px 0;
       color: #000000;
@@ -610,9 +612,87 @@ header nav {
       text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.1em; }
-      header nav ul li a:hover {
-        border-bottom: #5f8289 6px solid;
-        color: #4a656b; }
+  header nav > ul > li > a.is-active {
+    border-bottom: #5f8289 6px solid;
+    color: #4a656b; }
+  header nav li:hover a.is-active {
+    border-bottom: #ffffff; }
+  header nav li:hover {
+    background: #ffffff; }
+  header nav ul li:hover ul {
+    display: block; }
+  header nav ul ul {
+    display: none;
+    min-width: 253px;
+    position: absolute;
+    margin-top: 15px;
+    padding: 0;
+    list-style-type: none;
+    background: #ffffff;
+    border: 1px solid #f5f4f1;
+    border-bottom: 3px solid #f5f4f1;
+    border-top: 0 none; }
+    header nav ul ul li {
+      width: 100%;
+      text-align: left;
+      border-top: 1px solid #f5f4f1; }
+      header nav ul ul li:hover {
+        background: #f5f4f1; }
+    header nav ul ul a {
+      text-transform: none;
+      width: 100%;
+      display: block;
+      margin: 0;
+      padding-left: 10px; }
+
+ul li.responsive-tab {
+  display: none; }
+
+@media (max-width: 1000px) {
+  header nav > ul {
+    width: 100%;
+    padding: 0; }
+  header nav > ul li.responsive-tab {
+    display: block; }
+  header nav > ul li.responsive-tab a {
+    background: url("images/menu.png") no-repeat;
+    background-position: 95% -35%; }
+  header nav > ul > li {
+    display: none;
+    text-align: left; }
+  header nav > ul li.right {
+    float: none; }
+  header nav > ul li {
+    position: relative; }
+  header nav > ul li ul {
+    display: none;
+    position: static;
+    width: 100%;
+    background: #ffffff;
+    border: 0 none; }
+  header nav > ul li ul li {
+    display: block !important;
+    padding-left: 15px; }
+  header nav > ul li ul li a span {
+    display: block;
+    padding-left: 24px; }
+  header nav > ul li > a {
+    background-image: none;
+    text-align: left; }
+  header nav > ul > li > a.is-active {
+    border: none; } }
+
+.collapsed {
+  display: none;
+  background: #ffffff; }
+
+@media (min-width: 1000px) {
+  header nav > ul > li.collapsed {
+    display: inline-block !important;
+    *display: inline;
+    zoom: 1; }
+  header nav > ul ul li.collapsed {
+    display: block !important; } }
 
 /* generated with grunt-sass-globbing */
 
