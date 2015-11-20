@@ -1,26 +1,153 @@
 header nav {
-    margin: 0 auto;
-    ul {
-        list-style: none;
-        margin: 0;
-        padding-left: 5px;
-        text-align: center;
-        li {
-            padding: 15px 0;
-            display: inline-block;
-        }
-        li a {
-            margin: 0 12px;
-            padding: 10px 0;
-            color: $black;
-            font: 300 13px $font-sans;
-            text-decoration: none;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            &:hover {
-                border-bottom: $blue-1 6px solid;
-                color: darken($blue-1,10);
-            }
-        }
+  margin: 0 auto;
+
+  > ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 5px;
+    text-align: center;
+
+    > li {
+      padding: 15px 0;
+      display: inline-block;
+      position: relative;
     }
+
+    li a {
+      margin: 0 12px;
+      padding: 10px 0;
+      color: $black;
+      font: 300 13px $font-sans;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+  }
+
+  > ul > li > a.is-active {
+    border-bottom: $blue-1 6px solid;
+    color: darken($blue-1, 10);
+  }
+
+  li:hover a.is-active {
+    border-bottom: $white;
+  }
+
+  li:hover {
+    background: $white;
+  }
+
+  ul li:hover ul {
+    display: block;
+  }
+
+  ul ul {
+    display: none;
+    min-width: 253px;
+    position: absolute;
+    margin-top: 15px;
+    padding: 0;
+    list-style-type: none;
+    background: $white;
+    border: 1px solid $gray-lightest;
+    border-bottom: 3px solid $gray-lightest;
+    border-top: 0 none;
+
+    li {
+      width: 100%;
+      text-align: left;
+      border-top: 1px solid $gray-lightest;
+
+      &:hover {
+        background: $gray-lightest;
+      }
+    }
+
+    a {
+      text-transform: none;
+      width: 100%;
+      display: block;
+      margin: 0;
+      padding-left: 10px;
+    }
+  }
+}
+
+ul li.responsive-tab {
+  display: none;
+}
+
+@media (max-width: 1000px) {
+  header {
+    nav > ul {
+      width: 100%;
+      padding: 0;
+    }
+
+    nav > ul li.responsive-tab {
+      display: block;
+    }
+
+    nav > ul li.responsive-tab a {
+      background: url("images/menu.png") no-repeat;
+      background-position: 95% -35%;
+    }
+
+    nav > ul > li {
+      display: none;
+      text-align: left;
+    }
+
+    nav > ul li.right {
+      float: none;
+    }
+
+    nav > ul li {
+      position: relative;
+    }
+
+    nav > ul li ul {
+      display: none;
+      position: static;
+      width: 100%;
+      background: $white;
+      border: 0 none;
+    }
+
+    nav > ul li ul li {
+      display: block !important;
+      padding-left: 15px;
+    }
+
+    nav > ul li ul li a span {
+      display: block;
+      padding-left: 24px;
+    }
+
+    nav > ul li > a {
+      background-image: none;
+      text-align: left;
+    }
+
+    nav > ul > li > a.is-active {
+      border: none;
+    }
+  }
+}
+
+.collapsed {
+  display: none;
+  background: $white;
+}
+
+@media (min-width: 1000px) {
+  header nav > ul > li.collapsed {
+    display: inline-block !important;
+    *display: inline;
+    zoom: 1;
+  }
+
+  header nav > ul ul li.collapsed {
+    display: block !important;
+  }
 }
