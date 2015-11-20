@@ -15,6 +15,12 @@ function cas_schema() {
         'length' => 128,
         'not null' => TRUE,
       ),
+      'plainsid' => array(
+        'description' => 'An unhashed session ID. Only stored if single logout is configured.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+      ),
       'ticket' => array(
         'description' => "A CAS service ticket.",
         'type' => 'varchar',

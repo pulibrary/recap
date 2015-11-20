@@ -3,6 +3,7 @@
 namespace Drupal\cas\Controller;
 
 use Drupal\cas\Service\CasHelper;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
@@ -54,6 +55,13 @@ class ForceLoginController implements ContainerInjectionInterface {
     $cas_login_url = $this->casHelper->getServerLoginUrl($query_params);
     $this->casHelper->log("Cas forced login route, redirecting to: $cas_login_url");
 
-    return TrustedRedirectResponse::create($cas_login_url, 302);
+    $cacheableMetadata = new CacheableMetadata();
+    $cacheableMetadata->addCacheTags(array(
+      'config:cas.settings'
+    ));
+    $response = TrustedRedirectResponse::create($cas_login_url, 302);
+    $response->addCacheableDependency($cacheableMetadata);
+
+    return $response;
   }
 }

@@ -103,11 +103,27 @@ class CasSettings extends ConfigFormBase {
       '#size' => 30,
       '#default_value' => $config->get('server.path'),
     );
+    $form['server']['verify'] = array(
+      '#type' => 'radios',
+      '#title' => 'SSL Verification',
+      '#description' => $this->t('Choose an appropriate option for verifying the certificate of your CAS server.'),
+      '#options' => array(
+        CasHelper::CA_DEFAULT => $this->t('Verify using web server\'s default certificates.'),
+        CasHelper::CA_NONE => $this->t('Do not verify CAS server. (Note: this should NEVER be used in production.)'),
+        CasHelper::CA_CUSTOM => $this->t('Verify using a custom certificate in the local filesystem. Use the field below to provide path.'),
+      ),
+      '#default_value' => $config->get('server.verify'),
+    );
     $form['server']['cert'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Certificate Authority PEM Certificate'),
-      '#description' => $this->t('The PEM certificate of the Certificate Authority that issued the certificate of the CAS server. If omitted, the certificate authority will not be verified.'),
+      '#title' => $this->t('Custom Certificate Authority PEM Certificate'),
+      '#description' => $this->t('The PEM certificate of the Certificate Authority that issued the certificate on the CAS server, used only with the custom certificate option above.'),
       '#default_value' => $config->get('server.cert'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="server[verify]"]' => array('value' => CasHelper::CA_CUSTOM),
+        ),
+      ),
     );
 
     $form['gateway'] = array(
@@ -173,20 +189,35 @@ class CasSettings extends ConfigFormBase {
       '#default_value' => $config->get('user_accounts.auto_register'),
     );
 
-    $form['redirection'] = array(
+    $form['logout'] = array(
       '#type' => 'details',
-      '#title' => $this->t('Redirection'),
+      '#title' => $this->t('Logout Behavior'),
       '#open' => FALSE,
       '#tree' => TRUE,
     );
-    $form['redirection']['logout_destination'] = array(
+    $form['logout']['cas_logout'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Drupal Logout Triggers CAS Logout'),
+      '#description' => $this->t('When enabled, a Drupal user logout will cause a CAS logout.'),
+      '#default_value' => $config->get('logout.cas_logout'),
+    );
+    $form['logout']['logout_destination'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Logout destination'),
       '#description' => $this->t(
         'Drupal path or URL. Enter a destination if you want the CAS Server to ' .
         'redirect the user after logging out of CAS.'
       ),
-      '#default_value' => $config->get('redirection.logout_destination'),
+      '#default_value' => $config->get('logout.logout_destination'),
+    );
+    $form['logout']['enable_single_logout'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable single log out?'),
+      '#default_value' => $config->get('logout.enable_single_logout'),
+      '#description' => $this->t('If enabled (and your CAS server supports it), ' .
+        'users will be logged out of your Drupal site when they log out of your ' .
+        'CAS server. NOTE: THIS WILL REMOVE A SECURITY HARDENING FEATURE ADDED ' .
+        'IN DRUPAL 8! Session IDs to be stored unhashed in the database.'),
     );
 
     $form['proxy'] = array(
@@ -264,6 +295,13 @@ class CasSettings extends ConfigFormBase {
     $condition_values = (new FormState())
       ->setValues($form_state->getValue(['forced_login', 'paths']));
     $this->forcedLoginPaths->validateConfigurationForm($form, $condition_values);
+
+    $sslVerificationMethod = $form_state->getValue(['server', 'verify']);
+    $certPath = $form_state->getValue(['server', 'cert']);
+    if ($sslVerificationMethod == CasHelper::CA_CUSTOM && !file_exists($certPath)) {
+      $form_state->setErrorByName('server][cert', $this->t('The path you provided to the custom PEM certificate for your CAS server does not exist or is not readable. Verify this path and try again.'));
+    }
+
     return parent::validateForm($form, $form_state);
   }
 
@@ -279,6 +317,7 @@ class CasSettings extends ConfigFormBase {
       ->set('server.hostname', $server_data['hostname'])
       ->set('server.port', $server_data['port'])
       ->set('server.path', $server_data['path'])
+      ->set('server.verify', $server_data['verify'])
       ->set('server.cert', $server_data['cert']);
 
     $condition_values = (new FormState())
@@ -296,8 +335,9 @@ class CasSettings extends ConfigFormBase {
       ->set('forced_login.paths', $this->forcedLoginPaths->getConfiguration());
 
     $config
-      ->set('redirection.logout_destination', $form_state->getValue(['redirection', 'logout_destination']));
-
+      ->set('logout.logout_destination', $form_state->getValue(['logout', 'logout_destination']))
+      ->set('logout.enable_single_logout', $form_state->getValue(['logout', 'enable_single_logout']))
+      ->set('logout.cas_logout', $form_state->getValue(['logout', 'cas_logout']));
     $config
       ->set('proxy.initialize', $form_state->getValue(['proxy', 'initialize']))
       ->set('proxy.can_be_proxied', $form_state->getValue(['proxy', 'can_be_proxied']))

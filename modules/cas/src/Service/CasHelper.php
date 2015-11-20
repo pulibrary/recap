@@ -5,12 +5,34 @@ namespace Drupal\cas\Service;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\Core\Logger\LoggerChannel;
 use Drupal\Core\Logger\RfcLogLevel;
 
 class CasHelper {
+
+  /**
+   * SSL configuration to use the system's CA bundle to verify CAS server.
+   *
+   * @var int
+   */
+  const CA_DEFAULT = 0;
+
+  /**
+   * SSL configuration to use provided file to verify CAS server.
+   *
+   * @var int
+   */
+  const CA_CUSTOM = 1;
+
+  /**
+   * SSL Configuration to not verify CAS server.
+   *
+   * @var int
+   */
+  const CA_NONE = 2;
 
   /**
    * Gateway configuration to never check preemptively to see if the user is
@@ -187,6 +209,16 @@ class CasHelper {
   }
 
   /**
+   * Return the SSL verification method.
+   *
+   * @return int
+   *   The verification method.
+   */
+  public function getSslVerificationMethod() {
+    return $this->settings->get('server.verify');
+  }
+
+  /**
    * Return CA PEM file path.
    *
    * @return mixed|null
@@ -348,8 +380,8 @@ class CasHelper {
    */
   public function getServerLogoutUrl($request) {
     $base_url = $this->getServerBaseUrl() . 'logout';
-    if ($this->settings->get('redirection.logout_destination') != '') {
-      $destination = $this->settings->get('redirection.logout_destination');
+    if ($this->settings->get('logout.logout_destination') != '') {
+      $destination = $this->settings->get('logout.logout_destination');
       if ($destination == '<front>') {
         // If we have '<front>', resolve the path.
         $params['service'] = $this->urlGenerator->generate($destination, array(), TRUE);
@@ -382,5 +414,55 @@ class CasHelper {
    */
   protected function isExternal($url) {
     return UrlHelper::isExternal($url);
+  }
+
+  /**
+   * Check if the current logout request should be served by caslogout.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request instance.
+   *
+   * @return bool
+   *   Whether to process logout as caslogout.
+   */
+  public function provideCasLogoutOverride($request) {
+    if ($this->settings->get('logout.cas_logout') == TRUE) {
+      if ($this->isCasSession($request->getSession()->getId())) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Check if the given session ID was authenticated with CAS.
+   *
+   * @param string $session_id
+   *   The session ID to look up.
+   *
+   * @return bool
+   *   Whether or not this session was authenticated with CAS.
+   *
+   * @codeCoverageIgnore
+   */
+  public function isCasSession($session_id) {
+    $results = $this->connection->select('cas_login_data')
+      ->fields('cas_login_data', array('sid'))
+      ->condition('sid', Crypt::hashBase64($session_id))
+      ->execute()
+      ->fetchAll();
+
+    return !empty($results);
+  }
+
+  /**
+   * Whether or not session IDs are stored for single logout.
+   *
+   * @return bool
+   *   Whether or not single logout is enabled in the configuration.
+   */
+  public function getSingleLogOut() {
+    return $this->settings->get('logout.enable_single_logout');
   }
 }

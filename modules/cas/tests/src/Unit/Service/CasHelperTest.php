@@ -368,6 +368,24 @@ class CasHelperTest extends UnitTestCase {
   }
 
   /**
+   * Test getting the SSL verification method.
+   *
+   * @covers ::getSslVerificationMethod
+   */
+  public function testGetSslVerificationMethod() {
+    $config_factory = $this->getConfigFactoryStub(array(
+      'cas.settings' => array(
+        'server.hostname' => 'example.com',
+        'server.port' => 443,
+        'server.path' => '/cas',
+        'server.verify' => 17,
+      ),
+    ));
+    $cas_helper = new CasHelper($config_factory, $this->urlGenerator, $this->connection, $this->loggerFactory);
+    $this->assertEquals(17, $cas_helper->getSslVerificationMethod());
+  }
+
+  /**
    * Test getting the CA PEM file.
    *
    * @covers ::getCertificateAuthorityPem
@@ -487,7 +505,7 @@ class CasHelperTest extends UnitTestCase {
   public function testGetServerLogoutUrlNoRedirect() {
     $config_factory = $this->getConfigFactoryStub(array(
       'cas.settings' => array(
-        'redirection.logout_destination' => '',
+        'logout.logout_destination' => '',
       )
     ));
     $cas_helper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
@@ -511,7 +529,7 @@ class CasHelperTest extends UnitTestCase {
   public function testGetServerLogoutUrlFrontPage() {
     $config_factory = $this->getConfigFactoryStub(array(
       'cas.settings' => array(
-        'redirection.logout_destination' => '<front>',
+        'logout.logout_destination' => '<front>',
       )
     ));
     $cas_helper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
@@ -538,7 +556,7 @@ class CasHelperTest extends UnitTestCase {
   public function testGetServerLogoutUrlExternalUrl() {
     $config_factory = $this->getConfigFactoryStub(array(
       'cas.settings' => array(
-        'redirection.logout_destination' => 'https://foo.example.com',
+        'logout.logout_destination' => 'https://foo.example.com',
       )
     ));
     $cas_helper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
@@ -565,7 +583,7 @@ class CasHelperTest extends UnitTestCase {
   public function testGetServerLogoutUrlInternalPath() {
     $config_factory = $this->getConfigFactoryStub(array(
       'cas.settings' => array(
-        'redirection.logout_destination' => 'node/1',
+        'logout.logout_destination' => 'node/1',
       )
     ));
     $cas_helper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
@@ -585,5 +603,59 @@ class CasHelperTest extends UnitTestCase {
       ->method('isExternal')
       ->will($this->returnValue(FALSE));
     $this->assertEquals('https://example.com/logout?service=https%3A//bar.example.com/node/1', $cas_helper->getServerLogoutUrl($request));
+  }
+
+  /**
+   * Test providing CAS logout override.
+   *
+   * @dataProvider provideCasLogoutOverrideDataProvider
+   */
+  public function testProvideCasLogoutOverride($config, $cas_authenticated) {
+    $config_factory = $this->getConfigFactoryStub(array(
+      'cas.settings' => array(
+        'logout.cas_logout' => $config,
+      )
+    ));
+    $cas_helper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
+      ->setConstructorArgs(array($config_factory, $this->urlGenerator, $this->connection, $this->loggerFactory))
+      ->setMethods(array('isCasSession'))
+      ->getMock();
+    $cas_helper->expects($this->any())
+      ->method('isCasSession')
+      ->willReturn($cas_authenticated);
+    $request = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Request')
+                    ->disableOriginalConstructor()
+                    ->getMock();
+    $session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session')
+                    ->disableOriginalConstructor()
+                    ->setMethods(['getId'])
+                    ->getMock();
+    if ($config) {
+      $request->expects($this->once())
+       ->method('getSession')
+       ->willReturn($session);
+      $session->expects($this->once())
+       ->method('getId')
+       ->willReturn($this->randomMachineName(8));
+    }
+
+    $this->assertEquals($config && $cas_authenticated, $cas_helper->provideCasLogoutOverride($request));
+  }
+
+  /**
+   * Provide configuration for testProvideCasLogoutOverride()
+   *
+   * @return array
+   *   Parameters.
+   *
+   * @see \Drupal\Tests\cas\Unit\Service\CasHelperTest::testProvideCasLogoutOverride
+   */
+  public function provideCasLogoutOverrideDataProvider() {
+    return [
+      [TRUE, TRUE],
+      [TRUE, FALSE],
+      [FALSE, TRUE],
+      [FALSE, FALSE],
+    ];
   }
 }
