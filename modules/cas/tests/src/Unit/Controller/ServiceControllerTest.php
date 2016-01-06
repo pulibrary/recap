@@ -426,7 +426,7 @@ class ServiceControllerTest extends UnitTestCase {
     // Validation service should be called for that ticket.
     $this->casValidator->expects($this->once())
       ->method('validateTicket')
-      ->with(NULL, $this->equalTo('ST-foobar'), $this->equalTo($service_params))
+      ->with($this->equalTo('ST-foobar'), $this->equalTo($service_params))
       ->will($this->returnValue($validation_data));
   }
 

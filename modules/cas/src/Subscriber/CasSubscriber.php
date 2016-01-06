@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains Drupal\cas\Subscriber\CasSubscriber.
@@ -59,6 +60,8 @@ class CasSubscriber implements EventSubscriberInterface {
   protected $conditionManager;
 
   /**
+   * CAS helper.
+   *
    * @var \Drupal\cas\Service\CasHelper
    */
   protected $casHelper;
@@ -92,7 +95,9 @@ class CasSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[KernelEvents::REQUEST][] = array('handle', 20);
+    // Priority is just before the Dynamic Page Cache subscriber, but after
+    // important services like route matcher and maintenance mode subscribers.
+    $events[KernelEvents::REQUEST][] = array('handle', 29);
     return $events;
   }
 
@@ -167,8 +172,8 @@ class CasSubscriber implements EventSubscriberInterface {
         'returnto' => $this->requestStack->getCurrentRequest()->getUri(),
         'cas_temp_disable' => TRUE,
       ));
-      $this->casHelper->log("Protected Url detected, redirecting to: $cas_login_url");
-      $event->setResponse(TrustedRedirectResponse::create($cas_login_url));
+      $this->casHelper->log("Forced login path detected, redirecting to: $cas_login_url");
+      $event->setResponse($this->createNonCachedRedirectToCasServer($cas_login_url));
       return TRUE;
     }
     return FALSE;
@@ -220,7 +225,8 @@ class CasSubscriber implements EventSubscriberInterface {
       'cas_temp_disable' => TRUE,
     ), TRUE);
     $this->casHelper->log("Gateway activated, redirecting to $cas_login_url");
-    $event->setResponse(TrustedRedirectResponse::create($cas_login_url));
+
+    $event->setResponse($this->createNonCachedRedirectToCasServer($cas_login_url));
 
     return TRUE;
   }
@@ -300,4 +306,29 @@ class CasSubscriber implements EventSubscriberInterface {
 
     return FALSE;
   }
+
+  /**
+   * Create a redirect response to the CAS server.
+   *
+   * We ensure this response is not cacheable, otherwise an infinite redirect
+   * loop is created when users are returned to the URL they are on when
+   * forced login or gateway mode was triggered.
+   *
+   * @param string $url
+   *   The URL to the CAS server.
+   *
+   * @return \Drupal\Core\Routing\TrustedRedirectResponse
+   *   The non-cacheable redirect response.
+   *
+   * @see https://www.drupal.org/node/2607818
+   */
+  private function createNonCachedRedirectToCasServer($url) {
+    // Don't allow this redirect to be cached to prevent an infinite redirect
+    // loop when we return users to this page.
+    $redirect = TrustedRedirectResponse::create($url)
+      ->addCacheableDependency([]);
+
+    return $redirect;
+  }
+
 }

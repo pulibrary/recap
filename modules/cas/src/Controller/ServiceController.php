@@ -1,8 +1,14 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\cas\Controller\ServiceController.
+ */
+
 namespace Drupal\cas\Controller;
 
 use Drupal\cas\Exception\CasLoginException;
+use Drupal\cas\Exception\CasSloException;
 use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Service\CasLogin;
 use Drupal\cas\Exception\CasValidateException;
@@ -17,36 +23,51 @@ use Drupal\cas\Service\CasLogout;
 use Symfony\Component\HttpFoundation\Response;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
+/**
+ * Class ServiceController.
+ */
 class ServiceController implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
 
   /**
+   * Used for misc. services required.
+   *
    * @var \Drupal\cas\Service\CasHelper
    */
   protected $casHelper;
 
   /**
+   * Used to validate CAS service tickets.
+   *
    * @var \Drupal\cas\Service\CasValidator
    */
   protected $casValidator;
 
   /**
+   * Used to log a user in after they've been validated.
+   *
    * @var \Drupal\cas\Service\CasLogin
    */
   protected $casLogin;
 
   /**
+   * Used to log a user out due to a single log out request.
+   *
    * @var \Drupal\cas\Service\CasLogout
    */
   protected $casLogout;
 
   /**
+   * Used to retrieve request parameters.
+   *
    * @var \Symfony\Component\HttpFoundation\RequestStack
    */
   protected $requestStack;
 
   /**
+   * Used to generate redirect URLs.
+   *
    * @var \Drupal\Core\Routing\UrlGeneratorInterface
    */
   protected $urlGenerator;
@@ -82,19 +103,25 @@ class ServiceController implements ContainerInjectionInterface {
   }
 
   /**
-   * Handles a request to either validate a user login or log a user out.
+   * Main point of communication between CAS server and the Drupal site.
    *
    * The path that this controller/action handle are always set to the "service"
-   * when authenticating with the CAS server, so CAS server communicates back to
-   * the Drupal site using this controller.
+   * url when authenticating with the CAS server, so CAS server communicates
+   * back to the Drupal site using this controller action. That's why there's
+   * so much going on in here - it needs to process a few different types of
+   * requests.
    */
   public function handle() {
     $request = $this->requestStack->getCurrentRequest();
 
     // First, check if this is a single-log-out (SLO) request from the server.
     if ($request->request->has('logoutRequest')) {
-      $this->casHelper->log("Logout request: passing to casLogout::handleSlo");
-      $this->casLogout->handleSlo($request->request->get('logoutRequest'));
+      try {
+        $this->casLogout->handleSlo($request->request->get('logoutRequest'));
+      }
+      catch (CasSloException $e) {
+        $this->casHelper->log($e->getMessage());
+      }
       // Always return a 200 code. CAS Server doesn’t care either way what
       // happens here, since it is a fire-and-forget approach taken.
       return Response::create('', 200);
@@ -108,16 +135,24 @@ class ServiceController implements ContainerInjectionInterface {
       $_SESSION['cas_temp_disable'] = TRUE;
     }
 
-    // Check if there is a ticket parameter. If there isn't, we could be
-    // returning from a gateway request and the user may not be logged into CAS.
-    // Just redirect away from here.
+    /* If there is no ticket parameter on the request, the browser either:
+     * (a) is returning from a gateway request to the CAS server in which
+     *     the user was not already authenticated to CAS, so there is no
+     *     service ticket to validate and nothing to do.
+     * (b) has hit this URL for some other reason (crawler, curiosity, etc)
+     *     and there is nothing to do.
+     * In either case, we just want to redirect them away from this controller.
+     */
     if (!$request->query->has('ticket')) {
       $this->casHelper->log("No ticket detected, move along.");
       $this->handleReturnToParameter($request);
       return RedirectResponse::create($this->urlGenerator->generate('<front>'));
     }
-    $ticket = $request->query->get('ticket');
 
+    // There is a ticket present, meaning CAS server has returned the browser
+    // to the Drupal site so we can authenticate the user locally using the
+    // ticket.
+    $ticket = $request->query->get('ticket');
     // Our CAS service will need to reconstruct the original service URL
     // when validating the ticket. We always know what the base URL for
     // the service URL (it's this page), but there may be some query params
@@ -125,30 +160,35 @@ class ServiceController implements ContainerInjectionInterface {
     // as well. So, detach the ticket param, and pass the rest off.
     $service_params = $request->query->all();
     unset($service_params['ticket']);
-    $cas_version = $this->casHelper->getCasProtocolVersion();
-    $this->casHelper->log("Configured to use CAS protocol version: $cas_version");
     try {
-      $cas_validation_info = $this->casValidator->validateTicket($cas_version, $ticket, $service_params);
+      $cas_validation_info = $this->casValidator->validateTicket($ticket, $service_params);
     }
     catch (CasValidateException $e) {
       // Validation failed, redirect to homepage and set message.
+      $this->casHelper->log($e->getMessage());
       $this->setMessage($this->t('There was a problem validating your login, please contact a site administrator.'), 'error');
       $this->handleReturnToParameter($request);
       return RedirectResponse::create($this->urlGenerator->generate('<front>'));
     }
 
+    // Now that the ticket has been validated, we can use the information from
+    // validation request to authenticate the user locally on the Drupal site.
     try {
       $this->casLogin->loginToDrupal($cas_validation_info, $ticket);
       if ($this->casHelper->isProxy() && $cas_validation_info->getPgt()) {
         $this->casHelper->log("Storing PGT information for this session.");
-        $this->casHelper->storePGTSession($cas_validation_info->getPgt());
+        $this->casHelper->storePgtSession($cas_validation_info->getPgt());
       }
       $this->setMessage($this->t('You have been logged in.'));
     }
     catch (CasLoginException $e) {
+      $this->casHelper->log($e->getMessage());
       $this->setMessage($this->t('There was a problem logging in, please contact a site administrator.'), 'error');
     }
 
+    // And finally redirect the user to the homepage, or so a specific
+    // destination found in the destination param (like the page they were on
+    // prior to initiating authentication).
     $this->handleReturnToParameter($request);
     return RedirectResponse::create($this->urlGenerator->generate('<front>'));
   }
@@ -193,7 +233,7 @@ class ServiceController implements ContainerInjectionInterface {
    * @param string $message
    *   The message text to set.
    * @param string $type
-   *   The message type. 
+   *   The message type.
    * @param bool $repeat
    *   Whether identical messages should all be shown.
    *
@@ -202,4 +242,5 @@ class ServiceController implements ContainerInjectionInterface {
   public function setMessage($message, $type = 'status', $repeat = FALSE) {
     drupal_set_message($message, $type, $repeat);
   }
+
 }
