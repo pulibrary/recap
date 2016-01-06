@@ -3,6 +3,7 @@ server:
   hostname: ''
   port: 443
   path: '/'
+  verify: 0
   cert: ''
 
 gateway:
@@ -13,8 +14,9 @@ forced_login:
   enabled: false
   paths: {}
 
-redirection:
+logout:
   logout_destination: ''
+  enable_single_logout: false
 
 proxy:
   initialize: false
@@ -23,6 +25,9 @@ proxy:
 
 user_accounts:
   auto_register: false
+
+logout:
+  cas_logout: false
 
 debugging:
   log: false

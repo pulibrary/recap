@@ -148,17 +148,23 @@ class CasLogin {
    * Store the Session ID and ticket for single-log-out purposes.
    *
    * @param string $session_id
-   *   The hashed session ID, to be used to kill the session later.
+   *   The session ID, to be used to kill the session later.
    * @param string $ticket
    *   The CAS service ticket to be used as the lookup key.
    *
    * @codeCoverageIgnore
    */
   protected function storeLoginSessionData($session_id, $ticket) {
+    if ($this->settings->get('cas.settings')->get('logout.enable_single_logout') === TRUE) {
+      $plainsid = $session_id;
+    }
+    else {
+      $plainsid = '';
+    }
     $this->connection->insert('cas_login_data')
       ->fields(
-        array('sid', 'ticket'),
-        array(Crypt::hashBase64($session_id), $ticket)
+        array('sid', 'plainsid', 'ticket'),
+        array(Crypt::hashBase64($session_id), $plainsid, $ticket)
       )
       ->execute();
   }
