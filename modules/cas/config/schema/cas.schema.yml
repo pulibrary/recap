@@ -20,9 +20,6 @@ cas.settings:
         path:
           type: string
           label: 'Path'
-        verify:
-          type: integer
-          label: 'SSL Verification Method'
         cert:
           type: string
           label: 'PEM Cert path'
@@ -53,19 +50,6 @@ cas.settings:
         auto_register:
           type: boolean
           label: 'Auto Register Users'
-    logout:
-      type: mapping
-      label: 'Logout'
-      mapping:
-        cas_logout:
-          type: boolean
-          label: 'Drupal Logout Triggers CAS Logout'
-        logout_destination:
-          type: string
-          label: 'Logout Destination'
-        enable_single_logout:
-          type: boolean
-          label: 'Enable'
     proxy:
       type: mapping
       label: 'Proxy'
@@ -79,6 +63,13 @@ cas.settings:
         proxy_chains:
           type: string
           label: 'Proxy Chains'
+    redirection:
+      type: mapping
+      label: 'Redirection'
+      mapping:
+        logout_destination:
+          type: string
+          label: 'Logout Destination'
     debugging:
       type: mapping
       label: 'Debugging'

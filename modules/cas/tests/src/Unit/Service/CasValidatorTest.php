@@ -15,10 +15,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Middleware;
-use Drupal\cas\Service\CasHelper;
 
 /**
  * CasHelper unit tests.
@@ -33,7 +29,6 @@ class CasValidatorTest extends UnitTestCase {
   /**
    * Test validation of Cas tickets.
    *
-   * @covers ::__construct
    * @covers ::validateTicket
    * @covers ::validateVersion1
    * @covers ::validateVersion2
@@ -43,12 +38,10 @@ class CasValidatorTest extends UnitTestCase {
    *
    * @dataProvider validateTicketDataProvider
    */
-  public function testValidateTicket($version, $ticket, $username, $response, $is_proxy, $can_be_proxied, $proxy_chains, $ssl_verification) {
+  public function testValidateTicket($version, $ticket, $username, $response, $is_proxy, $can_be_proxied, $proxy_chains) {
+
     $mock = new MockHandler([new Response(200, array(), $response)]);
     $handler = HandlerStack::create($mock);
-    $container = [];
-    $history = Middleware::history($container);
-    $handler->push($history);
     $httpClient = new Client(['handler' => $handler]);
 
     $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
@@ -56,15 +49,7 @@ class CasValidatorTest extends UnitTestCase {
                       ->getMock();
     $casValidator = new CasValidator($httpClient, $casHelper);
 
-    $casHelper->expects($this->any())
-              ->method('getCasProtocolVersion')
-              ->will($this->returnValue($version));
-
     $casHelper->expects($this->once())
-              ->method('getSslVerificationMethod')
-              ->willReturn($ssl_verification);
-
-    $casHelper->expects($this->any())
               ->method('getCertificateAuthorityPem')
               ->will($this->returnValue('foo'));
 
@@ -81,20 +66,6 @@ class CasValidatorTest extends UnitTestCase {
               ->will($this->returnValue($proxy_chains));
 
     $property_bag = $casValidator->validateTicket($version, $ticket, array());
-
-    // Test that we sent the correct ssl option to the http client.
-    foreach ($container as $transaction) {
-      switch ($ssl_verification) {
-        case CasHelper::CA_CUSTOM:
-          $this->assertEquals('foo', $transaction['options']['verify']);
-          break;
-        case CasHelper::CA_NONE:
-          $this->assertEquals(FALSE, $transaction['options']['verify']);
-          break;
-        default:
-          $this->assertEquals(TRUE, $transaction['options']['verify']);
-      }
-    }
     $this->assertEquals($username, $property_bag->getUsername());
   }
 
@@ -118,7 +89,6 @@ class CasValidatorTest extends UnitTestCase {
       FALSE,
       FALSE,
       '',
-      CasHelper::CA_CUSTOM,
     );
 
     // Second test case: protocol version 2, no proxies.
@@ -136,7 +106,6 @@ class CasValidatorTest extends UnitTestCase {
       FALSE,
       FALSE,
       '',
-      CasHelper::CA_NONE,
     );
 
     // Third test case: protocol version 2, initialize as proxy.
@@ -157,7 +126,6 @@ class CasValidatorTest extends UnitTestCase {
       TRUE,
       FALSE,
       '',
-      CasHelper::CA_DEFAULT,
     );
 
     // Fourth test case: protocol version 2, can be proxied.
@@ -180,7 +148,6 @@ class CasValidatorTest extends UnitTestCase {
       FALSE,
       TRUE,
       $proxy_chains,
-      CasHelper::CA_DEFAULT,
     );
 
     // Fifth test case: protocol version 2, proxy in both directions.
@@ -204,7 +171,6 @@ class CasValidatorTest extends UnitTestCase {
       TRUE,
       TRUE,
       $proxy_chains,
-      CasHelper::CA_DEFAULT,
     );
 
     return $params;
@@ -223,12 +189,7 @@ class CasValidatorTest extends UnitTestCase {
    * @dataProvider validateTicketExceptionDataProvider
    */
   public function testValidateTicketException($version, $response, $is_proxy, $can_be_proxied, $proxy_chains, $exception, $exception_message, $http_client_exception) {
-    if ($http_client_exception) {
-      $mock = new MockHandler([new RequestException($exception_message, new Request('GET', 'test'))]);
-    }
-    else {
-      $mock = new MockHandler([new Response(200, array(), $response)]);
-    }
+    $mock = new MockHandler([new Response(200, array(), $response)]);
     $handler = HandlerStack::create($mock);
     $httpClient = new Client(['handler' => $handler]);
 
@@ -236,10 +197,6 @@ class CasValidatorTest extends UnitTestCase {
                       ->disableOriginalConstructor()
                       ->getMock();
     $casValidator = new CasValidator($httpClient, $casHelper);
-
-    $casHelper->expects($this->any())
-              ->method('getCasProtocolVersion')
-              ->will($this->returnValue($version));
 
     $casHelper->expects($this->any())
               ->method('isProxy')
@@ -253,9 +210,14 @@ class CasValidatorTest extends UnitTestCase {
               ->method('getProxyChains')
               ->will($this->returnValue($proxy_chains));
 
-    $this->setExpectedException($exception, $exception_message);
+    if (!empty($exception_message)) {
+      $this->setExpectedException($exception, $exception_message);
+    }
+    else {
+      $this->setExpectedException($exception);
+    }
     $ticket = $this->randomMachineName(24);
-    $casValidator->validateTicket($ticket, array());
+    $user = $casValidator->validateTicket($version, $ticket, array());
   }
 
   /**
@@ -275,9 +237,11 @@ class CasValidatorTest extends UnitTestCase {
     $exception_type = '\Drupal\cas\Exception\CasValidateException';
 
     /* The first exception is actually a 'recasting' of an http client
-     * exception.
+     * exception. We're not in the business of checking their exception text,
+     * so simply tell the client to throw an exception, and don't worry about
+     * the message given.
      */
-    $params[] = array('2.0', '', FALSE, FALSE, '', $exception_type, 'External http client exception', TRUE);
+    $params[] = array('2.0', '', FALSE, FALSE, '', $exception_type, '', TRUE);
 
     /* Protocol version 1 can throw two exceptions: 'no' text is found, or
      * 'yes' text is not found (in that order).
@@ -431,7 +395,7 @@ class CasValidatorTest extends UnitTestCase {
       FALSE,
       '',
       $exception_type,
-      "Unknown CAS protocol version specified: foobarbaz",
+      "Unknown CAS protocol version specified.",
       FALSE,
     );
 
@@ -446,6 +410,7 @@ class CasValidatorTest extends UnitTestCase {
    */
   public function testParseAttributes() {
     $ticket = $this->randomMachineName(8);
+    $version = '2.0';
     $service_params = array();
     $response = "<cas:serviceResponse xmlns:cas='http://example.com/cas'>
         <cas:authenticationSuccess>
@@ -464,18 +429,13 @@ class CasValidatorTest extends UnitTestCase {
     $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
                       ->disableOriginalConstructor()
                       ->getMock();
-
-    $casHelper->expects($this->any())
-              ->method('getCasProtocolVersion')
-              ->willReturn('2.0');
-
     $casValidator = new CasValidator($httpClient, $casHelper);
     $expected_bag = new CasPropertyBag('username');
     $expected_bag->setAttributes(array(
       'email' => array('foo@example.com'),
       'memberof' => array('cn=foo,o=example', 'cn=bar,o=example'),
     ));
-    $actual_bag = $casValidator->validateTicket($ticket, $service_params);
+    $actual_bag = $casValidator->validateTicket($version, $ticket, $service_params);
     $this->assertEquals($expected_bag, $actual_bag);
   }
 

@@ -7,7 +7,6 @@
 
 namespace Drupal\Tests\cas\Unit\Controller;
 
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\cas\Controller\ForceLoginController;
@@ -70,12 +69,7 @@ class ForceLoginControllerTest extends UnitTestCase {
       ->with($this->equalTo($parameters))
       ->will($this->returnValue('https://example.com'));
 
-    $cacheableMetadata = new CacheableMetadata();
-    $cacheableMetadata->addCacheTags(array(
-      'config:cas.settings'
-    ));
     $expected_response = new TrustedRedirectResponse('https://example.com', 302);
-    $expected_response->addCacheableDependency($cacheableMetadata);
 
     $force_login_controller = new ForceLoginController($this->casHelper, $this->requestStack);
     $response = $force_login_controller->forceLogin();

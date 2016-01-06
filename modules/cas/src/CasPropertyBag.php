@@ -1,49 +1,36 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\CasPropertyBag.
- */
-
 namespace Drupal\cas;
 
-/**
- * Class CasPropertyBag.
- */
 class CasPropertyBag {
 
   /**
-   * The username of the CAS user.
-   *
    * @var string
+   *   The username of the CAS user.
    */
   protected $username;
 
   /**
-   * The proxy granting ticket, if supplied.
-   *
    * @var string
+   *   The proxy granting ticket, if supplied.
    */
   protected $pgt;
 
   /**
-   * An array containing attributes returned from the server.
-   *
    * @var array
+   *   An array containing attributes returned from the server.
    */
   protected $attributes;
 
   /**
-   * Whether or not user is allowed to log in.
-   *
    * @var bool
+   *   Whether or not user is allowed to log in.
    */
   protected $loginStatus;
 
   /**
-   * Whether or not user is allowed to register an account.
-   *
    * @var bool
+   *   Whether or not user is allowed to register an account.
    */
   protected $registerStatus;
 
@@ -85,7 +72,7 @@ class CasPropertyBag {
    * @param array $cas_attributes
    *   An associative array containing attribute names as keys.
    */
-  public function setAttributes(array $cas_attributes) {
+  public function setAttributes($cas_attributes) {
     $this->attributes = $cas_attributes;
   }
 
@@ -124,6 +111,7 @@ class CasPropertyBag {
    *
    * @return string
    *   The pgt property.
+   *
    */
   public function getPgt() {
     return $this->pgt;

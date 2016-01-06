@@ -1,23 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Event\CasPropertyEvent.
- */
-
 namespace Drupal\cas\Event;
 
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\cas\CasPropertyBag;
 
-/**
- * Class CasPropertyEvent.
- */
 class CasPropertyEvent extends Event {
 
   /**
-   * Store the CAS property bag.
-   *
    * @var \Drupal\cas\CasPropertyBag
    *   The CasPropertyBag for context.
    */
@@ -26,7 +16,7 @@ class CasPropertyEvent extends Event {
   /**
    * Constructor.
    *
-   * @param \Drupal\cas\CasPropertyBag $cas_property_bag
+   * @param \Drupal\cas\CasProperyBag $cas_property_bag
    *   The CasPropertyBag of the current login cycle.
    */
   public function __construct(CasPropertyBag $cas_property_bag) {
@@ -44,3 +34,4 @@ class CasPropertyEvent extends Event {
   }
 
 }
+
