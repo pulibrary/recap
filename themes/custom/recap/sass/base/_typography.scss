@@ -53,7 +53,9 @@ small,
     font-size: 0.875em;
 }
 
-a:active,
+a:active {
+  outline: none;
+}
 a:focus {
     outline: thin dotted $gray;
 }

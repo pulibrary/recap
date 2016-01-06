@@ -485,7 +485,9 @@ small,
 .font_small {
   font-size: 0.875em; }
 
-a:active,
+a:active {
+  outline: none; }
+
 a:focus {
   outline: thin dotted #83888F; }
 
@@ -506,6 +508,11 @@ footer {
     footer .layout-container > div:last-child {
       float: right;
       margin-right: 0; }
+  footer nav ul {
+    list-style: none;
+    text-align: right; }
+  footer nav a {
+    color: #ffffff; }
 
 .members {
   padding: 36px 0 55px; }
@@ -623,7 +630,7 @@ header nav {
     display: block; }
   header nav ul ul {
     display: none;
-    min-width: 253px;
+    min-width: 251px;
     position: absolute;
     margin-top: 15px;
     padding: 0;
@@ -640,7 +647,7 @@ header nav {
         background: #f5f4f1; }
     header nav ul ul a {
       text-transform: none;
-      width: 100%;
+      width: calc(100% - 10px);
       display: block;
       margin: 0;
       padding-left: 10px; }
