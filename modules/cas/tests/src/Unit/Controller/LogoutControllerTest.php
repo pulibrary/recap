@@ -46,9 +46,6 @@ class LogoutControllerTest extends UnitTestCase {
     $this->requestStack = $this->getMockBuilder('\Symfony\Component\HttpFoundation\RequestStack')
                                ->disableOriginalConstructor()
                                ->getMock();
-
-    $this->requestStack->method('getCurrentRequest')
-      ->willReturn($this->getMock('\Symfony\Component\HttpFoundation\Request'));
   }
 
   /**

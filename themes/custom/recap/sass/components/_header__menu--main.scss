@@ -43,7 +43,7 @@ header nav {
 
   ul ul {
     display: none;
-    min-width: 251px;
+    min-width: 253px;
     position: absolute;
     margin-top: 15px;
     padding: 0;
@@ -65,7 +65,7 @@ header nav {
 
     a {
       text-transform: none;
-      width: calc(100% - 10px);
+      width: 100%;
       display: block;
       margin: 0;
       padding-left: 10px;

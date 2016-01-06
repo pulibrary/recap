@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Contains \Drupal\cas\Form\CasSettings.
@@ -16,22 +15,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\cas\Service\CasHelper;
 
 /**
- * Class CasSettings.
- *
  * @codeCoverageIgnore
  */
 class CasSettings extends ConfigFormBase {
 
   /**
-   * RequestPath condition that contains the paths to use for gateway.
-   *
    * @var \Drupal\system\Plugin\Condition\RequestPath
    */
   protected $gatewayPaths;
 
   /**
-   * RequestPath condition that contains the paths to used for forcedLogin.
-   *
    * @var \Drupal\system\Plugin\Condition\RequestPath
    */
   protected $forcedLoginPaths;
@@ -63,7 +56,7 @@ class CasSettings extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormID() {
     return 'cas_settings';
   }
 
@@ -85,6 +78,7 @@ class CasSettings extends ConfigFormBase {
       '#options' => array(
         '1.0' => $this->t('1.0'),
         '2.0' => $this->t('2.0 or higher'),
+        'S1' => $this->t('SAML Version 1.1'),
       ),
       '#default_value' => $config->get('server.version'),
     );
@@ -109,27 +103,11 @@ class CasSettings extends ConfigFormBase {
       '#size' => 30,
       '#default_value' => $config->get('server.path'),
     );
-    $form['server']['verify'] = array(
-      '#type' => 'radios',
-      '#title' => 'SSL Verification',
-      '#description' => $this->t('Choose an appropriate option for verifying the certificate of your CAS server.'),
-      '#options' => array(
-        CasHelper::CA_DEFAULT => $this->t('Verify using web server\'s default certificates.'),
-        CasHelper::CA_NONE => $this->t('Do not verify CAS server. (Note: this should NEVER be used in production.)'),
-        CasHelper::CA_CUSTOM => $this->t('Verify using a custom certificate in the local filesystem. Use the field below to provide path.'),
-      ),
-      '#default_value' => $config->get('server.verify'),
-    );
     $form['server']['cert'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Custom Certificate Authority PEM Certificate'),
-      '#description' => $this->t('The PEM certificate of the Certificate Authority that issued the certificate on the CAS server, used only with the custom certificate option above.'),
+      '#title' => $this->t('Certificate Authority PEM Certificate'),
+      '#description' => $this->t('The PEM certificate of the Certificate Authority that issued the certificate of the CAS server. If omitted, the certificate authority will not be verified.'),
       '#default_value' => $config->get('server.cert'),
-      '#states' => array(
-        'visible' => array(
-          ':input[name="server[verify]"]' => array('value' => CasHelper::CA_CUSTOM),
-        ),
-      ),
     );
 
     $form['gateway'] = array(
@@ -142,11 +120,7 @@ class CasSettings extends ConfigFormBase {
         'When enabled, Drupal will check if a visitor is already logged into your CAS server before ' .
         'serving a page request. If they have an active CAS session, they will be automatically ' .
         'logged into the Drupal site. This is done by quickly redirecting them to the CAS server to perform the ' .
-        'active session check, and then redirecting them back to page they initially requested.<br/><br/>' .
-        'If enabled, all pages on your site will trigger this feature. You can instead enable ' .
-        'this feature for only specific pages by listing them below.<br/><br/>' .
-        '<strong>WARNING:</strong> This feature is NOT compatible with the Internal Page Cache module or external ' .
-        'page caching software like Varnish.',
+        'active session check, and then redirecting them back to page they initially requested.',
         array('@cas-gateway' => 'https://wiki.jasig.org/display/CAS/gateway')
       ),
     );
@@ -171,15 +145,13 @@ class CasSettings extends ConfigFormBase {
       '#description' => $this->t(
         'Anonymous users will be forced to login through CAS when enabled. ' .
         'This differs from the "gateway feature" in that it will REQUIRE that a user be logged in to their CAS ' .
-        'account, instead of just checking if they already are.<br/><br/>' .
-        '<strong>WARNING:</strong> This feature is NOT compatible with the Internal Page Cache module or external ' .
-        'page caching software like Varnish.'
+        'account, instead of just checking if they already are.'
       ),
     );
     $form['forced_login']['enabled'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Enable'),
-      '#description' => $this->t('When enabled, every path will force a CAS login, unless specific pages are listed below.'),
+      '#description' => $this->t('When enabled, every path will force a CAS login, unless specific pages are listed.'),
       '#default_value' => $config->get('forced_login.enabled'),
     );
     $this->forcedLoginPaths->setConfiguration($config->get('forced_login.paths'));
@@ -201,35 +173,20 @@ class CasSettings extends ConfigFormBase {
       '#default_value' => $config->get('user_accounts.auto_register'),
     );
 
-    $form['logout'] = array(
+    $form['redirection'] = array(
       '#type' => 'details',
-      '#title' => $this->t('Logout Behavior'),
+      '#title' => $this->t('Redirection'),
       '#open' => FALSE,
       '#tree' => TRUE,
     );
-    $form['logout']['cas_logout'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Drupal Logout Triggers CAS Logout'),
-      '#description' => $this->t('When enabled, users that log out of your Drupal site will then be logged out of your CAS server as well. This is done by redirecting the user to the CAS logout page.'),
-      '#default_value' => $config->get('logout.cas_logout'),
-    );
-    $form['logout']['logout_destination'] = array(
+    $form['redirection']['logout_destination'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Logout destination'),
       '#description' => $this->t(
         'Drupal path or URL. Enter a destination if you want the CAS Server to ' .
         'redirect the user after logging out of CAS.'
       ),
-      '#default_value' => $config->get('logout.logout_destination'),
-    );
-    $form['logout']['enable_single_logout'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable single log out?'),
-      '#default_value' => $config->get('logout.enable_single_logout'),
-      '#description' => $this->t('If enabled (and your CAS server supports it), ' .
-        'users will be logged out of your Drupal site when they log out of your ' .
-        'CAS server. NOTE: THIS WILL REMOVE A SECURITY HARDENING FEATURE ADDED ' .
-        'IN DRUPAL 8! Session IDs to be stored unhashed in the database.'),
+      '#default_value' => $config->get('redirection.logout_destination'),
     );
 
     $form['proxy'] = array(
@@ -307,13 +264,6 @@ class CasSettings extends ConfigFormBase {
     $condition_values = (new FormState())
       ->setValues($form_state->getValue(['forced_login', 'paths']));
     $this->forcedLoginPaths->validateConfigurationForm($form, $condition_values);
-
-    $ssl_verification_method = $form_state->getValue(['server', 'verify']);
-    $cert_path = $form_state->getValue(['server', 'cert']);
-    if ($ssl_verification_method == CasHelper::CA_CUSTOM && !file_exists($cert_path)) {
-      $form_state->setErrorByName('server][cert', $this->t('The path you provided to the custom PEM certificate for your CAS server does not exist or is not readable. Verify this path and try again.'));
-    }
-
     return parent::validateForm($form, $form_state);
   }
 
@@ -329,7 +279,6 @@ class CasSettings extends ConfigFormBase {
       ->set('server.hostname', $server_data['hostname'])
       ->set('server.port', $server_data['port'])
       ->set('server.path', $server_data['path'])
-      ->set('server.verify', $server_data['verify'])
       ->set('server.cert', $server_data['cert']);
 
     $condition_values = (new FormState())
@@ -347,9 +296,8 @@ class CasSettings extends ConfigFormBase {
       ->set('forced_login.paths', $this->forcedLoginPaths->getConfiguration());
 
     $config
-      ->set('logout.logout_destination', $form_state->getValue(['logout', 'logout_destination']))
-      ->set('logout.enable_single_logout', $form_state->getValue(['logout', 'enable_single_logout']))
-      ->set('logout.cas_logout', $form_state->getValue(['logout', 'cas_logout']));
+      ->set('redirection.logout_destination', $form_state->getValue(['redirection', 'logout_destination']));
+
     $config
       ->set('proxy.initialize', $form_state->getValue(['proxy', 'initialize']))
       ->set('proxy.can_be_proxied', $form_state->getValue(['proxy', 'can_be_proxied']))
@@ -370,5 +318,4 @@ class CasSettings extends ConfigFormBase {
   protected function getEditableConfigNames() {
     return array('cas.settings');
   }
-
 }

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\ProxyCallbackController.
- */
-
 namespace Drupal\cas\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -14,27 +9,18 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Drupal\cas\Service\CasHelper;
 
-/**
- * Class ProxyCallbackController.
- */
 class ProxyCallbackController implements ContainerInjectionInterface {
   /**
-   * Used when inserting the CAS PGT into the database.
-   *
    * @var \Drupal\Core\Database\Connection
    */
   protected $connection;
 
   /**
-   * Used to get params from the current request object.
-   *
    * @var \Symfony\Component\HttpFoundation\RequestStack
    */
   protected $requestStack;
 
   /**
-   * Used for logging.
-   *
    * @var \Drupal\cas\Service\CasHelper
    */
   protected $casHelper;
@@ -109,5 +95,4 @@ class ProxyCallbackController implements ContainerInjectionInterface {
       )
       ->execute();
   }
-
 }
