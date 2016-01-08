@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\cas\Service\CasProxyHelper.
+ */
+
 namespace Drupal\cas\Service;
 
 use GuzzleHttp\Client;
@@ -8,14 +13,21 @@ use Drupal\Component\Utility\UrlHelper;
 use GuzzleHttp\Cookie\CookieJar;
 use Drupal\cas\Exception\CasProxyException;
 
+/**
+ * Class CasProxyHelper.
+ */
 class CasProxyHelper {
 
   /**
-   * @var GuzzleHttp\Client
+   * The Guzzle HTTP client used to make ticket validation request.
+   *
+   * @var \GuzzleHttp\Client
    */
   protected $httpClient;
 
   /**
+   * CAS Helper object.
+   *
    * @var \Drupal\cas\Service\CasHelper
    */
   protected $casHelper;
@@ -42,7 +54,7 @@ class CasProxyHelper {
    * @return string
    *   The fully formatted URL.
    */
-  private function getServerProxyURL($target_service) {
+  private function getServerProxyUrl($target_service) {
     $url = $this->casHelper->getServerBaseUrl() . 'proxy';
     $params = array();
     $params['pgt'] = $_SESSION['cas_pgt'];
@@ -64,6 +76,8 @@ class CasProxyHelper {
    *   proxied service.
    *
    * @throws CasProxyException
+   *   Thrown if there was a problem communicating with the CAS server
+   *   or if there was is invalid use rsession data.
    */
   public function proxyAuthenticate($target_service) {
     // Check to see if we have proxied this application already.
@@ -84,7 +98,7 @@ class CasProxyHelper {
     }
 
     // Make request to CAS server to retrieve a proxy ticket for this service.
-    $cas_url = $this->getServerProxyURL($target_service);
+    $cas_url = $this->getServerProxyUrl($target_service);
     try {
       $this->casHelper->log("Retrieving proxy ticket from: $cas_url");
       $response = $this->httpClient->get($cas_url);
@@ -125,6 +139,7 @@ class CasProxyHelper {
    *   A proxy ticket to be used with the target service, FALSE on failure.
    *
    * @throws CasProxyException
+   *   Thrown if there was a problem parsing the proxy validation response.
    */
   private function parseProxyTicket($xml) {
     $dom = new \DomDocument();
@@ -151,4 +166,5 @@ class CasProxyHelper {
     }
     return $proxy_ticket->item(0)->nodeValue;
   }
+
 }

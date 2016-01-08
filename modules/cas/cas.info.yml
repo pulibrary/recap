@@ -2,9 +2,10 @@ name: CAS
 description: 'Provides CAS authentication for Drupal.'
 type: module
 # core: 8.x
+configure: cas.settings
 
-# Information added by Drupal.org packaging script on 2015-10-27
+# Information added by Drupal.org packaging script on 2016-01-07
 version: '8.x-1.x-dev'
 core: '8.x'
 project: 'cas'
-datestamp: 1445975064
+datestamp: 1452199757

@@ -1,64 +1,67 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\src\Service\CasHelper.
+ */
+
 namespace Drupal\cas\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Logger\LoggerChannelFactory;
-use Drupal\Core\Logger\LoggerChannel;
 use Drupal\Core\Logger\RfcLogLevel;
+use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Class CasHelper.
+ */
 class CasHelper {
 
   /**
-   * Gateway configuration to never check preemptively to see if the user is
-   * logged in.
+   * SSL configuration to use the system's CA bundle to verify CAS server.
+   *
+   * @var int
+   */
+  const CA_DEFAULT = 0;
+
+  /**
+   * SSL configuration to use provided file to verify CAS server.
+   *
+   * @var int
+   */
+  const CA_CUSTOM = 1;
+
+  /**
+   * SSL Configuration to not verify CAS server.
+   *
+   * @var int
+   */
+  const CA_NONE = 2;
+
+  /**
+   * Gateway config: never check preemptively to see if the user is logged in.
    *
    * @var int
    */
   const CHECK_NEVER = -2;
 
   /**
-   * Gateway configuration to check only once per session to see if the user is
-   * logged in.
+   * Gateway config: check once per session to see if the user is logged in.
    *
    * @var int
    */
   const CHECK_ONCE = -1;
 
   /**
-   * Gateway configuration to check on every page load to see if the user is
-   * logged in.
+   * Gateway config: check on every page load to see if the user is logged in.
    *
    * @var int
    */
   const CHECK_ALWAYS = 0;
-
-  /**
-   * User-defined paths in this configuration are to be included, and all
-   * others are to be excluded.
-   *
-   * @var int
-   */
-  const CAS_REQUIRE_SPECIFIC = 0;
-
-  /**
-   * User-defined paths in this configuration are to be excluded, and all
-   * others are to be included.
-   *
-   * @var int
-   */
-  const CAS_REQUIRE_ALL_EXCEPT = 1;
-
-  /**
-   * These constants govern the (@TODO: as-yet un-implemented) login form
-   * behavior.
-   */
-  const CAS_NO_LINK = 0;
-  const CAS_ADD_LINK = 1;
-  const CAS_MAKE_DEFAULT = 2;
 
   /**
    * Event type identifier for cas user alter.
@@ -75,21 +78,29 @@ class CasHelper {
   const CAS_PROPERTY_ALTER = 'cas.property_alter';
 
   /**
+   * Stores database connection.
+   *
    * @var \Drupal\Core\Database\Connection
    */
   protected $connection;
 
   /**
+   * Stores settings object.
+   *
    * @var \Drupal\Core\Config\Config
    */
   protected $settings;
 
   /**
+   * Stores URL generator.
+   *
    * @var \Drupal\Core\Routing\UrlGeneratorInterface
    */
   protected $urlGenerator;
 
   /**
+   * Stores logger.
+   *
    * @var \Drupal\Core\Logger\LoggerChannel
    */
   protected $loggerChannel;
@@ -130,7 +141,7 @@ class CasHelper {
 
     $params = array();
     if ($gateway) {
-      $params['gateway'] = TRUE;
+      $params['gateway'] = 'true';
     }
     $params['service'] = $this->getCasServiceUrl($service_params);
 
@@ -171,7 +182,7 @@ class CasHelper {
     $params['service'] = $this->getCasServiceUrl($service_params);
     $params['ticket'] = $ticket;
     if ($this->isProxy()) {
-      $params['pgtUrl'] = $this->formatProxyCallbackURL();
+      $params['pgtUrl'] = $this->formatProxyCallbackUrl();
     }
     return $validate_url . '?' . UrlHelper::buildQuery($params);
   }
@@ -184,6 +195,16 @@ class CasHelper {
    */
   public function getCasProtocolVersion() {
     return $this->settings->get('server.version');
+  }
+
+  /**
+   * Return the SSL verification method.
+   *
+   * @return int
+   *   The verification method.
+   */
+  public function getSslVerificationMethod() {
+    return $this->settings->get('server.verify');
   }
 
   /**
@@ -248,7 +269,7 @@ class CasHelper {
    * @return string
    *   The pgtCallbackURL, fully formatted.
    */
-  private function formatProxyCallbackURL() {
+  private function formatProxyCallbackUrl() {
     return str_replace('http://', 'https://', $this->urlGenerator->generateFromRoute('cas.proxyCallback', array(), array(
       'absolute' => TRUE,
     )));
@@ -280,7 +301,7 @@ class CasHelper {
    * @param string $pgt_iou
    *   A pgtIou to identify the PGT.
    */
-  public function storePGTSession($pgt_iou) {
+  public function storePgtSession($pgt_iou) {
     $pgt = $this->lookupPgtByPgtIou($pgt_iou);
     $_SESSION['cas_pgt'] = $pgt;
     // Now that we have the pgt in the session,
@@ -341,15 +362,15 @@ class CasHelper {
    * Return the logout URL for the CAS server.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *  The current request, to provide base url context.
+   *   The current request, to provide base url context.
    *
    * @return string
    *   The fully constructed server logout URL.
    */
-  public function getServerLogoutUrl($request) {
+  public function getServerLogoutUrl(Request $request) {
     $base_url = $this->getServerBaseUrl() . 'logout';
-    if ($this->settings->get('redirection.logout_destination') != '') {
-      $destination = $this->settings->get('redirection.logout_destination');
+    if ($this->settings->get('logout.logout_destination') != '') {
+      $destination = $this->settings->get('logout.logout_destination');
       if ($destination == '<front>') {
         // If we have '<front>', resolve the path.
         $params['service'] = $this->urlGenerator->generate($destination, array(), TRUE);
@@ -383,4 +404,55 @@ class CasHelper {
   protected function isExternal($url) {
     return UrlHelper::isExternal($url);
   }
+
+  /**
+   * Check if the current logout request should be served by caslogout.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request instance.
+   *
+   * @return bool
+   *   Whether to process logout as caslogout.
+   */
+  public function provideCasLogoutOverride(Request $request) {
+    if ($this->settings->get('logout.cas_logout') == TRUE) {
+      if ($this->isCasSession($request->getSession()->getId())) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Check if the given session ID was authenticated with CAS.
+   *
+   * @param string $session_id
+   *   The session ID to look up.
+   *
+   * @return bool
+   *   Whether or not this session was authenticated with CAS.
+   *
+   * @codeCoverageIgnore
+   */
+  public function isCasSession($session_id) {
+    $results = $this->connection->select('cas_login_data')
+      ->fields('cas_login_data', array('sid'))
+      ->condition('sid', Crypt::hashBase64($session_id))
+      ->execute()
+      ->fetchAll();
+
+    return !empty($results);
+  }
+
+  /**
+   * Whether or not session IDs are stored for single logout.
+   *
+   * @return bool
+   *   Whether or not single logout is enabled in the configuration.
+   */
+  public function getSingleLogOut() {
+    return $this->settings->get('logout.enable_single_logout');
+  }
+
 }

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\cas\Controller\LogoutController.
+ */
+
 namespace Drupal\cas\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -8,13 +13,21 @@ use Drupal\cas\Service\CasHelper;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+/**
+ * Class LogoutController.
+ */
 class LogoutController implements ContainerInjectionInterface {
+
   /**
+   * The cas helper used to get settings from.
+   *
    * @var \Drupal\cas\Service\CasHelper
    */
   protected $casHelper;
 
   /**
+   * The request stack to get the request object from.
+   *
    * @var \Symfony\Component\HttpFoundation\RequestStack;
    */
   protected $requestStack;
@@ -24,7 +37,7 @@ class LogoutController implements ContainerInjectionInterface {
    *
    * @param CasHelper $cas_helper
    *   The CasHelper to get the logout Url from.
-   * @ param RequestStack $request_stack
+   * @param RequestStack $request_stack
    *   The current request stack, to provide context.
    */
   public function __construct(CasHelper $cas_helper, RequestStack $request_stack) {
