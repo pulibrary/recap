@@ -1,23 +1,32 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\cas\Event\CasUserEvent.
+ */
+
 namespace Drupal\cas\Event;
 
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\user\UserInterface;
 use Drupal\cas\CasPropertyBag;
 
+/**
+ * Class CasUserEvent.
+ */
 class CasUserEvent extends Event {
 
   /**
-   * @var \Drupal\user\UserInterface
-   *
    * The user account to be altered by this event.
+   *
+   * @var \Drupal\user\UserInterface
    */
   protected $user;
 
   /**
+   * The user information returned from the CAS server.
+   *
    * @var \Drupal\cas\CasPropertyBag
-   *   The user information returned from the CAS server.
    */
   protected $casPropertyBag;
 
