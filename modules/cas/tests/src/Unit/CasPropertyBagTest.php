@@ -41,8 +41,6 @@ class CasPropertyBagTest extends UnitTestCase {
     $new_name = $this->randomMachineName(8);
     $bag->setUsername($new_name);
     $this->assertEquals($new_name, \PHPUnit_Framework_Assert::readAttribute($bag, 'username'));
-    $this->assertEquals(TRUE, \PHPUnit_Framework_Assert::readAttribute($bag, 'loginStatus'));
-    $this->assertEquals(TRUE, \PHPUnit_Framework_Assert::readAttribute($bag, 'registerStatus'));
   }
 
   /**
@@ -70,28 +68,6 @@ class CasPropertyBagTest extends UnitTestCase {
     );
     $bag->setAttributes($attributes);
     $this->assertEquals($attributes, \PHPUnit_Framework_Assert::readAttribute($bag, 'attributes'));
-  }
-
-  /**
-   * Test setting the login status.
-   *
-   * @covers ::setLoginStatus
-   */
-  public function testSetLoginStatus() {
-    $bag = new CasPropertyBag($this->randomMachineName(8));
-    $bag->setLoginStatus(FALSE);
-    $this->assertEquals(FALSE, \PHPUnit_Framework_Assert::readAttribute($bag, 'loginStatus'));
-  }
-
-  /**
-   * Test setting the register status.
-   *
-   * @covers ::setRegisterStatus
-   */
-  public function testSetRegisterStatus() {
-    $bag = new CasPropertyBag($this->randomMachineName(8));
-    $bag->setRegisterStatus(FALSE);
-    $this->assertEquals(FALSE, \PHPUnit_Framework_Assert::readAttribute($bag, 'registerStatus'));
   }
 
   /**
@@ -142,31 +118,4 @@ class CasPropertyBagTest extends UnitTestCase {
     $this->assertEquals($attributes, $bag->getAttributes());
   }
 
-  /**
-   * Test getting the login status.
-   *
-   * @covers ::getLoginStatus
-   */
-  public function testGetLoginStatus() {
-    $bag = new CasPropertyBag($this->randomMachineName(8));
-    $reflection = new \ReflectionClass($bag);
-    $property = $reflection->getProperty('loginStatus');
-    $property->setAccessible(TRUE);
-    $property->setValue($bag, FALSE);
-    $this->assertEquals(FALSE, $bag->getLoginStatus());
-  }
-    
-  /**
-   * Test getting the register status.
-   *
-   * @covers ::getRegisterStatus
-   */
-  public function testGetRegisterStatus() {
-    $bag = new CasPropertyBag($this->randomMachineName(8));
-    $reflection = new \ReflectionClass($bag);
-    $property = $reflection->getProperty('registerStatus');
-    $property->setAccessible(TRUE);
-    $property->setValue($bag, FALSE);
-    $this->assertEquals(FALSE, $bag->getRegisterStatus());
-  }
 }

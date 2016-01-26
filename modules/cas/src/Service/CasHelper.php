@@ -15,6 +15,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\Core\Logger\RfcLogLevel;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * Class CasHelper.
@@ -64,18 +65,18 @@ class CasHelper {
   const CHECK_ALWAYS = 0;
 
   /**
-   * Event type identifier for cas user alter.
+   * Event type identifier for user load events.
    *
    * @var string
    */
-  const CAS_USER_ALTER = 'cas.user_alter';
+  const EVENT_USER_LOAD = 'cas.user_load';
 
   /**
-   * Event type identifier for cas property alter.
+   * Event type identifier for pre auth events.
    *
    * @var string
    */
-  const CAS_PROPERTY_ALTER = 'cas.property_alter';
+  const EVENT_PRE_AUTH = 'cas.pre_auth';
 
   /**
    * Stores database connection.
@@ -106,6 +107,13 @@ class CasHelper {
   protected $loggerChannel;
 
   /**
+   * Used to get session data.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected $session;
+
+  /**
    * Constructor.
    *
    * @param ConfigFactoryInterface $config_factory
@@ -116,10 +124,13 @@ class CasHelper {
    *   The database service.
    * @param LoggerChannelFactory $logger_factory
    *   The logger channel factory.
+   * @param SessionInterface $session
+   *   The session handler.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, Connection $database_connection, LoggerChannelFactory $logger_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, Connection $database_connection, LoggerChannelFactory $logger_factory, SessionInterface $session) {
     $this->urlGenerator = $url_generator;
     $this->connection = $database_connection;
+    $this->session = $session;
 
     $this->settings = $config_factory->get('cas.settings');
     $this->loggerChannel = $logger_factory->get('cas');
@@ -303,7 +314,7 @@ class CasHelper {
    */
   public function storePgtSession($pgt_iou) {
     $pgt = $this->lookupPgtByPgtIou($pgt_iou);
-    $_SESSION['cas_pgt'] = $pgt;
+    $this->session->set('cas_pgt', $pgt);
     // Now that we have the pgt in the session,
     // we can delete the database mapping.
     $this->deletePgtMappingByPgtIou($pgt_iou);

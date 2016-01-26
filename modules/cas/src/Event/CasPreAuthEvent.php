@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\cas\Event\CasUserEvent.
+ * Contains \Drupal\cas\Event\CasPreAuthEvent.
  */
 
 namespace Drupal\cas\Event;
@@ -12,9 +12,9 @@ use Drupal\user\UserInterface;
 use Drupal\cas\CasPropertyBag;
 
 /**
- * Class CasUserEvent.
+ * Class CasPreAuthEvent.
  */
-class CasUserEvent extends Event {
+class CasPreAuthEvent extends Event {
 
   /**
    * The user account to be altered by this event.
@@ -29,6 +29,13 @@ class CasUserEvent extends Event {
    * @var \Drupal\cas\CasPropertyBag
    */
   protected $casPropertyBag;
+
+  /**
+   * Whether or not to allow this user to authenticate to Drupal.
+   *
+   * @var bool
+   */
+  public $allowLogin = TRUE;
 
   /**
    * Contructor.

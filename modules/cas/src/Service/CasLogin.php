@@ -7,11 +7,12 @@
 
 namespace Drupal\cas\Service;
 
+use Drupal\cas\Event\CasPreAuthEvent;
+use Drupal\cas\Event\CasUserLoadEvent;
 use Drupal\cas\Exception\CasLoginException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
-use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Component\Utility\Crypt;
 use Drupal\user\UserInterface;
@@ -19,6 +20,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\cas\Event\CasUserEvent;
 use Drupal\cas\CasPropertyBag;
 use Drupal\cas\Event\CasPropertyEvent;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * Class CasLogin.
@@ -42,9 +44,9 @@ class CasLogin {
   /**
    * Used to get session data.
    *
-   * @var \Drupal\Core\Session\SessionManagerInterface
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
    */
-  protected $sessionManager;
+  protected $session;
 
   /**
    * Used when storing CAS login data.
@@ -67,17 +69,17 @@ class CasLogin {
    *   The settings.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
-   *   The session manager.
+   * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
+   *   The session.
    * @param \Drupal\Core\Database\Connection $database_connection
    *   The database connection.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
    */
-  public function __construct(ConfigFactoryInterface $settings, EntityTypeManagerInterface $entity_type_manager, SessionManagerInterface $session_manager, Connection $database_connection, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(ConfigFactoryInterface $settings, EntityTypeManagerInterface $entity_type_manager, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher) {
     $this->settings = $settings;
     $this->entityTypeManager = $entity_type_manager;
-    $this->sessionManager = $session_manager;
+    $this->session = $session;
     $this->connection = $database_connection;
     $this->eventDispatcher = $event_dispatcher;
   }
@@ -97,39 +99,43 @@ class CasLogin {
    *   Thrown if there was a problem logging in the user.
    */
   public function loginToDrupal(CasPropertyBag $property_bag, $ticket) {
-    // Fire CAS pre-login event to allow modules the opportunity to inspect
-    // the CAS data and deny login or registration for the user.
-    $this->eventDispatcher->dispatch(CasHelper::CAS_PROPERTY_ALTER, new CasPropertyEvent($property_bag));
+    // Dispatch an event that allows modules to change user data we received
+    // from CAS before attempting to use it to load a Drupal user.
+    // Auto-registration can also be disabled for this user if their account
+    // does not exist.
+    $user_load_event = new CasUserLoadEvent($property_bag);
+    $this->eventDispatcher->dispatch(CasHelper::EVENT_USER_LOAD, $user_load_event);
 
     $account = $this->userLoadByName($property_bag->getUsername());
     if (!$account) {
       $config = $this->settings->get('cas.settings');
       if ($config->get('user_accounts.auto_register') === TRUE) {
-        if (!$property_bag->getRegisterStatus()) {
-          $_SESSION['cas_temp_disable'] = TRUE;
+        if ($user_load_event->allowAutoRegister) {
+          $account = $this->registerUser($property_bag->getUsername());
+        }
+        else {
           throw new CasLoginException("Cannot register user, an event listener denied access.");
         }
-        $account = $this->registerUser($property_bag->getUsername());
       }
       else {
         throw new CasLoginException("Cannot login, local Drupal user account does not exist.");
       }
     }
 
-    // Dispatch additional CAS pre-login event to allow modules to alter the
-    // user object before logging them in (like to add user roles).
-    $this->eventDispatcher->dispatch(CasHelper::CAS_USER_ALTER, new CasUserEvent($account, $property_bag));
-
-    if (!$property_bag->getLoginStatus()) {
-      $_SESSION['cas_temp_disable'] = TRUE;
-      throw new CasLoginException("Cannot login, an event listener denied access.");
-    }
+    // Dispatch an event that allows modules to prevent this user from logging
+    // in and/or alter the user entity before we save it.
+    $pre_auth_event = new CasPreAuthEvent($account, $property_bag);
+    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_AUTH, $pre_auth_event);
 
     // Save user entity since event listeners may have altered it.
     $account->save();
 
+    if (!$pre_auth_event->allowLogin) {
+      throw new CasLoginException("Cannot login, an event listener denied access.");
+    }
+
     $this->userLoginFinalize($account);
-    $this->storeLoginSessionData($this->sessionManager->getId(), $ticket);
+    $this->storeLoginSessionData($this->session->getId(), $ticket);
   }
 
   /**
@@ -144,15 +150,15 @@ class CasLogin {
    * @throws CasLoginException
    *   Thrown if there was a problem registering the user.
    */
-  private function registerUser($username) {
+  protected function registerUser($username) {
     try {
       $user_storage = $this->entityTypeManager->getStorage('user');
       $account = $user_storage->create(array(
         'name' => $username,
         'status' => 1,
+        'pass' => $this->randomPassword(),
       ));
       $account->enforceIsNew();
-      $account->save();
       return $account;
     }
     catch (EntityStorageException $e) {
@@ -214,6 +220,16 @@ class CasLogin {
         array(Crypt::hashBase64($session_id), $plainsid, $ticket)
       )
       ->execute();
+  }
+
+  /**
+   * Wrapper for Drupal function user_password so we can stub it in unit tests.
+   *
+   * @return string
+   *   A random password.
+   */
+  protected function randomPassword() {
+    return user_password(30);
   }
 
 }
