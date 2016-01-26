@@ -4,8 +4,8 @@ type: module
 # core: 8.x
 configure: cas.settings
 
-# Information added by Drupal.org packaging script on 2016-01-07
+# Information added by Drupal.org packaging script on 2016-01-13
 version: '8.x-1.x-dev'
 core: '8.x'
 project: 'cas'
-datestamp: 1452199757
+datestamp: 1452704355

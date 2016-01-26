@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\cas\Event\CasPropertyEvent.
+ * Contains \Drupal\cas\Event\CasUserLoadEvent.
  */
 
 namespace Drupal\cas\Event;
@@ -11,9 +11,9 @@ use Symfony\Component\EventDispatcher\Event;
 use Drupal\cas\CasPropertyBag;
 
 /**
- * Class CasPropertyEvent.
+ * Class CasUserLoadEvent.
  */
-class CasPropertyEvent extends Event {
+class CasUserLoadEvent extends Event {
 
   /**
    * Store the CAS property bag.
@@ -22,6 +22,13 @@ class CasPropertyEvent extends Event {
    *   The CasPropertyBag for context.
    */
   protected $casPropertyBag;
+
+  /**
+   * Whether or not to allow CAS to auto-register this user.
+   *
+   * @var bool
+   */
+  public $allowAutoRegister = TRUE;
 
   /**
    * Constructor.

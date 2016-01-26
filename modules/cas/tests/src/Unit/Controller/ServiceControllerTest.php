@@ -95,12 +95,22 @@ class ServiceControllerTest extends UnitTestCase {
     $this->requestStack = $this->getMock('\Symfony\Component\HttpFoundation\RequestStack');
     $this->urlGenerator = $this->getMock('\Drupal\Core\Routing\UrlGeneratorInterface');
 
-    $this->requestObject = $this->getMock('\Symfony\Component\HttpFoundation\Request');
+    $this->requestObject = new \Symfony\Component\HttpFoundation\Request();
     $request_bag = $this->getMock('\Symfony\Component\HttpFoundation\ParameterBag');
     $query_bag = $this->getMock('\Symfony\Component\HttpFoundation\ParameterBag');
     $this->requestObject->query = $query_bag;
     $this->requestObject->request = $request_bag;
 
+    $storage = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage')
+                    ->setMethods(NULL)
+                    ->getMock();
+    $session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
+                    ->setConstructorArgs(array($storage))
+                    ->setMethods(NULL)
+                    ->getMock();
+    $session->start();
+
+    $this->requestObject->setSession($session);
 
 
     $this->serviceController = new TestServiceController(
@@ -138,12 +148,10 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testSingleLogout($returnto, $cas_temp_disable) {
+  public function testSingleLogout($returnto) {
     $this->setupRequestParameters(
       // returnto.
       $returnto,
-      // cas_temp_disable.
-      $cas_temp_disable,
       // logoutRequest.
       TRUE,
       // ticket.
@@ -168,12 +176,10 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testMissingTicketRedirectsHome($returnto, $cas_temp_disable) {
+  public function testMissingTicketRedirectsHome($returnto) {
     $this->setupRequestParameters(
       // returnto.
       $returnto,
-      // cas_temp_disable.
-      $cas_temp_disable,
       // logoutRequest.
       FALSE,
       // ticket.
@@ -189,9 +195,6 @@ class ServiceControllerTest extends UnitTestCase {
     }
 
     $this->assertRedirectedToFrontPageOnHandle();
-    if ($cas_temp_disable) {
-      $this->assertEquals(TRUE, $_SESSION['cas_temp_disable']);
-    }
   }
 
   /**
@@ -199,12 +202,10 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testSuccessfulLogin($returnto, $cas_temp_disable) {
+  public function testSuccessfulLogin($returnto) {
     $this->setupRequestParameters(
       // returnto.
       $returnto,
-      // cas_temp_disable.
-      $cas_temp_disable,
       // logoutRequest.
       FALSE,
       // ticket.
@@ -221,7 +222,7 @@ class ServiceControllerTest extends UnitTestCase {
 
     $validation_data = new CasPropertyBag('testuser');
 
-    $this->assertSuccessfulValidation($returnto, $cas_temp_disable);
+    $this->assertSuccessfulValidation($returnto);
 
     // Login should be called.
     $this->casLogin->expects($this->once())
@@ -229,9 +230,6 @@ class ServiceControllerTest extends UnitTestCase {
       ->with($this->equalTo($validation_data), $this->equalTo('ST-foobar'));
 
     $this->assertRedirectedToFrontPageOnHandle();
-    if ($cas_temp_disable) {
-      $this->assertEquals(TRUE, $_SESSION['cas_temp_disable']);
-    }
   }
 
   /**
@@ -239,12 +237,10 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testSuccessfulLoginProxyEnabled($returnto, $cas_temp_disable) {
+  public function testSuccessfulLoginProxyEnabled($returnto) {
     $this->setupRequestParameters(
       // returnto.
       $returnto,
-      // cas_temp_disable.
-      $cas_temp_disable,
       // logoutRequest.
       FALSE,
       // ticket.
@@ -254,7 +250,7 @@ class ServiceControllerTest extends UnitTestCase {
     $this->requestStack->expects($this->once())
       ->method('getCurrentRequest')
       ->will($this->returnValue($this->requestObject));
-    
+
     if ($returnto) {
       $this->assertDestinationSetFromReturnTo();
     }
@@ -264,7 +260,7 @@ class ServiceControllerTest extends UnitTestCase {
       ->method('isProxy')
       ->will($this->returnValue(TRUE));
 
-    $this->assertSuccessfulValidation($returnto, $cas_temp_disable, TRUE);
+    $this->assertSuccessfulValidation($returnto, TRUE);
 
     $validation_data = new CasPropertyBag('testuser');
     $validation_data->setPgt('testpgt');
@@ -280,9 +276,6 @@ class ServiceControllerTest extends UnitTestCase {
       ->with($this->equalTo('testpgt'));
 
     $this->assertRedirectedToFrontPageOnHandle();
-    if ($cas_temp_disable) {
-      $this->assertEquals(TRUE, $_SESSION['cas_temp_disable']);
-    }
   }
 
   /**
@@ -290,22 +283,20 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testTicketValidationError($returnto, $cas_temp_disable) {
+  public function testTicketValidationError($returnto) {
     $this->setupRequestParameters(
       // returnto.
       $returnto,
-      // cas_temp_disable.
-      $cas_temp_disable,
       // logoutRequest.
       FALSE,
       // ticket.
       TRUE
     );
-    
+
     $this->requestStack->expects($this->once())
       ->method('getCurrentRequest')
       ->will($this->returnValue($this->requestObject));
-    
+
     if ($returnto) {
       $this->assertDestinationSetFromReturnTo();
     }
@@ -320,9 +311,6 @@ class ServiceControllerTest extends UnitTestCase {
       ->method('loginToDrupal');
 
     $this->assertRedirectedToFrontPageOnHandle();
-    if ($cas_temp_disable) {
-      $this->assertEquals(TRUE, $_SESSION['cas_temp_disable']);
-    }
   }
 
   /**
@@ -330,27 +318,25 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testLoginError($returnto, $cas_temp_disable) {
+  public function testLoginError($returnto) {
     $this->setupRequestParameters(
       // returnto.
       $returnto,
-      // cas_temp_disable.
-      $cas_temp_disable,
       // logoutRequest.
       FALSE,
       // ticket.
       TRUE
     );
-    
+
     $this->requestStack->expects($this->once())
       ->method('getCurrentRequest')
       ->will($this->returnValue($this->requestObject));
-    
+
     if ($returnto) {
       $this->assertDestinationSetFromReturnTo();
     }
 
-    $this->assertSuccessfulValidation($returnto, $cas_temp_disable);
+    $this->assertSuccessfulValidation($returnto);
 
     // Login should throw an exception.
     $this->casLogin->expects($this->once())
@@ -358,9 +344,6 @@ class ServiceControllerTest extends UnitTestCase {
       ->will($this->throwException(new CasLoginException()));
 
     $this->assertRedirectedToFrontPageOnHandle();
-    if ($cas_temp_disable) {
-      $this->assertEquals(TRUE, $_SESSION['cas_temp_disable']);
-    }
   }
 
   /**
@@ -372,14 +355,10 @@ class ServiceControllerTest extends UnitTestCase {
    */
   public function parameterDataProvider() {
     return array(
-      // "returnto" not set, "cas_temp_disable" not set.
-      array(FALSE, FALSE),
-      // "returnto" set, "cas_temp_disable" not set.
-      array(TRUE, FALSE),
-      // "returnto" not set, "cas_temp_disable" set.
-      array(FALSE, TRUE),
-      // "returnto" set, "cas_temp_disable" set.
-      array(TRUE, TRUE),
+      // "returnto" not set.
+      array(FALSE),
+      // "returnto" set.
+      array(TRUE),
     );
   }
 
@@ -409,13 +388,10 @@ class ServiceControllerTest extends UnitTestCase {
   /**
    * Asserts that validation is executed.
    */
-  private function assertSuccessfulValidation($returnto, $cas_temp_disable, $for_proxy = FALSE) {
+  private function assertSuccessfulValidation($returnto, $for_proxy = FALSE) {
     $service_params = array();
     if ($returnto) {
       $service_params['returnto'] = 'node/1';
-    }
-    if ($cas_temp_disable) {
-      $service_params['cas_temp_disable'] = TRUE;
     }
 
     $validation_data = new CasPropertyBag('testuser');
@@ -440,14 +416,12 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @param bool $returnto
    *   If returnto param should be set.
-   * @param bool $cas_temp_disable
-   *   If cas_temp_disable param should be set.
    * @param bool $logout_request
    *   If logoutRequest param should be set.
    * @param bool $ticket
    *   If ticket param should be set.
    */
-  private function setupRequestParameters($returnto, $cas_temp_disable, $logout_request, $ticket) {
+  private function setupRequestParameters($returnto, $logout_request, $ticket) {
     // Request params.
     $map = array(
       array('logoutRequest', $logout_request),
@@ -469,7 +443,6 @@ class ServiceControllerTest extends UnitTestCase {
     // Query string params.
     $map = array(
       array('returnto', $returnto),
-      array('cas_temp_disable', $cas_temp_disable),
       array('ticket', $ticket),
     );
     $this->queryBag->expects($this->any())
@@ -494,13 +467,11 @@ class ServiceControllerTest extends UnitTestCase {
     if ($returnto) {
       $all['returnto'] = 'node/1';
     }
-    if ($cas_temp_disable) {
-      $all['cas_temp_disable'] = TRUE;
-    }
     if ($ticket) {
       $all['ticket'] = 'ST-foobar';
     }
     $this->queryBag->method('all')
       ->will($this->returnValue($all));
   }
+
 }

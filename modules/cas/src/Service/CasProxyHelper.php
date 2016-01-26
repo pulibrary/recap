@@ -12,6 +12,7 @@ use GuzzleHttp\Exception\ClientException;
 use Drupal\Component\Utility\UrlHelper;
 use GuzzleHttp\Cookie\CookieJar;
 use Drupal\cas\Exception\CasProxyException;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * Class CasProxyHelper.
@@ -33,16 +34,26 @@ class CasProxyHelper {
   protected $casHelper;
 
   /**
+   * Used to get session data.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
+   */
+  protected $session;
+
+  /**
    * Constructor.
    *
    * @param Client $http_client
    *   The HTTP Client library.
    * @param CasHelper $cas_helper
    *   The CAS Helper service.
+   * @param SessionInterface $session
+   *   The session manager.
    */
-  public function __construct(Client $http_client, CasHelper $cas_helper) {
+  public function __construct(Client $http_client, CasHelper $cas_helper, SessionInterface $session) {
     $this->httpClient = $http_client;
     $this->casHelper = $cas_helper;
+    $this->session = $session;
   }
 
   /**
@@ -57,7 +68,7 @@ class CasProxyHelper {
   private function getServerProxyUrl($target_service) {
     $url = $this->casHelper->getServerBaseUrl() . 'proxy';
     $params = array();
-    $params['pgt'] = $_SESSION['cas_pgt'];
+    $params['pgt'] = $this->session->get('cas_pgt');
     $params['targetService'] = $target_service;
     return $url . '?' . UrlHelper::buildQuery($params);
   }
@@ -80,10 +91,11 @@ class CasProxyHelper {
    *   or if there was is invalid use rsession data.
    */
   public function proxyAuthenticate($target_service) {
+    $cas_proxy_helper = $this->session->get('cas_proxy_helper');
     // Check to see if we have proxied this application already.
-    if (isset($_SESSION['cas_proxy_helper'][$target_service])) {
+    if (isset($cas_proxy_helper[$target_service])) {
       $cookies = array();
-      foreach ($_SESSION['cas_proxy_helper'][$target_service] as $cookie) {
+      foreach ($cas_proxy_helper[$target_service] as $cookie) {
         $cookies[$cookie['Name']] = $cookie['Value'];
       }
       $domain = $cookie['Domain'];
@@ -92,7 +104,7 @@ class CasProxyHelper {
       return $jar;
     }
 
-    if (!($this->casHelper->isProxy() && isset($_SESSION['cas_pgt']))) {
+    if (!($this->casHelper->isProxy() && $this->session->has('cas_pgt'))) {
       // We can't perform proxy authentication in this state.
       throw new CasProxyException("Session state not sufficient for proxying.");
     }
@@ -124,7 +136,8 @@ class CasProxyHelper {
       throw new CasProxyException($e->getMessage());
     }
     // Store in session storage for later reuse.
-    $_SESSION['cas_proxy_helper'][$target_service] = $cookie_jar->toArray();
+    $cas_proxy_helper[$target_service] = $cookie_jar->toArray();
+    $this->session->set('cas_proxy_helper', $cas_proxy_helper);
     $this->casHelper->log("Stored cookies from $target_service in session.");
     return $cookie_jar;
   }

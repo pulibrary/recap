@@ -34,20 +34,6 @@ class CasPropertyBag {
   protected $attributes;
 
   /**
-   * Whether or not user is allowed to log in.
-   *
-   * @var bool
-   */
-  protected $loginStatus;
-
-  /**
-   * Whether or not user is allowed to register an account.
-   *
-   * @var bool
-   */
-  protected $registerStatus;
-
-  /**
    * Contructor.
    *
    * @param string $user
@@ -55,8 +41,6 @@ class CasPropertyBag {
    */
   public function __construct($user) {
     $this->username = $user;
-    $this->loginStatus = TRUE;
-    $this->registerStatus = TRUE;
   }
 
   /**
@@ -90,26 +74,6 @@ class CasPropertyBag {
   }
 
   /**
-   * Login status property setter.
-   *
-   * @param bool $status
-   *   Whether or not user is allowed to log in.
-   */
-  public function setLoginStatus($status) {
-    $this->loginStatus = $status;
-  }
-
-  /**
-   * Register status property setter.
-   *
-   * @param bool $status
-   *   Whether or not user is allowed to register.
-   */
-  public function setRegisterStatus($status) {
-    $this->registerStatus = $status;
-  }
-
-  /**
    * Username property getter.
    *
    * @return string
@@ -137,26 +101,6 @@ class CasPropertyBag {
    */
   public function getAttributes() {
     return $this->attributes;
-  }
-
-  /**
-   * Login status getter.
-   *
-   * @return bool
-   *   The loginStatus property.
-   */
-  public function getLoginStatus() {
-    return $this->loginStatus;
-  }
-
-  /**
-   * Register status getter.
-   *
-   * @return bool
-   *   The registerStatus property.
-   */
-  public function getRegisterStatus() {
-    return $this->registerStatus;
   }
 
 }

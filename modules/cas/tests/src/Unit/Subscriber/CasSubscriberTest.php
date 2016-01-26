@@ -22,7 +22,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Condition\ConditionManager;
 use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Subscriber\CasSubscriber;
-    
+
 /**
  * CasSubscriber unit tests.
  *
@@ -32,7 +32,7 @@ use Drupal\cas\Subscriber\CasSubscriber;
  * @coversDefaultClass \Drupal\cas\Subscriber\CasSubscriber
  */
 class CasSubscriberTest extends UnitTestCase {
-  
+
   /**
    * The mocked current user.
    *
@@ -76,6 +76,13 @@ class CasSubscriberTest extends UnitTestCase {
   protected $event;
 
   /**
+   * The session.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\Session
+   */
+  protected $session;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
@@ -93,6 +100,15 @@ class CasSubscriberTest extends UnitTestCase {
     $this->event = $this->getMockBuilder('\Symfony\Component\HttpKernel\Event\GetResponseEvent')
                   ->disableOriginalConstructor()
                   ->getMock();
+
+    $storage = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage')
+                    ->setMethods(NULL)
+                    ->getMock();
+    $this->session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
+                          ->setConstructorArgs(array($storage))
+                          ->setMethods(NULL)
+                          ->getMock();
+    $this->session->start();
   }
 
   /**
@@ -303,6 +319,7 @@ class CasSubscriberTest extends UnitTestCase {
                              $this->currentUser,
                              $this->conditionManager,
                              $this->casHelper,
+                             $this->session
                            ))
                            ->setMethods(NULL)
                            ->getMock();
@@ -316,22 +333,24 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object = $this->getMock('\Symfony\Component\HttpFoundation\Request');
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
-    $this->requestStack->expects($this->once())
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
+    $this->requestStack->expects($this->any())
       ->method('getCurrentRequest')
       ->will($this->returnValue($request_object));
 
     $server->expects($this->any())
       ->method('get')
       ->will($this->returnValue('NotAKnownBot'));
-    
-    // We want to check that we've gotten past this point.
-    $_SESSION['cas_temp_disable'] = TRUE;
-    $cas_subscriber->handle($this->event);
 
+    // We want to check that we've gotten past this point.
+    $this->session->set('cas_temp_disable_auto_auth', TRUE);
+    $cas_subscriber->handle($this->event);
   }
 
   /**
-   * Test backing out when we have cas_temp_disable.
+   * Test backing out when we have cas_temp_disable_auto_auth.
    *
    * @covers ::handle
    * @covers ::__construct
@@ -357,18 +376,21 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object->attributes = $attributes;
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
     $this->requestStack->expects($this->any())
       ->method('getCurrentRequest')
       ->will($this->returnValue($request_object));
     // Set the session variable that should force backing out.
-    $_SESSION['cas_temp_disable'] = TRUE;
+    $this->session->set('cas_temp_disable_auto_auth', TRUE);
 
     $cas_subscriber->expects($this->never())
       ->method('handleForcedPath');
     $cas_subscriber->expects($this->never())
       ->method('handleGateway');
     $cas_subscriber->handle($this->event);
-    $this->assertEmpty($_SESSION);
+    $this->assertEmpty($this->session->all());
   }
   /**
    * Test handling a forced login path.
@@ -418,6 +440,9 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object->attributes = $attributes;
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
     $this->requestStack->expects($this->any())
       ->method('getCurrentRequest')
       ->will($this->returnValue($request_object));
@@ -428,6 +453,7 @@ class CasSubscriberTest extends UnitTestCase {
       ->method('setResponse');
     $cas_subscriber->expects($this->never())
       ->method('handleGateway');
+
     $cas_subscriber->handle($this->event);
   }
 
@@ -465,6 +491,9 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object->attributes = $attributes;
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
 
     // This assertion means we've made it through to gateway mode. Exit out.
     $request_object->expects($this->once())
@@ -475,7 +504,7 @@ class CasSubscriberTest extends UnitTestCase {
     $this->requestStack->expects($this->any())
       ->method('getCurrentRequest')
       ->will($this->returnValue($request_object));
-    
+
     $cas_subscriber->handle($this->event);
   }
 
@@ -513,6 +542,9 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object->attributes = $attributes;
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
     $condition = $this->getMockBuilder('\Drupal\Core\Condition\ConditionPluginBase')
                       ->disableOriginalConstructor()
                       ->getMock();
@@ -536,7 +568,7 @@ class CasSubscriberTest extends UnitTestCase {
     $this->requestStack->expects($this->any())
       ->method('getCurrentRequest')
       ->will($this->returnValue($request_object));
-    
+
     $cas_subscriber->handle($this->event);
   }
 
@@ -574,6 +606,9 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object->attributes = $attributes;
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
     $condition = $this->getMockBuilder('\Drupal\Core\Condition\ConditionPluginBase')
                       ->disableOriginalConstructor()
                       ->getMock();
@@ -600,7 +635,7 @@ class CasSubscriberTest extends UnitTestCase {
     $this->requestStack->expects($this->any())
       ->method('getCurrentRequest')
       ->will($this->returnValue($request_object));
-    
+
     $cas_subscriber->handle($this->event);
   }
 
@@ -639,6 +674,9 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object->attributes = $attributes;
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
     $condition = $this->getMockBuilder('\Drupal\Core\Condition\ConditionPluginBase')
                       ->disableOriginalConstructor()
                       ->getMock();
@@ -668,7 +706,7 @@ class CasSubscriberTest extends UnitTestCase {
     // means that we failed out checking paths.
     $this->casHelper->expects($this->never())
       ->method('getServerLoginUrl');
-    
+
     $cas_subscriber->handle($this->event);
   }
 
@@ -707,6 +745,9 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object->attributes = $attributes;
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
     $condition = $this->getMockBuilder('\Drupal\Core\Condition\ConditionPluginBase')
                       ->disableOriginalConstructor()
                       ->getMock();
@@ -732,13 +773,13 @@ class CasSubscriberTest extends UnitTestCase {
       ->method('getCurrentRequest')
       ->will($this->returnValue($request_object));
 
-    $_SESSION['cas_gateway_checked'] = TRUE;
+    $this->session->set('cas_gateway_checked', TRUE);
 
     // Asserting that CasHelper never gets asked for the server login url
     // means that we failed out checking paths.
     $this->casHelper->expects($this->never())
       ->method('getServerLoginUrl');
-    
+
     $cas_subscriber->handle($this->event);
   }
 
@@ -777,6 +818,9 @@ class CasSubscriberTest extends UnitTestCase {
     $request_object->attributes = $attributes;
     $server = $this->getMock('\Symfony\Component\HttpFoundation\ServerBag');
     $request_object->server = $server;
+    $request_object->expects($this->any())
+      ->method('getSession')
+      ->will($this->returnValue($this->session));
     $condition = $this->getMockBuilder('\Drupal\Core\Condition\ConditionPluginBase')
                       ->disableOriginalConstructor()
                       ->getMock();
@@ -809,6 +853,6 @@ class CasSubscriberTest extends UnitTestCase {
     $this->event->expects($this->once())
       ->method('setResponse');
     $cas_subscriber->handle($this->event);
-    $this->assertArrayHasKey('cas_gateway_checked', $_SESSION);
+    $this->assertArrayHasKey('cas_gateway_checked', $this->session->all());
   }
 }

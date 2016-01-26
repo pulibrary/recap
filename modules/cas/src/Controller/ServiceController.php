@@ -127,13 +127,12 @@ class ServiceController implements ContainerInjectionInterface {
       return Response::create('', 200);
     }
 
-    // Our CAS Subscriber, which implements forced redirect and gateway, will
-    // set this query string param which indicates we should disable the
-    // subscriber on the next redirect. This prevents an infinite redirect loop.
-    if ($request->query->has('cas_temp_disable')) {
-      $this->casHelper->log("Temp disable flag set, set session flag.");
-      $_SESSION['cas_temp_disable'] = TRUE;
-    }
+    // We will be redirecting the user below. To prevent the CasSubscriber from
+    // initiating an automatic authentiation on the that request (like forced
+    // auth or gateway auth) and potentially creating an authentication loop,
+    // we set a session variable instructing the CasSubscriber skip auto auth
+    // for that request.
+    $request->getSession()->set('cas_temp_disable_auto_auth', TRUE);
 
     /* If there is no ticket parameter on the request, the browser either:
      * (a) is returning from a gateway request to the CAS server in which

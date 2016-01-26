@@ -131,9 +131,10 @@ class CasSubscriber implements EventSubscriberInterface {
     // The service controller may have indicated that this current request
     // should not be automatically sent to CAS for authentication checking.
     // This is to prevent infinite redirect loops.
-    if (isset($_SESSION['cas_temp_disable'])) {
-      unset($_SESSION['cas_temp_disable']);
-      $this->casHelper->log("Temp disable flag set. Skip processing this request.");
+    $session = $this->requestStack->getCurrentRequest()->getSession();
+    if ($session->has('cas_temp_disable_auto_auth')) {
+      $session->remove('cas_temp_disable_auto_auth');
+      $this->casHelper->log("Temp disable flag set, skipping CAS subscriber.");
       return;
     }
 
@@ -170,7 +171,6 @@ class CasSubscriber implements EventSubscriberInterface {
     if ($this->conditionManager->execute($condition)) {
       $cas_login_url = $this->casHelper->getServerLoginUrl(array(
         'returnto' => $this->requestStack->getCurrentRequest()->getUri(),
-        'cas_temp_disable' => TRUE,
       ));
       $this->casHelper->log("Forced login path detected, redirecting to: $cas_login_url");
       $event->setResponse($this->createNonCachedRedirectToCasServer($cas_login_url));
@@ -213,16 +213,15 @@ class CasSubscriber implements EventSubscriberInterface {
     // so we don't keep doing it.
     if ($check_frequency === CasHelper::CHECK_ONCE) {
       // If the session var is already set, we know to back out.
-      if (isset($_SESSION['cas_gateway_checked'])) {
+      if ($this->requestStack->getCurrentRequest()->getSession()->has('cas_gateway_checked')) {
         $this->casHelper->log("Gateway already checked, will not check again.");
         return FALSE;
       }
-      $_SESSION['cas_gateway_checked'] = TRUE;
+      $this->requestStack->getCurrentRequest()->getSession()->set('cas_gateway_checked', TRUE);
     }
 
     $cas_login_url = $this->casHelper->getServerLoginUrl(array(
       'returnto' => $this->requestStack->getCurrentRequest()->getUri(),
-      'cas_temp_disable' => TRUE,
     ), TRUE);
     $this->casHelper->log("Gateway activated, redirecting to $cas_login_url");
 

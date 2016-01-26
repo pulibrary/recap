@@ -25,6 +25,29 @@ use GuzzleHttp\Psr7\Response;
 class CasProxyHelperTest extends UnitTestCase {
 
   /**
+   * The mocked session manager.
+   *
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $session;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
+    parent::setUp();
+
+    $storage = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage')
+      ->setMethods(NULL)
+      ->getMock();
+    $this->session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
+      ->setConstructorArgs(array($storage))
+      ->setMethods(NULL)
+      ->getMock();
+    $this->session->start();
+  }
+
+  /**
    * Test proxy authentication to a service.
    *
    * @covers ::proxyAuthenticate
@@ -35,24 +58,25 @@ class CasProxyHelperTest extends UnitTestCase {
    */
   public function testProxyAuthenticate($target_service, $cookie_domain, $already_proxied) {
     // Set up the fake pgt in the session.
-    $_SESSION['cas_pgt'] = $this->randomMachineName(24);
+    $this->session->set('cas_pgt', $this->randomMachineName(24));
 
     // Set up properties so the http client callback knows about them.
     $cookie_value = $this->randomMachineName(24);
 
     if ($already_proxied) {
       // Set up the fake session data.
-      $_SESSION['cas_proxy_helper'][$target_service][] = array(
+      $session_cas_proxy_helper[$target_service][] = array(
         'Name' => 'SESSION',
         'Value' => $cookie_value,
         'Domain' => $cookie_domain,
       );
+      $this->session->set('cas_proxy_helper', $session_cas_proxy_helper);
 
       $httpClient = new Client();
       $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
                         ->disableOriginalConstructor()
                         ->getMock();
-      $casProxyHelper = new CasProxyHelper($httpClient, $casHelper);
+      $casProxyHelper = new CasProxyHelper($httpClient, $casHelper, $this->session);
 
       $jar = $casProxyHelper->proxyAuthenticate($target_service);
       $cookie_array = $jar->toArray();
@@ -78,7 +102,7 @@ class CasProxyHelperTest extends UnitTestCase {
       $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
                         ->disableOriginalConstructor()
                         ->getMock();
-      $casProxyHelper = new CasProxyHelper($httpClient, $casHelper);
+      $casProxyHelper = new CasProxyHelper($httpClient, $casHelper, $this->session);
 
       // The casHelper expects to be called for a few things.
       $casHelper->expects($this->once())
@@ -90,9 +114,9 @@ class CasProxyHelperTest extends UnitTestCase {
 
 
       $jar = $casProxyHelper->proxyAuthenticate($target_service);
-      $this->assertEquals('SESSION', $_SESSION['cas_proxy_helper'][$target_service][0]['Name']);
-      $this->assertEquals($cookie_value, $_SESSION['cas_proxy_helper'][$target_service][0]['Value']);
-      $this->assertEquals($cookie_domain, $_SESSION['cas_proxy_helper'][$target_service][0]['Domain']);
+      $this->assertEquals('SESSION', $this->session->get('cas_proxy_helper')[$target_service][0]['Name']);
+      $this->assertEquals($cookie_value, $this->session->get('cas_proxy_helper')[$target_service][0]['Value']);
+      $this->assertEquals($cookie_domain, $this->session->get('cas_proxy_helper')[$target_service][0]['Domain']);
       $cookie_array = $jar->toArray();
       $this->assertEquals('SESSION', $cookie_array[0]['Name']);
       $this->assertEquals($cookie_value, $cookie_array[0]['Value']);
@@ -131,7 +155,7 @@ class CasProxyHelperTest extends UnitTestCase {
   public function testProxyAuthenticateException($is_proxy, $pgt_set, $target_service, $response, $client_exception, $exception_type, $exception_message) {
     if ($pgt_set) {
       // Set up the fake pgt in the session.
-      $_SESSION['cas_pgt'] = $this->randomMachineName(24);
+      $this->session->set('cas_pgt', $this->randomMachineName(24));
     }
     // Set up properties so the http client callback knows about them.
     $cookie_value = $this->randomMachineName(24);
@@ -163,7 +187,7 @@ class CasProxyHelperTest extends UnitTestCase {
     $handler = HandlerStack::create($mock);
     $httpClient = new Client(['handler' => $handler]);
 
-    $casProxyHelper = new CasProxyHelper($httpClient, $casHelper);
+    $casProxyHelper = new CasProxyHelper($httpClient, $casHelper, $this->session);
     $this->setExpectedException($exception_type, $exception_message);
     $jar = $casProxyHelper->proxyAuthenticate($target_service);
 
