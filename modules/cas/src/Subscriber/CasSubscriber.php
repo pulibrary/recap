@@ -123,8 +123,8 @@ class CasSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    // Don't do anything if this is a request from cron, drush, crawler, etc.
-    if ($this->isNotNormalRequest()) {
+    // Don't do anything if this is a request from a crawler.
+    if ($this->isCrawlerRequest()) {
       return;
     }
 
@@ -231,23 +231,16 @@ class CasSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Check is the current request is a normal web request from a user.
+   * Check is the current request is from a known list of web crawlers.
    *
-   * We don't want to perform any CAS redirects for things like cron
-   * and drush.
+   * We don't want to perform any CAS redirects in this case, because crawlers
+   * need to be able to index the pages.
    *
    * @return bool
-   *   Whether or not this is a normal request.
+   *   True if the request is coming from a crawler, false otherwise.
    */
-  private function isNotNormalRequest() {
+  private function isCrawlerRequest() {
     $current_request = $this->requestStack->getCurrentRequest();
-    if (stristr($current_request->server->get('SCRIPT_FILENAME'), 'xmlrpc.php')) {
-      return TRUE;
-    }
-    if (stristr($current_request->server->get('SCRIPT_FILENAME'), 'cron.php')) {
-      $this->casHelper->log("Skip processing requests for cron.");
-      return TRUE;
-    }
     if ($current_request->server->get('HTTP_USER_AGENT')) {
       $crawlers = array(
         'Google',
@@ -275,7 +268,7 @@ class CasSubscriber implements EventSubscriberInterface {
       // Return on the first find.
       foreach ($crawlers as $c) {
         if (stripos($current_request->server->get('HTTP_USER_AGENT'), $c) !== FALSE) {
-          $this->casHelper->log("Ignoring request from $c");
+          $this->casHelper->log('CasSubscriber ignoring request from suspected crawler "$c"');
           return TRUE;
         }
       }
@@ -296,6 +289,7 @@ class CasSubscriber implements EventSubscriberInterface {
       'cas.proxyCallback',
       'cas.login',
       'cas.logout',
+      'system.cron',
     );
 
     $current_route = $this->routeMatcher->getRouteName();
