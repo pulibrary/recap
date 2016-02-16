@@ -34,6 +34,6 @@ cas.logout:
   defaults:
     _controller: '\Drupal\cas\Controller\LogoutController::logout'
   requirements:
-    _access: 'TRUE'
+    _user_is_logged_in: 'TRUE'
   options:
     _maintenance_access: TRUE

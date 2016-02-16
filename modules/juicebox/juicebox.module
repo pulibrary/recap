@@ -21,7 +21,37 @@ function juicebox_theme() {
       'file' => 'templates/juicebox.theme.inc',
       'render element' => 'element',
     ),
+    // Field template for use with relative-width galleries.
+    'field__juicebox_relative_width' => array(
+      'base hook' => 'field',
+    ),
   );
+}
+
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ */
+function juicebox_theme_suggestions_field_alter(array &$suggestions, array $variables) {
+  // Some themes (e.g. Bartik) style fields in special ways that breaks
+  // Juicebox output. Specifically they target a theme-specific selector,
+  // that identifies the field type (e.g. "field-type-image"), with special CSS.
+  // This CSS often assumes an inline list of images that have layout/width is
+  // being renderd, and apply float or table positioning on the field wrapper.
+  // This positioning can make relative width galleries display in very
+  // unpredictable ways. To address this we implement our own field template,
+  // based on the base core field template, for fields that contains a
+  // relative-width Juicebox gallery.
+  // @see https://www.drupal.org/node/2625806
+  if (isset($variables['element']['#formatter']) && $variables['element']['#formatter'] == 'juicebox_formatter'
+      && isset($variables['element'][0]['#gallery']) && $variables['element'][0]['#gallery'] instanceof JuiceboxGalleryInterface) {
+    $options = $variables['element'][0]['#gallery']->getOptions();
+    // If the gallery has a "%" char in the width configuration it's a
+    // relative-width gallery.
+    if (array_key_exists('gallerywidth', $options) && strpos($options['gallerywidth'], '%')) {
+      $suggestions[] = 'field__juicebox_relative_width';
+    }
+  }
 }
 
 

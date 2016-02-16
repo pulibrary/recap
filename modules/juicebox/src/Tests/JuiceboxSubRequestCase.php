@@ -8,7 +8,6 @@
 namespace Drupal\juicebox\Tests;
 
 use Drupal\Component\Utility\Html;
-use Drupal\views\Tests\ViewTestData;
 
 
 /**
@@ -18,18 +17,19 @@ use Drupal\views\Tests\ViewTestData;
  */
 class JuiceboxSubRequestCase extends JuiceboxBaseCase {
 
-  // For some totally vexing (and downright damming) reason, tests using views
-  // that contain file/image fields won't work if the field configuration is
-  // created progrmatically as part of the test itself. In other words if we
-  // use JuiceboxBaseCase::initNode() to add fields and attach them to a node,
-  // and then load a view conf that uses these fields, things won't work
-  // (the view will have broken handlers). Surely there is some cache clearing
-  // technique that will get around this? Anyway, after hours of bloody test
-  // debugging I have resourted to loading the field conf within a helper module
-  // (juicebox_mimic_article) as it seems to get around this. That module just
-  // mimics an "article" type so another option is to use the "standard" profile
-  // and remove juicebox_mimic_article below (but that's slow).
-  public static $modules = array('node', 'field', 'image', 'juicebox', 'views', 'juicebox_mimic_article', 'juicebox_test_views');
+  // For some totally vexing reason, tests using views that contain file/image
+  // fields won't work if the field configuration is created progrmatically as
+  // part of the test itself. In other words if we use
+  // JuiceboxBaseCase::initNode() to add fields and attach them to a node, and
+  // then load a view conf that uses these fields, things won't work (the view
+  // will have broken handlers). This much have somthing to do with the config
+  // schema or something (progratically created entities are not yet recognized
+  // when a view config that depends on them in loaded)? I have resourted to
+  // loading the field conf within a helper module (juicebox_mimic_article) as
+  // it seems to get around this. That module just mimics an "article" type so
+  // another option is to use the "standard" profile and remove
+  // juicebox_mimic_article below (but that's slow).
+  public static $modules = array('node', 'text', 'field', 'image', 'editor', 'juicebox', 'views', 'juicebox_mimic_article', 'juicebox_test_views');
   protected $instBundle = 'article';
   protected $instFieldName = 'field_image';
   // Uncomment the line below, and remove juicebox_mimic_article from the module
@@ -37,15 +37,12 @@ class JuiceboxSubRequestCase extends JuiceboxBaseCase {
   // instead of the one we create manually (should also work, but will be slow).
   // protected $profile = 'standard';
 
-  // Views used by this test.
-  public static $testViews = array('juicebox_test_row_formatter');
-
 
   /**
    * Define setup tasks.
    */
-  public function setUp($import_test_views = TRUE) {
-    parent::setUp($import_test_views);
+  public function setUp() {
+    parent::setUp();
     // Create and login user.
     $this->webUser = $this->drupalCreateUser(array('access content', 'access administration pages', 'administer site configuration', 'administer content types', 'administer nodes', 'bypass node access'));
     $this->drupalLogin($this->webUser);
@@ -53,10 +50,6 @@ class JuiceboxSubRequestCase extends JuiceboxBaseCase {
     // structure before this because that's been handled for us by
     // juicebox_mimic_article.
     $this->createNodeWithFile('image', FALSE, FALSE);
-    // Enable our test views.
-    if ($import_test_views) {
-      ViewTestData::createTestViews(get_class($this), array('juicebox_test_views'));
-    }
     // Start all cases as an anon user.
     $this->drupalLogout();
   }

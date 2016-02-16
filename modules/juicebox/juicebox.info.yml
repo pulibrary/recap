@@ -9,8 +9,8 @@ dependencies:
   - libraries
 configure: admin/config/media/juicebox
 
-# Information added by Drupal.org packaging script on 2015-10-10
-version: '8.x-2.0-beta1'
+# Information added by Drupal.org packaging script on 2016-02-13
+version: '8.x-2.0-beta3'
 core: '8.x'
 project: 'juicebox'
-datestamp: 1444491240
+datestamp: 1455394441

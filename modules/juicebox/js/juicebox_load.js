@@ -10,7 +10,7 @@
         var galleries = settings['juicebox'];
         // Loop-through galleries that were added during this request.
         for (var key in galleries) {
-          if (galleries.hasOwnProperty(key)) {
+          if (galleries.hasOwnProperty(key) && document.getElementById(key)) {
             // Instantiate each new gallery via the library. Take a copy to be
             // safe as we will delete the original settings reference after.
             var newGallery = $.extend({}, galleries[key]);

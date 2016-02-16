@@ -11,3 +11,7 @@ effects:
     weight: 0
     uuid: 17b2a910-8c6f-11e3-baa8-0800200c9a66
 langcode: en
+dependencies:
+  enforced:
+    module:
+      - juicebox

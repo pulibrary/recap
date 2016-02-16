@@ -148,7 +148,7 @@ class CasSubscriberTest extends UnitTestCase {
     $cas_subscriber->expects($this->never())
       ->method('isIgnoreableRoute');
     $cas_subscriber->expects($this->never())
-      ->method('isNotNormalRequest');
+      ->method('IsCrawlerRequest');
     $cas_subscriber->expects($this->never())
       ->method('handleForcedPath');
     $cas_subscriber->expects($this->never())
@@ -185,7 +185,7 @@ class CasSubscriberTest extends UnitTestCase {
     $cas_subscriber->expects($this->never())
       ->method('isIgnoreableRoute');
     $cas_subscriber->expects($this->never())
-      ->method('isNotNormalRequest');
+      ->method('IsCrawlerRequest');
     $cas_subscriber->expects($this->never())
       ->method('handleForcedPath');
     $cas_subscriber->expects($this->never())
@@ -221,7 +221,7 @@ class CasSubscriberTest extends UnitTestCase {
       ->method('getRouteName')
       ->will($this->returnValue('cas.service'));
     $cas_subscriber->expects($this->never())
-      ->method('isNotNormalRequest');
+      ->method('IsCrawlerRequest');
     $cas_subscriber->expects($this->never())
       ->method('handleForcedPath');
     $cas_subscriber->expects($this->never())
@@ -233,13 +233,11 @@ class CasSubscriberTest extends UnitTestCase {
    * Test backing out when the request comes from specific automated sources.
    *
    * @covers ::handle
-   * @covers ::isNotNormalRequest
+   * @covers ::isCrawlerRequest
    * @covers ::__construct
    * @covers ::isIgnoreableRoute
-   *
-   * @dataProvider handleIsNotNormalRequestDataProvider
    */
-  public function testHandleIsNotNormalRequest($method_param, $method_value) {
+  public function testHandleDoesNothingWhenWebCrawlerRequest() {
     $config_factory = $this->getConfigFactoryStub();
     $cas_subscriber = $this->getMockBuilder('\Drupal\cas\Subscriber\CasSubscriber')
                            ->setConstructorArgs(array(
@@ -267,7 +265,7 @@ class CasSubscriberTest extends UnitTestCase {
       ->will($this->returnValue($request_object));
 
     $map = array(
-      array($method_param, NULL, FALSE, $method_value),
+      array('HTTP_USER_AGENT', NULL, FALSE, 'gsa-crawler'),
     );
     $server->expects($this->any())
       ->method('get')
@@ -277,39 +275,21 @@ class CasSubscriberTest extends UnitTestCase {
     $cas_subscriber->expects($this->never())
       ->method('handleGateway');
     $cas_subscriber->handle($this->event);
-
   }
 
   /**
-   * Provides parameters for testHandleIsNotNormalRequest.
+   * Tests that a request from a non-crawler proceeds as normal.
    *
-   * @return array
-   *  Parameters.
-   *
-   * @see \Drupal\Tests\cas\Unit\Subscriber\CasSubscriber::testHandleIsNotNormalRequest
-   */
-  public function handleIsNotNormalRequestDataProvider() {
-    // Request is from xmlrpc.php.
-    $params[] = array('SCRIPT_FILENAME', 'xmlrpc.php');
-
-    // Request is from cron.php.
-    $params[] = array('SCRIPT_FILENAME', 'cron.php');
-
-    // Request is from a known crawler.
-    $params[] = array('HTTP_USER_AGENT', 'gsa-crawler');
-
-    return $params;
-  }
-
-  /**
-   * Test passing through isNotNormalRequest when user agent is not a bot.
+   * @todo This test is not really great. It has too much knowledge about the
+   *       implementation of the method it's testing, specifically when
+   *       trying to ensure that we "got past" the web crawler check.
    *
    * @covers ::handle
-   * @covers ::isNotNormalRequest
+   * @covers ::isCrawlerRequest
    * @covers ::__construct
    * @covers ::isIgnoreableRoute
    */
-  public function testHandleIsNotNormalRequestPassThrough() {
+  public function testHandleDoesNotBackoutWhenNonCrawlerRequest() {
     $config_factory = $this->getConfigFactoryStub();
     $cas_subscriber = $this->getMockBuilder('\Drupal\cas\Subscriber\CasSubscriber')
                            ->setConstructorArgs(array(
