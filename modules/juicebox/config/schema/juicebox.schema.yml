@@ -135,3 +135,30 @@ field.formatter.settings.juicebox_formatter:
       type: string
       label: 'Title source'
     <<: *juicebox_formatter_common
+
+views.style.juicebox:
+  type: views_style
+  label: 'Juicebox'
+  mapping:
+    image_field:
+      type: string
+      label: 'Image field'
+    image_field_style:
+      type: string
+      label: 'Image field style'
+    thumb_field:
+      type: string
+      label: 'Thumb field'
+    thumb_field_style:
+      type: string
+      label: 'Thumb field style'
+    title_field:
+      type: string
+      label: 'Title field'
+    caption_field:
+      type: string
+      label: 'Caption field'
+    show_title:
+      type: boolean
+      label: 'Show title'
+    <<: *juicebox_formatter_common

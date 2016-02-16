@@ -7,7 +7,6 @@ dependencies:
     - field.field.node.article.field_image
     - node.type.article
   module:
-    - entity_reference
     - image
     - text
 id: node.article.default
