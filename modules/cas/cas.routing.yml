@@ -21,6 +21,7 @@ cas.service:
     _access: 'TRUE'
   options:
     _maintenance_access: TRUE
+    no_cache: TRUE
 cas.proxyCallback:
     path: '/casproxycallback'
     defaults:
@@ -29,6 +30,7 @@ cas.proxyCallback:
         _access: 'TRUE'
     options:
       _maintenance_access: TRUE
+      no_cache: TRUE
 cas.logout:
   path: '/caslogout'
   defaults:
@@ -37,3 +39,4 @@ cas.logout:
     _user_is_logged_in: 'TRUE'
   options:
     _maintenance_access: TRUE
+    no_cache: TRUE

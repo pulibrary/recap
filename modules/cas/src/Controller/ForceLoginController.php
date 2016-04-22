@@ -61,6 +61,9 @@ class ForceLoginController implements ContainerInjectionInterface {
     $cas_login_url = $this->casHelper->getServerLoginUrl($query_params);
     $this->casHelper->log("Cas forced login route, redirecting to: $cas_login_url");
 
+    // This response is OK to cache, but since the redirect URL is dependent on
+    // the configured server settings, we need to add some cache metadata tied
+    // to the settings.
     $cacheable_metadata = new CacheableMetadata();
     $cacheable_metadata->addCacheTags(array(
       'config:cas.settings',

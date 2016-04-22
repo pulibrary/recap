@@ -9,7 +9,6 @@ namespace Drupal\Tests\cas\Unit\Service;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\cas\Service\CasValidator;
-use GuzzleHttp\Exception\ClientException;
 use Drupal\cas\CasPropertyBag;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
