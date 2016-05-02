@@ -151,3 +151,8 @@ ul li.responsive-tab {
     display: block !important;
   }
 }
+
+main {
+  z-index: 0;
+  position: relative;
+}
