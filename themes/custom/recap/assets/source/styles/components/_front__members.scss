@@ -1,0 +1,33 @@
+.members {
+  padding: 36px 0 55px;
+
+  h2 {
+    font-family: "Oswald";
+    margin-bottom: 36px;
+  }
+
+  li {
+    @include span(4 of 12);
+
+    display: inline-block;
+
+    &:last-child {
+      @include last;
+    }
+  }
+
+  a {
+    display: block;
+    opacity: 0.7;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  img {
+    display: block;
+    margin: 0 auto;
+    max-height: 65px;
+  }
+}

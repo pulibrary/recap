@@ -1,0 +1,69 @@
+header {
+  @include clearfix;
+
+  background: $blue-4;
+  background-attachment: fixed;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  position: relative;
+  transition: all 0.6s ease 0s;
+  width: 100%;
+  z-index: 5;
+}
+
+.separator {
+  background-color: $blue-1;
+  border-color: $blue-1;
+  color: $blue-1;
+  height: 1px;
+  margin-bottom: 30px;
+  width: 40px;
+}
+
+.banner {
+  @include linear-gradient(lighten($blue-3, 5), lighten($blue-3, 20));
+
+  height: 530px;
+  position: relative;
+
+  h1 {
+    font: 150px "Oswald";
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin: 0;
+    padding: 20px 0 0;
+    position: relative;
+    text-align: center;
+    z-index: 2;
+  }
+
+  h2 {
+    font: 18px "Vollkorn";
+    font-style: italic;
+    font-weight: bold;
+    margin: 0;
+    position: relative;
+    text-transform: capitalize;
+    z-index: 2;
+  }
+
+  img {
+    bottom: 0;
+    opacity: 0.2;
+    position: absolute;
+    z-index: 1;
+  }
+}
+
+header.clone {
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  transform: translateY(-100%);
+  transition: 0.2s transform cubic-bezier(0.3, 0.73, 0.3, 0.74);
+}
+
+body.down header.clone {
+  transform: translateY(0);
+}
