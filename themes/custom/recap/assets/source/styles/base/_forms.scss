@@ -1,0 +1,17 @@
+select {
+  background: $gray-light;
+  border: 1px solid $gray-light;
+  height: 1.8em;
+  outline: none;
+}
+
+select[multiple],
+select[size] {
+  height: auto;
+}
+
+input[type="text"]:focus {
+  border-color: $yellow;
+  box-shadow: inset 0 1px 3px $box-shadow, 0 0 5px $box-shadow-yellow;
+  outline: none;
+}

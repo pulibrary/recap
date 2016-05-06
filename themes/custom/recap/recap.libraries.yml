@@ -1,11 +1,11 @@
 global-css:
   css:
     theme:
-      css/recap.styles.css: {}
+      assets/public/styles/recap.styles.min.css: {}
       # css/print.css: { media: print }
 
 global-js:
   js:
-    js/script.js: {}
+    assets/public/scripts/recap.script.min.js: {}
   dependencies:
     - core/jquery
