@@ -6,6 +6,6 @@ global-css:
 
 global-js:
   js:
-    assets/public/scripts/recap.script.min.js: {}
+    assets/public/scripts/recap.scripts.min.js: {}
   dependencies:
     - core/jquery
