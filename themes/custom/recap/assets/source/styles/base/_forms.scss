@@ -1,3 +1,27 @@
+form {
+  overflow: hidden;
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+input,
+textarea {
+  border-radius: 4px;
+  margin: 0;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+.js-form-item textarea:focus {
+  border-color: $yellow;
+  box-shadow: inset 0 1px 3px $box-shadow, 0 0 5px $box-shadow-yellow;
+  outline: none;
+}
+
 select {
   background: $gray-light;
   border: 1px solid $gray-light;
@@ -10,8 +34,42 @@ select[size] {
   height: auto;
 }
 
-input[type="text"]:focus {
-  border-color: $yellow;
-  box-shadow: inset 0 1px 3px $box-shadow, 0 0 5px $box-shadow-yellow;
-  outline: none;
+.js-form-item {
+  padding: 20px 20px 0 0;
+}
+
+.js-form-item label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.js-form-item input,
+.js-form-item textarea {
+  border: 1px solid $gray;
+  margin-top: 6px;
+  padding: 6px;
+  width: 100%;
+}
+
+.form-actions {
+  height: auto;
+  margin-bottom: 20px;
+  padding: 20px 20px 0 0;
+}
+
+.form-actions .button {
+  background: $blue-3;
+  border: 0;
+  color: $black;
+  cursor: pointer;
+  float: left;
+  font-weight: bold;
+  margin: 10px 20px 0 0;
+  padding: 8px 16px;
+
+  &:hover,
+  &:focus {
+    background: $blue-2;
+  }
 }
