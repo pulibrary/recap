@@ -59,26 +59,19 @@
         </aside>
       {% endif %}
 
-      {% if page.sidebar_second %}
-        <aside class="layout-sidebar-second" role="complementary">
-          {{ page.sidebar_second }}
-        </aside>
-      {% endif %}
-    <!--   </div>
-      <div class="recent-posts">
-        <div class="layout-container">
-          <h2>Recent Posts</h2>
-        </div>
-    -->   </div>
-      <div class="members">
-        <div class="layout-container">
-          <h2>Members of ReCAP</h2>
-          <ul>
-            <li><a href="http://www.columbia.edu/" target="_blank"><img src="/themes/custom/recap/assets/public/images/columbia-logo.png" alt="Columbia University"></a></li>
-            <li><a href="http://www.nypl.org/" target="_blank"><img src="/themes/custom/recap/assets/public/images/nypl-logo.png" alt="New York Public Library"></a></li>
-            <li><a href="http://www.princeton.edu/" target="_blank"><img src="/themes/custom/recap/assets/public/images/princeton-logo.png" alt="Princeton University"></a></li>
-          </ul>
-        </div>
+    {% if page.sidebar_second %}
+      <aside class="layout-sidebar-second" role="complementary">
+        {{ page.sidebar_second }}
+      </aside>
+    {% endif %}
+    <div class="members">
+      <div class="layout-container">
+        <h2>Members of ReCAP</h2>
+        <ul>
+          <li><a href="http://www.columbia.edu/" target="_blank"><img src="/themes/custom/recap/assets/public/images/columbia-logo.png" alt="Columbia University"></a></li>
+          <li><a href="http://www.nypl.org/" target="_blank"><img src="/themes/custom/recap/assets/public/images/nypl-logo.png" alt="New York Public Library"></a></li>
+          <li><a href="http://www.princeton.edu/" target="_blank"><img src="/themes/custom/recap/assets/public/images/princeton-logo.png" alt="Princeton University"></a></li>
+        </ul>
       </div>
     </main>
   </div>
