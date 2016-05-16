@@ -237,7 +237,7 @@ gulp.task('watch4drupal', function () {
  gulp.task('browser-sync4drupal', ['styles'], function() {
  browserSync.init({
    // Change as required
-   proxy: "recap.princeton.edu",
+   proxy: "recap-local.princeton.edu",
    socket: {
        // For local development only use the default Browsersync local URL.
        domain: 'localhost:3000'

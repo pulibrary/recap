@@ -10,18 +10,6 @@ $(document).ready(function() {
     // menu shows active parent
     $('#block-recap-main-menu li li:has(a.is-active)').parents('li').children('a').addClass('is-active');
 
-    // var menuToggle = $('#js-centered-navigation-mobile-menu').unbind();
-    //   $('#js-centered-navigation-menu').removeClass("show");
-
-    //   menuToggle.on('click', function(e) {
-    //     e.preventDefault();
-    //     $('#js-centered-navigation-menu').slideToggle(function(){
-    //       if($('#js-centered-navigation-menu').is(':hidden')) {
-    //         $('#js-centered-navigation-menu').removeAttr('style');
-    //       }
-    //     });
-    //   });
-
     // Cache the elements we'll need
     var menu = $('#block-recap-main-menu');
     var menuList = menu.find('ul:first');

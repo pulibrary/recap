@@ -52,3 +52,21 @@ ul {
 //     @include span(2 of 12);
 //   }
 // }
+
+
+// sticky footer
+html,
+body {
+  height: 100%;
+}
+
+.page-wrapper {
+  margin-bottom: -60px;
+  min-height: 100%;
+
+  &:after {
+    content: "";
+    display: block;
+    height: 60px;
+  }
+}
