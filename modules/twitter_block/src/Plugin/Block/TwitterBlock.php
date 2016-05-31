@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\twitter_block\Plugin\Block\TwitterBlock.
- */
-
 namespace Drupal\twitter_block\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
@@ -203,7 +198,7 @@ class TwitterBlock extends BlockBase {
 
     $config = $this->getConfiguration();
 
-    $render = [
+    $render['block'] = [
       '#type' => 'link',
       '#title' => 'Twitter feed',
       '#url' => Url::fromUri('https://twitter.com/twitterapi'),
@@ -217,47 +212,47 @@ class TwitterBlock extends BlockBase {
     ];
 
     if (!empty($config['theme'])) {
-      $render['#attributes']['data-theme'] = $config['theme'];
+      $render['block']['#attributes']['data-theme'] = $config['theme'];
     }
 
     if (!empty($config['link_color'])) {
-      $render['#attributes']['data-link-color'] = '#' . $config['link_color'];
+      $render['block']['#attributes']['data-link-color'] = '#' . $config['link_color'];
     }
 
     if (!empty($config['width'])) {
-      $render['#attributes']['width'] = $config['width'];
+      $render['block']['#attributes']['width'] = $config['width'];
     }
 
     if (!empty($config['height'])) {
-      $render['#attributes']['height'] = $config['height'];
+      $render['block']['#attributes']['height'] = $config['height'];
     }
 
     if (!empty($config['chrome'])) {
       $options = array_keys(array_filter($config['chrome']));
 
       if (count($options)) {
-        $render['#attributes']['data-chrome'] = implode(' ', $options);
+        $render['block']['#attributes']['data-chrome'] = implode(' ', $options);
       }
     }
 
     if (!empty($config['border_color'])) {
-      $render['#attributes']['data-border-color'] = '#' . $config['border_color'];
+      $render['block']['#attributes']['data-border-color'] = '#' . $config['border_color'];
     }
 
     if (!empty($config['language'])) {
-      $render['#attributes']['lang'] = $config['language'];
+      $render['block']['#attributes']['lang'] = $config['language'];
     }
 
     if (!empty($config['tweet_limit'])) {
-      $render['#attributes']['data-tweet-limit'] = $config['tweet_limit'];
+      $render['block']['#attributes']['data-tweet-limit'] = $config['tweet_limit'];
     }
 
     if (!empty($config['related'])) {
-      $render['#attributes']['data-related'] = $config['related'];
+      $render['block']['#attributes']['data-related'] = $config['related'];
     }
 
     if (!empty($config['polite'])) {
-      $render['#attributes']['aria-polite'] = $config['polite'];
+      $render['block']['#attributes']['aria-polite'] = $config['polite'];
     }
 
     return $render;
@@ -278,7 +273,7 @@ class TwitterBlock extends BlockBase {
       'language' => '',
       'tweet_limit' => '',
       'related' => '',
-      'polite' => [],
+      'polite' => '',
     ];
   }
 

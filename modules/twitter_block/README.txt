@@ -16,6 +16,7 @@ Current Maintainers:
  * ZenDoodles http://drupal.org/user/226976
  * cweagans http://drupal.org/user/404732
  * Devin Carlson http://drupal.org/user/290182
+ * Naveen Valecha http://drupal.org/user/2665733
 
 Twitter Block is a lightweight module which allows administrators to create
 blocks which display embedded timelines.
@@ -36,7 +37,7 @@ INSTALLATION
 ------------
 
 Twitter Block can be installed via the standard Drupal installation process
-(http://drupal.org/documentation/install/modules-themes/modules-7).
+(http://drupal.org/documentation/install/modules-themes/modules-8).
 
 PERMISSIONS
 ------------
