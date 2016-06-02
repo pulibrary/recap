@@ -2,17 +2,17 @@
 
 /**
  * @file
- * Contains \Drupal\libraries\ExternalLibrary\Exception\LibraryDefinitionNotFoundException.
+ * Contains \Drupal\libraries\ExternalLibrary\Exception\LibraryTypeNotFoundException.
  */
 
 namespace Drupal\libraries\ExternalLibrary\Exception;
-use Drupal\libraries\ExternalLibrary\LibraryIdAccessorTrait;
-use Exception;
+
+use Drupal\libraries\ExternalLibrary\Utility\LibraryIdAccessorTrait;
 
 /**
- * Provides an exception for a library definition that cannot be found.
+ * Provides an exception for a library definition without a type declaration.
  */
-class LibraryClassNotFoundException extends \RuntimeException {
+class LibraryTypeNotFoundException extends \RuntimeException {
 
   use LibraryIdAccessorTrait;
 
@@ -35,7 +35,7 @@ class LibraryClassNotFoundException extends \RuntimeException {
     \Exception $previous = NULL
   ) {
     $this->libraryId = (string) $library_id;
-    $message = $message ?: "The library class for the library '{$this->libraryId}' could not be found.";
+    $message = $message ?: "The library type for the library '{$this->libraryId}' could not be found.";
     parent::__construct($message, $code, $previous);
   }
 

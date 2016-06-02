@@ -11,6 +11,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ExampleController implements ContainerInjectionInterface {
+
   /**
    * Injects BookManager Service.
    */
@@ -94,4 +95,5 @@ class ExampleController implements ContainerInjectionInterface {
   public function cache() {
     return $this->buildPage('example_callback');
   }
+
 }
