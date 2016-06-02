@@ -7,7 +7,6 @@
 
 namespace Drupal\libraries\StreamWrapper;
 
-
 /**
  * Provides a trait for local streams that are not publicly accessible.
  *

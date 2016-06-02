@@ -11,7 +11,6 @@ use Drupal\Core\Extension\Extension as CoreExtension;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 
-
 /**
  * @todo
  */
@@ -89,6 +88,4 @@ class ExtensionHandler implements ExtensionHandlerInterface {
     );
   }
 
-
 }
-

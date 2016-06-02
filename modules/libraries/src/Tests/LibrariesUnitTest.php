@@ -54,4 +54,5 @@ class LibrariesUnitTest extends KernelTestBase {
     libraries_prepare_files($library, NULL, NULL);
     $this->assertEqual($expected, $library, 'libraries_prepare_files() works correctly.');
   }
+
 }
