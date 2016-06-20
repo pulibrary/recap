@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Provides any admin-specific functionality
- */
-
 namespace Drupal\libraries_test\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;

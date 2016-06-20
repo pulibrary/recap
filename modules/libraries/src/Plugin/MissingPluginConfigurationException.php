@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\Exception\MissingPluginConfigurationException.
- */
-
 namespace Drupal\libraries\Plugin;
 
 use Drupal\Component\Plugin\Exception\PluginException;
@@ -53,4 +48,3 @@ class MissingPluginConfigurationException extends PluginException {
   }
 
 }
-

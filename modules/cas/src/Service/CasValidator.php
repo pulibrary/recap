@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \src\Drupal\Service\CasValidator.
- */
-
 namespace Drupal\cas\Service;
 
 use Drupal\cas\Exception\CasValidateException;

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\ProxyCallbackController.
- */
-
 namespace Drupal\cas\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;

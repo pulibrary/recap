@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\ExternalLibrary\Remote\RemoteLibraryInterface.
- */
-
 namespace Drupal\libraries\ExternalLibrary\Remote;
 
 use Drupal\libraries\ExternalLibrary\LibraryInterface;

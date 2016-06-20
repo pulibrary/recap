@@ -13,6 +13,14 @@ cas.login:
     _access: 'TRUE'
   options:
     _maintenance_access: TRUE
+cas.legacy_login:
+  path: '/cas'
+  defaults:
+    _controller: '\Drupal\cas\Controller\ForceLoginController::forceLogin'
+  requirements:
+    _access: 'TRUE'
+  options:
+    _maintenance_access: TRUE
 cas.service:
   path: '/casservice'
   defaults:

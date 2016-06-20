@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Definition of \Drupal\libraries\Tests\LibrariesWebTest.
- */
-
 namespace Drupal\libraries\Tests;
 
 use Drupal\Component\Utility\SafeMarkup;
@@ -27,7 +22,7 @@ class LibrariesWebTest extends WebTestBase {
    *
    * @var array
    */
-  static $modules = array('libraries', 'libraries_test');
+  public static $modules = array('libraries', 'libraries_test');
 
   /**
    * The URL generator used in this test.

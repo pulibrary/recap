@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\Extension\ExtensionHandler.
- */
-
 namespace Drupal\libraries\Extension;
 
 use Drupal\Core\Extension\Extension as CoreExtension;

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Service\CasLogin.
- */
-
 namespace Drupal\cas\Service;
 
 use Drupal\cas\Event\CasPreAuthEvent;

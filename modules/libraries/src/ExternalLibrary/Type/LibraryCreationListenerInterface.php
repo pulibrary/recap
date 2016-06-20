@@ -18,4 +18,3 @@ interface LibraryCreationListenerInterface {
   public function onLibraryCreate(LibraryInterface $library);
 
 }
-

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\Plugin\libraries\Locator\StreamLocatorTrait.
- */
-
 namespace Drupal\libraries\Plugin\libraries\Locator;
 
 use Drupal\Core\File\FileSystemInterface;

@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\libraries\Plugin\libraries\VersionDetector;
+
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\libraries\ExternalLibrary\Exception\UnknownLibraryVersionException;
@@ -16,6 +17,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * particular format in a changelog or readme file, for example.
  *
  * @VersionDetector("line_pattern")
+ *
+ * @ingroup libraries
  */
 class LinePatternDetector extends PluginBase implements VersionDetectorInterface, ContainerFactoryPluginInterface {
 

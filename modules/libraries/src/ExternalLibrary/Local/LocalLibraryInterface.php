@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\ExternalLibrary\Local\LocalLibraryInterface.
- */
-
 namespace Drupal\libraries\ExternalLibrary\Local;
 
 use Drupal\Component\Plugin\Factory\FactoryInterface;

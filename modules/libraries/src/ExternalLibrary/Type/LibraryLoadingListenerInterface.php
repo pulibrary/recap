@@ -18,4 +18,3 @@ interface LibraryLoadingListenerInterface {
   public function onLibraryLoad(LibraryInterface $library);
 
 }
-

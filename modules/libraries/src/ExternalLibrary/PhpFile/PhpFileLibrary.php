@@ -1,16 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\ExternalLibrary\PhpFile\PhpFileLibrary.
- */
-
 namespace Drupal\libraries\ExternalLibrary\PhpFile;
 
 use Drupal\Component\Plugin\Factory\FactoryInterface;
 use Drupal\libraries\ExternalLibrary\Exception\LibraryNotInstalledException;
 use Drupal\libraries\ExternalLibrary\LibraryBase;
 use Drupal\libraries\ExternalLibrary\Local\LocalLibraryTrait;
+use Drupal\libraries\ExternalLibrary\Type\LibraryTypeInterface;
 
 /**
  * Provides a base PHP file library implementation.
@@ -33,17 +29,20 @@ class PhpFileLibrary extends LibraryBase implements PhpFileLibraryInterface {
    *   The library ID.
    * @param array $definition
    *   The library definition array.
+   * @param \Drupal\libraries\ExternalLibrary\Type\LibraryTypeInterface $type
+   *   The library type of this library.
    */
-  public function __construct($id, array $definition) {
-    parent::__construct($id, $definition);
+  public function __construct($id, array $definition, LibraryTypeInterface $type) {
+    parent::__construct($id, $definition, $type);
     $this->files = $definition['files'];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected static function definitionDefaults() {
-    return parent::definitionDefaults() + [
+  protected static function processDefinition(array &$definition) {
+    parent::processDefinition($definition);
+    $definition += [
       'files' => [],
     ];
   }

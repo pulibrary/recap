@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\cas\Subscriber\CasSubscriber.
- */
-
 namespace Drupal\cas\Subscriber;
 
 use Drupal\cas\CasRedirectResponse;
@@ -295,6 +290,7 @@ class CasSubscriber implements EventSubscriberInterface {
       'cas.service',
       'cas.proxyCallback',
       'cas.login',
+      'cas.legacy_login',
       'cas.logout',
       'system.cron',
     );

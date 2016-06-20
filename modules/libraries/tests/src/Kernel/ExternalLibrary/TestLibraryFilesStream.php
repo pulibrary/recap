@@ -47,7 +47,6 @@ class TestLibraryFilesStream extends LocalStream {
    * @param string $directory
    *   The directory within the Libraries API's tests directory that is to be
    *   searched for test library files.
-   *
    */
   public function __construct(ModuleHandlerInterface $module_handler, TranslationInterface $string_translation, $directory) {
     $this->moduleHandler = $module_handler;

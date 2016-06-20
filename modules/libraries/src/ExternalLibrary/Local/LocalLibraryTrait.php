@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\ExternalLibrary\Local\LocalLibraryTrait.
- */
-
 namespace Drupal\libraries\ExternalLibrary\Local;
 use Drupal\libraries\ExternalLibrary\Exception\LibraryNotInstalledException;
 

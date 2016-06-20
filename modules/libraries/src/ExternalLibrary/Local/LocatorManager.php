@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\ExternalLibrary\Local\LocatorManager.
- */
-
 namespace Drupal\libraries\ExternalLibrary\Local;
 
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -32,7 +27,6 @@ class LocatorManager extends DefaultPluginManager {
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct('Plugin/libraries/Locator', $namespaces, $module_handler, LocatorInterface::class, Locator::class);
-    // @todo Document this hook.
     $this->alterInfo('libraries_locator_info');
     $this->setCacheBackend($cache_backend, 'libraries_locator_info');
   }

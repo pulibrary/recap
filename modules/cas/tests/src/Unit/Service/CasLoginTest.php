@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\Tests\cas\Unit\Service\CasLoginTest.
- */
-
 namespace Drupal\Tests\cas\Unit\Service;
 
 use Drupal\cas\Event\CasPreAuthEvent;

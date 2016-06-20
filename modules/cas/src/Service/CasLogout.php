@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Service\CasLogout.
- */
-
 namespace Drupal\cas\Service;
 
 use Drupal\cas\Exception\CasSloException;

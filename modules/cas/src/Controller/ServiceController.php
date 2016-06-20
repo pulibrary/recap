@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Controller\ServiceController.
- */
-
 namespace Drupal\cas\Controller;
 
 use Drupal\cas\Exception\CasLoginException;

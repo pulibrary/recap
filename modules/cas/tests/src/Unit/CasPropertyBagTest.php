@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\Tests\cas\Unit\CasPropertyBagTest.
- */
-
 namespace Drupal\Tests\cas\Unit;
 
 use Drupal\Tests\UnitTestCase;

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\ExternalLibrary\Utility\LibraryIdAccessorTrait.
- */
-
 namespace Drupal\libraries\ExternalLibrary\Utility;
 
 /**
