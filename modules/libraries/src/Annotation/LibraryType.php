@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\Annotation\LibraryType.
- */
-
 namespace Drupal\libraries\Annotation;
 
 use Drupal\Component\Annotation\PluginID;

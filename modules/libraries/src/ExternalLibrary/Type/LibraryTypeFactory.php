@@ -25,7 +25,6 @@ class LibraryTypeFactory extends DefaultPluginManager {
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct('Plugin/libraries/Type', $namespaces, $module_handler, LibraryTypeInterface::class, LibraryType::class);
-    // @todo Document this hook.
     $this->alterInfo('libraries_library_type_info');
     $this->setCacheBackend($cache_backend, 'libraries_library_type_info');
   }

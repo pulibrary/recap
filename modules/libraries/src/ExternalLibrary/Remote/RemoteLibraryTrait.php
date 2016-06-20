@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\ExternalLibrary\Remote\RemoteLibraryTrait.
- */
-
 namespace Drupal\libraries\ExternalLibrary\Remote;
 
 /**

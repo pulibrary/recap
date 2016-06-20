@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Definition of \Drupal\libraries\Tests\LibrariesUnitTest.
- */
-
 namespace Drupal\libraries\Tests;
 
 use Drupal\simpletest\KernelTestBase;

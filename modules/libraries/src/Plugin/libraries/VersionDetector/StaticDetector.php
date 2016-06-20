@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\libraries\Plugin\libraries\VersionDetector;
+
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\libraries\ExternalLibrary\Exception\UnknownLibraryVersionException;
 use Drupal\libraries\ExternalLibrary\Version\VersionDetectorInterface;

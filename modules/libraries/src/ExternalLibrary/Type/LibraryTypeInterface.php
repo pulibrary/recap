@@ -12,7 +12,6 @@ interface LibraryTypeInterface {
    *
    * @return string
    *   The library type ID.
-   *
    */
   public function getId();
 

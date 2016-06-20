@@ -27,7 +27,6 @@ class VersionDetectorManager extends DefaultPluginManager {
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct('Plugin/libraries/VersionDetector', $namespaces, $module_handler, VersionDetectorInterface::class, VersionDetector::class);
-    // @todo Document this hook.
     $this->alterInfo('libraries_version_detector_info');
     $this->setCacheBackend($cache_backend, 'libraries_version_detector_info');
   }

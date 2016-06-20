@@ -11,6 +11,8 @@ use org\bovigo\vfs\vfsStream;
 /**
  * Tests the line pattern version detector.
  *
+ * @group libraries
+ *
  * @coversDefaultClass \Drupal\libraries\Plugin\libraries\VersionDetector\LinePatternDetector
  */
 class LinePatternDetectorTest extends UnitTestCase {

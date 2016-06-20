@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\ExternalLibrary\Utility\DependencyAccessorTrait.
- */
-
 namespace Drupal\libraries\ExternalLibrary\Utility;
 
 /**

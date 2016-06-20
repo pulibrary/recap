@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\libraries\StreamWrapper\PrivateStreamTrait.
- */
-
 namespace Drupal\libraries\StreamWrapper;
 
 /**

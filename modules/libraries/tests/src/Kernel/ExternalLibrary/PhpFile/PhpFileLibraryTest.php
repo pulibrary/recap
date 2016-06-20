@@ -15,11 +15,6 @@ class PhpFileLibraryTest extends LibraryTypeKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['libraries', 'libraries_test'];
-
-  /**
-   * {@inheritdoc}
-   */
   protected function setUp() {
     parent::setUp();
 
