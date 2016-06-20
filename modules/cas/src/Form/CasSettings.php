@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Form\CasSettings.
- */
-
 namespace Drupal\cas\Form;
 
 use Drupal\Component\Plugin\Factory\FactoryInterface;

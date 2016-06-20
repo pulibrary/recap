@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Event\CasUserLoadEvent.
- */
-
 namespace Drupal\cas\Event;
 
 use Symfony\Component\EventDispatcher\Event;

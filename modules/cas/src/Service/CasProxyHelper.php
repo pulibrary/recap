@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Service\CasProxyHelper.
- */
-
 namespace Drupal\cas\Service;
 
 use GuzzleHttp\Client;

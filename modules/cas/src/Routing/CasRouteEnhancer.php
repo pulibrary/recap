@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Routing\CasRouteEnhancer.
- */
-
 namespace Drupal\cas\Routing;
 
 use Drupal\Core\Routing\Enhancer\RouteEnhancerInterface;

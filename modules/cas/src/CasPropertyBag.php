@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\CasPropertyBag.
- */
-
 namespace Drupal\cas;
 
 /**

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\cas\Unit\Routing\CasRouteEnhancerTest.
- */
-
 namespace Drupal\Tests\cas\Unit\Routing;
 
 use Drupal\Tests\UnitTestCase;

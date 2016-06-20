@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\Tests\cas\Unit\Controller\ForceLoginControllerTest.
- */
-
 namespace Drupal\Tests\cas\Unit\Controller;
 
 use Drupal\Core\Cache\CacheableMetadata;

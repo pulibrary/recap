@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\src\Service\CasHelper.
- */
-
 namespace Drupal\cas\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;

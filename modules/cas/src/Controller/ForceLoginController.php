@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Controller\ForceLoginController.
- */
-
 namespace Drupal\cas\Controller;
 
 use Drupal\cas\Service\CasHelper;

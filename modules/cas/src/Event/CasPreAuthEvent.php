@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cas\Event\CasPreAuthEvent.
- */
-
 namespace Drupal\cas\Event;
 
 use Symfony\Component\EventDispatcher\Event;
