@@ -1,6 +1,7 @@
 
 Libraries 8.x-3.x, xxxx-xx-xx
 -----------------------------
+#2756265 by rajeshwari10: Replace deprecated usage of SafeMarkup::checkPlain().
 #2742333 by jrockowitz: Fix missing @group in LinePatternDetectorTest
 by tstoeckler: Document plugin alter hooks
 by tstoeckler: Fix coding standards

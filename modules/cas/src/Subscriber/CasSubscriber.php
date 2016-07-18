@@ -118,11 +118,6 @@ class CasSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    // Don't do anything if this is a request from a crawler.
-    if ($this->isCrawlerRequest()) {
-      return;
-    }
-
     // The service controller may have indicated that this current request
     // should not be automatically sent to CAS for authentication checking.
     // This is to prevent infinite redirect loops.
