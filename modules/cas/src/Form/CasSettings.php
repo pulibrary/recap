@@ -7,6 +7,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\user\RoleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\cas\Service\CasHelper;
 
@@ -196,6 +197,33 @@ class CasSettings extends ConfigFormBase {
       '#default_value' => $config->get('user_accounts.auto_register'),
     );
 
+    $auto_assigned_roles = $config->get('user_accounts.auto_assigned_roles');
+    $form['user_accounts']['auto_assigned_roles_enable'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Automatically assign roles on user registration'),
+      '#default_value' => count($auto_assigned_roles) > 0,
+      '#states' => array(
+        'invisible' => array(
+          'input[name="user_accounts[auto_register]"]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+    $roles = user_role_names(TRUE);
+    unset($roles[RoleInterface::AUTHENTICATED_ID]);
+    $form['user_accounts']['auto_assigned_roles'] = array(
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#title' => t('Roles'),
+      '#description' => t('The selected roles will be automatically assigned to each CAS user on login. Use this to automatically give CAS users additional privileges or to identify CAS users to other modules.'),
+      '#default_value' => $auto_assigned_roles,
+      '#options' => $roles,
+      '#states' => array(
+        'invisible' => array(
+          'input[name="user_accounts[auto_assigned_roles_enable]"]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+
     $form['logout'] = array(
       '#type' => 'details',
       '#title' => $this->t('Logout Behavior'),
@@ -351,6 +379,13 @@ class CasSettings extends ConfigFormBase {
       ->set('proxy.proxy_chains', $form_state->getValue(['proxy', 'proxy_chains']));
     $config
       ->set('user_accounts.auto_register', $form_state->getValue(['user_accounts', 'auto_register']));
+
+    $auto_assigned_roles = [];
+    if ($form_state->getValue(['user_accounts', 'auto_assigned_roles_enable'])) {
+      $auto_assigned_roles = array_keys($form_state->getValue(['user_accounts', 'auto_assigned_roles']));
+    }
+    $config
+      ->set('user_accounts.auto_assigned_roles', $auto_assigned_roles);
 
     $config
       ->set('debugging.log', $form_state->getValue(['debugging', 'log']));

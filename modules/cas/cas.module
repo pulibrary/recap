@@ -5,6 +5,8 @@
  * Provides CAS authentication for Drupal.
  */
 
+use Drupal\user\RoleInterface;
+
 /**
  * Implements hook_cron().
  *
@@ -15,4 +17,18 @@ function cas_cron() {
   db_delete('cas_pgt_storage')
     ->condition('timestamp', time() - 3600, '<=')
     ->execute();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for user_role entities.
+ */
+function cas_user_role_delete(RoleInterface $role) {
+  $config = \Drupal::configFactory()->getEditable('cas.settings');
+  $auto_assigned_roles = $config->get('user_accounts.auto_assigned_roles');
+  $array_key = array_search($role->id(), $auto_assigned_roles, TRUE);
+  if ($array_key) {
+    // Remove the role from the auto-assigned roles.
+    unset($auto_assigned_roles[$array_key]);
+    $config->set('user_accounts.auto_assigned_roles', $auto_assigned_roles)->save();
+  }
 }

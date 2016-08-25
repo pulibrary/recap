@@ -53,6 +53,11 @@ cas.settings:
         auto_register:
           type: boolean
           label: 'Auto Register Users'
+        auto_assigned_roles:
+          type: sequence
+          label: 'Auto assigned roles'
+          sequence:
+            type: string
     logout:
       type: mapping
       label: 'Logout'

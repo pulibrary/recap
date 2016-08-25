@@ -25,6 +25,7 @@ proxy:
 
 user_accounts:
   auto_register: false
+  auto_assigned_roles: {}
 
 logout:
   cas_logout: false

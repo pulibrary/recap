@@ -106,7 +106,7 @@ class CasLogin {
       $config = $this->settings->get('cas.settings');
       if ($config->get('user_accounts.auto_register') === TRUE) {
         if ($user_load_event->allowAutoRegister) {
-          $account = $this->registerUser($property_bag->getUsername());
+          $account = $this->registerUser($property_bag->getUsername(), $config->get('user_accounts.auto_assigned_roles'));
         }
         else {
           throw new CasLoginException("Cannot register user, an event listener denied access.");
@@ -138,6 +138,8 @@ class CasLogin {
    *
    * @param string $username
    *   Register a new account with the provided username.
+   * @param array $auto_assigned_roles
+   *   A list of role IDs to automatically assign to the created user.
    *
    * @return \Drupal\user\UserInterface
    *   The created user entity.
@@ -145,13 +147,14 @@ class CasLogin {
    * @throws CasLoginException
    *   Thrown if there was a problem registering the user.
    */
-  protected function registerUser($username) {
+  protected function registerUser($username, $auto_assigned_roles) {
     try {
       $user_storage = $this->entityTypeManager->getStorage('user');
       $account = $user_storage->create(array(
         'name' => $username,
         'status' => 1,
         'pass' => $this->randomPassword(),
+        'roles' => $auto_assigned_roles,
       ));
       $account->enforceIsNew();
       return $account;
