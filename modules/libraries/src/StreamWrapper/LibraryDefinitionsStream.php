@@ -80,7 +80,7 @@ class LibraryDefinitionsStream extends LocalStream {
   protected function getConfig($key) {
     return $this->configFactory
       ->get('libraries.settings')
-      ->get("library_definitions.$key");
+      ->get("definitions.$key");
   }
 
 }

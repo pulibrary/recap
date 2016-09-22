@@ -57,7 +57,7 @@ class PhpFileLibrary extends LibraryBase implements PhpFileLibraryInterface {
 
     $processed_files = [];
     foreach ($this->files as $file) {
-      $processed_files[] = $this->getLocalPath() . DIRECTORY_SEPARATOR . $file;
+      $processed_files[] = $this->getLocalPath() . '/' . $file;
     }
     return $processed_files;
   }

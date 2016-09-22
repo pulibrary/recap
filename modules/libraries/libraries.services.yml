@@ -2,12 +2,27 @@ services:
   libraries.manager:
     class: Drupal\libraries\ExternalLibrary\LibraryManager
     arguments:
-      - '@libraries.definitions.discovery'
+      - '@libraries.definition.discovery'
       - '@plugin.manager.libraries.library_type'
       - '@libraries.extension_handler'
-  libraries.definitions.discovery:
-    class: Drupal\libraries\ExternalLibrary\Definition\StreamDefinitionDiscovery
+
+  # These services are modified depending on the values of the
+  # 'libraries.settings' configuration object. See LibrariesServiceProvider.
+  libraries.definition.discovery:
+    class: Drupal\libraries\ExternalLibrary\Definition\ChainDefinitionDiscovery
     arguments: ['@serialization.yaml']
+    calls:
+      - [addDiscovery, ['@libraries.definition.discovery.local']]
+  libraries.definition.discovery.local:
+    class: Drupal\libraries\ExternalLibrary\Definition\WritableFileDefinitionDiscovery
+    arguments: ['@serialization.yaml', 'public://library-definitions']
+  libraries.definition.discovery.remote:
+    class: Drupal\libraries\ExternalLibrary\Definition\GuzzleDefinitionDiscovery
+    arguments:
+      - '@http_client'
+      - '@serialization.json'
+      # @todo Use a less "hidden" path, when available.
+      - 'http://cgit.drupalcode.org/sandbox-rjacobs-2761167/plain/registry'
 
   plugin.manager.libraries.library_type:
     class: Drupal\libraries\ExternalLibrary\Type\LibraryTypeFactory
@@ -18,6 +33,12 @@ services:
   plugin.manager.libraries.version_detector:
     class: Drupal\libraries\ExternalLibrary\Version\VersionDetectorManager
     parent: default_plugin_manager
+
+  libraries.config_subscriber:
+    class: Drupal\libraries\Config\LibrariesConfigSubscriber
+    arguments: ['@kernel']
+    tags:
+      - { name: event_subscriber }
 
   libraries.extension_handler:
     class: Drupal\libraries\Extension\ExtensionHandler

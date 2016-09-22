@@ -1,9 +1,9 @@
-library_definitions:
+definition:
   local:
-    # @todo Reconsider having library definitions be webserver-writable and consider implementing a stream wrapper that
-    #   finds library definitions in e.g. sites/all/libraries.
+    # @todo Implement a stream wrapper that finds library definitions in e.g.
+    # sites/all/libraries.
     path: 'public://library-definitions'
   remote:
-    # @todo Enable this by default, when there is an actual canonical registry.
-    enable: false
-    url: ''
+    enable: TRUE
+    # @todo Use a less "hidden" path, when available.
+    url: 'http://cgit.drupalcode.org/sandbox-rjacobs-2761167/plain/registry'

@@ -1,8 +1,8 @@
 # This is an example info file of a library used for testing purposes.
 name: Example info file
 
-# Information added by Drupal.org packaging script on 2016-06-27
+# Information added by Drupal.org packaging script on 2016-09-11
 version: '8.x-3.x-dev'
 core: '8.x'
 project: 'libraries'
-datestamp: 1467070743
+datestamp: 1473554941
