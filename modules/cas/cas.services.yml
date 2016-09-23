@@ -10,9 +10,9 @@ services:
   cas.validator:
     class: Drupal\cas\Service\CasValidator
     arguments: ['@http_client', '@cas.helper']
-  cas.login:
-    class: Drupal\cas\Service\CasLogin
-    arguments: ['@config.factory', '@entity_type.manager', '@session', '@database', '@event_dispatcher']
+  cas.user_manager:
+    class: Drupal\cas\Service\CasUserManager
+    arguments: ['@externalauth.externalauth', '@config.factory', '@session', '@database', '@event_dispatcher']
   cas.logout:
     class: Drupal\cas\Service\CasLogout
     arguments: ['@cas.helper', '@database']

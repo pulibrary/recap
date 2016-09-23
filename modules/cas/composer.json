@@ -32,10 +32,18 @@
   },
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
-  "require": { },
+  "require": {
+    "drupal/externalauth": "1.0.0-alpha3"
+  },
   "extra": {
     "branch-alias": {
       "dev-8.x-1.x": "8.1.x-dev"
+    }
+  },
+  "repositories": {
+    "drupal": {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
     }
   }
 }

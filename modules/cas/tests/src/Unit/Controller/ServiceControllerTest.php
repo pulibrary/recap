@@ -41,11 +41,11 @@ class ServiceControllerTest extends UnitTestCase {
   protected $casValidator;
 
   /**
-   * The mocked CasLogin.
+   * The mocked CasUserManager.
    *
-   * @var \Drupal\cas\Service\CasLogin|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasUserManager|\PHPUnit_Framework_MockObject_MockObject
    */
-  protected $casLogin;
+  protected $casUserManager;
 
   /**
    * The mocked CasLogout.
@@ -81,7 +81,7 @@ class ServiceControllerTest extends UnitTestCase {
     $this->casValidator = $this->getMockBuilder('\Drupal\cas\Service\CasValidator')
       ->disableOriginalConstructor()
       ->getMock();
-    $this->casLogin = $this->getMockBuilder('\Drupal\cas\Service\CasLogin')
+    $this->casUserManager = $this->getMockBuilder('\Drupal\cas\Service\CasUserManager')
       ->disableOriginalConstructor()
       ->getMock();
     $this->casLogout = $this->getMockBuilder('\Drupal\cas\Service\CasLogout')
@@ -111,7 +111,7 @@ class ServiceControllerTest extends UnitTestCase {
     $this->serviceController = new TestServiceController(
         $this->casHelper,
         $this->casValidator,
-        $this->casLogin,
+        $this->casUserManager,
         $this->casLogout,
         $this->requestStack,
         $this->urlGenerator
@@ -130,7 +130,7 @@ class ServiceControllerTest extends UnitTestCase {
       ->will($this->onConsecutiveCalls(
         $this->casHelper,
         $this->casValidator,
-        $this->casLogin,
+        $this->casUserManager,
         $this->casLogout,
         $this->requestStack,
         $this->urlGenerator
@@ -220,8 +220,8 @@ class ServiceControllerTest extends UnitTestCase {
     $this->assertSuccessfulValidation($returnto);
 
     // Login should be called.
-    $this->casLogin->expects($this->once())
-      ->method('loginToDrupal')
+    $this->casUserManager->expects($this->once())
+      ->method('login')
       ->with($this->equalTo($validation_data), $this->equalTo('ST-foobar'));
 
     $this->assertRedirectedToFrontPageOnHandle();
@@ -261,8 +261,8 @@ class ServiceControllerTest extends UnitTestCase {
     $validation_data->setPgt('testpgt');
 
     // Login should be called.
-    $this->casLogin->expects($this->once())
-      ->method('loginToDrupal')
+    $this->casUserManager->expects($this->once())
+      ->method('login')
       ->with($this->equalTo($validation_data), $this->equalTo('ST-foobar'));
 
     // PGT should be saved.
@@ -302,8 +302,8 @@ class ServiceControllerTest extends UnitTestCase {
       ->will($this->throwException(new CasValidateException()));
 
     // Login should not be called.
-    $this->casLogin->expects($this->never())
-      ->method('loginToDrupal');
+    $this->casUserManager->expects($this->never())
+      ->method('login');
 
     $this->assertRedirectedToFrontPageOnHandle();
   }
@@ -334,8 +334,8 @@ class ServiceControllerTest extends UnitTestCase {
     $this->assertSuccessfulValidation($returnto);
 
     // Login should throw an exception.
-    $this->casLogin->expects($this->once())
-      ->method('loginToDrupal')
+    $this->casUserManager->expects($this->once())
+      ->method('login')
       ->will($this->throwException(new CasLoginException()));
 
     $this->assertRedirectedToFrontPageOnHandle();

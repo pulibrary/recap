@@ -245,7 +245,7 @@ class CasHelper {
   public function getServerBaseUrl() {
     $url = 'https://' . $this->settings->get('server.hostname');
     $port = $this->settings->get('server.port');
-    if (!empty($port)) {
+    if (!empty($port) && $port != 443) {
       $url .= ':' . $this->settings->get('server.port');
     }
     $url .= $this->settings->get('server.path');

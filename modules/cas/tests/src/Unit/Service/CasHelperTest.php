@@ -129,22 +129,22 @@ class CasHelperTest extends UnitTestCase {
       array(
         array(),
         FALSE,
-        'https://example.com:443/cas/login?service=https%3A//example.com/client',
+        'https://example.com/cas/login?service=https%3A//example.com/client',
       ),
       array(
         array('returnto' => 'node/1'),
         FALSE,
-        'https://example.com:443/cas/login?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1',
+        'https://example.com/cas/login?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1',
       ),
       array(
         array(),
         TRUE,
-        'https://example.com:443/cas/login?gateway=true&service=https%3A//example.com/client',
+        'https://example.com/cas/login?gateway=true&service=https%3A//example.com/client',
       ),
       array(
         array('returnto' => 'node/1'),
         TRUE,
-        'https://example.com:443/cas/login?gateway=true&service=https%3A//example.com/client%3Freturnto%3Dnode%252F1',
+        'https://example.com/cas/login?gateway=true&service=https%3A//example.com/client%3Freturnto%3Dnode%252F1',
       ),
     );
   }
@@ -165,8 +165,30 @@ class CasHelperTest extends UnitTestCase {
     ));
     $cas_helper = new CasHelper($config_factory, $this->urlGenerator, $this->connection, $this->loggerFactory, $this->session);
 
-    $this->assertEquals('https://example.com:443/cas/', $cas_helper->getServerBaseUrl());
+    $this->assertEquals('https://example.com/cas/', $cas_helper->getServerBaseUrl());
   }
+
+  /**
+   * Test constructing the CAS Server base url with non-standard port.
+   *
+   * Non-standard ports should be included in the constructed URL.
+   *
+   * @covers ::getServerBaseUrl
+   * @covers ::__construct
+   */
+  public function testGetServerBaseUrlNonStandardPort() {
+    $config_factory = $this->getConfigFactoryStub(array(
+      'cas.settings' => array(
+        'server.hostname' => 'example.com',
+        'server.port' => 4433,
+        'server.path' => '/cas',
+      ),
+    ));
+    $cas_helper = new CasHelper($config_factory, $this->urlGenerator, $this->connection, $this->loggerFactory, $this->session);
+
+    $this->assertEquals('https://example.com:4433/cas/', $cas_helper->getServerBaseUrl());
+  }
+
 
   /**
    * Test constructing the CAS Server validation url.
@@ -235,7 +257,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[0],
         array(),
-        'https://example.com:443/cas/validate?service=https%3A//example.com/client&ticket=' . $ticket[0],
+        'https://example.com/cas/validate?service=https%3A//example.com/client&ticket=' . $ticket[0],
         FALSE,
         FALSE,
         '1.0',
@@ -244,7 +266,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[1],
         array('returnto' => 'node/1'),
-        'https://example.com:443/cas/validate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[1],
+        'https://example.com/cas/validate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[1],
         FALSE,
         FALSE,
         '1.0',
@@ -253,7 +275,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[2],
         array(),
-        'https://example.com:443/cas/serviceValidate?service=https%3A//example.com/client&ticket=' . $ticket[2],
+        'https://example.com/cas/serviceValidate?service=https%3A//example.com/client&ticket=' . $ticket[2],
         FALSE,
         FALSE,
         '2.0',
@@ -262,7 +284,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[3],
         array('returnto' => 'node/1'),
-        'https://example.com:443/cas/serviceValidate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[3],
+        'https://example.com/cas/serviceValidate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[3],
         FALSE,
         FALSE,
         '2.0',
@@ -271,7 +293,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[4],
         array(),
-        'https://example.com:443/cas/proxyValidate?service=https%3A//example.com/client&ticket=' . $ticket[4],
+        'https://example.com/cas/proxyValidate?service=https%3A//example.com/client&ticket=' . $ticket[4],
         FALSE,
         TRUE,
         '2.0',
@@ -280,7 +302,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[5],
         array('returnto' => 'node/1'),
-        'https://example.com:443/cas/proxyValidate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[5],
+        'https://example.com/cas/proxyValidate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[5],
         FALSE,
         TRUE,
         '2.0',
@@ -289,7 +311,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[6],
         array(),
-        'https://example.com:443/cas/serviceValidate?service=https%3A//example.com/client&ticket=' . $ticket[6] . '&pgtUrl=https%3A//example.com/casproxycallback',
+        'https://example.com/cas/serviceValidate?service=https%3A//example.com/client&ticket=' . $ticket[6] . '&pgtUrl=https%3A//example.com/casproxycallback',
         TRUE,
         FALSE,
         '2.0',
@@ -298,7 +320,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[7],
         array('returnto' => 'node/1'),
-        'https://example.com:443/cas/serviceValidate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[7] . '&pgtUrl=https%3A//example.com/casproxycallback',
+        'https://example.com/cas/serviceValidate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[7] . '&pgtUrl=https%3A//example.com/casproxycallback',
         TRUE,
         FALSE,
         '2.0',
@@ -307,7 +329,7 @@ class CasHelperTest extends UnitTestCase {
       array(
         $ticket[8],
         array(),
-        'https://example.com:443/cas/proxyValidate?service=https%3A//example.com/client&ticket=' . $ticket[8] . '&pgtUrl=https%3A//example.com/casproxycallback',
+        'https://example.com/cas/proxyValidate?service=https%3A//example.com/client&ticket=' . $ticket[8] . '&pgtUrl=https%3A//example.com/casproxycallback',
         TRUE,
         TRUE,
         '2.0',
@@ -315,7 +337,7 @@ class CasHelperTest extends UnitTestCase {
 
       array(
         $ticket[9],
-        array('returnto' => 'node/1'), 'https://example.com:443/cas/proxyValidate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[9] . '&pgtUrl=https%3A//example.com/casproxycallback',
+        array('returnto' => 'node/1'), 'https://example.com/cas/proxyValidate?service=https%3A//example.com/client%3Freturnto%3Dnode%252F1&ticket=' . $ticket[9] . '&pgtUrl=https%3A//example.com/casproxycallback',
         TRUE,
         TRUE,
         '2.0',

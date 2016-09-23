@@ -1,7 +1,7 @@
 # Configuration schema for the CAS module
 
 cas.settings:
-  type: mapping
+  type: config_object
   label: 'CAS settings'
   mapping:
     server:

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\Tests\cas\Unit\Subscriber\CasSubscriberTest.
- */
-
 namespace Drupal\Tests\cas\Unit\Subscriber;
 
 use Drupal\Tests\UnitTestCase;

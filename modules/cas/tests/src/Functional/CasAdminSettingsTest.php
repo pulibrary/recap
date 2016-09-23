@@ -55,8 +55,8 @@ class CasAdminSettingsTest extends BrowserTestBase {
     $this->assertEquals([$role_id, $role_id_2], $this->config('cas.settings')->get('user_accounts.auto_assigned_roles'));
 
     $cas_property_bag = new CasPropertyBag('test_cas_user_name');
-    \Drupal::service('cas.login')->loginToDrupal($cas_property_bag, 'fake_ticket_string');
-    $user = user_load_by_name('test_cas_user_name');
+    \Drupal::service('cas.user_manager')->login($cas_property_bag, 'fake_ticket_string');
+    $user = user_load_by_name('cas_test_cas_user_name');
     $this->assertTrue($user->hasRole($role_id), 'The user has the auto assigned role: ' . $role_id);
     $this->assertTrue($user->hasRole($role_id_2), 'The user has the auto assigned role: ' . $role_id_2);
 

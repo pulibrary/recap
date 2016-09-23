@@ -4,23 +4,27 @@ namespace Drupal\cas\Service;
 
 use Drupal\cas\Event\CasPreAuthEvent;
 use Drupal\cas\Event\CasUserLoadEvent;
+use Drupal\externalauth\Exception\ExternalAuthRegisterException;
 use Drupal\cas\Exception\CasLoginException;
+use Drupal\externalauth\ExternalAuthInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\EntityStorageException;
-use Drupal\Core\Database\Connection;
-use Drupal\Component\Utility\Crypt;
-use Drupal\user\UserInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Drupal\cas\Event\CasUserEvent;
-use Drupal\cas\CasPropertyBag;
-use Drupal\cas\Event\CasPropertyEvent;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Drupal\Core\Database\Connection;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\cas\CasPropertyBag;
+use Drupal\Component\Utility\Crypt;
 
 /**
- * Class CasLogin.
+ * Class CasUserManager.
  */
-class CasLogin {
+class CasUserManager {
+
+  /**
+   * Used to include the externalauth service from the external_auth module.
+   *
+   * @var \Drupal\externalauth\ExternalAuthInterface
+   */
+  protected $externalAuth;
 
   /**
    * Stores settings object.
@@ -28,13 +32,6 @@ class CasLogin {
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $settings;
-
-  /**
-   * Used when creating a new user.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
 
   /**
    * Used to get session data.
@@ -57,13 +54,15 @@ class CasLogin {
    */
   protected $eventDispatcher;
 
+  protected $provider = 'cas';
+
   /**
-   * CasLogin constructor.
+   * CasUserManager constructor.
    *
+   * @param \Drupal\externalauth\ExternalAuthInterface $external_auth
+   *   The external auth interface.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $settings
    *   The settings.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
    *   The session.
    * @param \Drupal\Core\Database\Connection $database_connection
@@ -71,19 +70,47 @@ class CasLogin {
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
    */
-  public function __construct(ConfigFactoryInterface $settings, EntityTypeManagerInterface $entity_type_manager, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(ExternalAuthInterface $external_auth, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher) {
+    $this->externalAuth = $external_auth;
     $this->settings = $settings;
-    $this->entityTypeManager = $entity_type_manager;
     $this->session = $session;
     $this->connection = $database_connection;
     $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
-   * Attempts to log the authenticated CAS user into Drupal.
+   * Register a local Drupal user given a CAS username.
    *
-   * This method should be used to login a user after they have successfully
-   * authenticated with the CAS server.
+   * @param string $authname
+   *   The CAS username.
+   * @param array $auto_assigned_roles
+   *   Array of roles to assign to this user.
+   *
+   * @throws CasLoginException
+   *
+   * @return \Drupal\user\UserInterface
+   *   The user entity of the newly registered user.
+   */
+  public function register($authname, $auto_assigned_roles = []) {
+    try {
+      $user = $this->externalAuth->register($authname, $this->provider);
+    }
+    catch (ExternalAuthRegisterException $e) {
+      throw new CasLoginException($e->getMessage());
+    }
+
+    if (!empty($auto_assigned_roles)) {
+      foreach ($auto_assigned_roles as $auto_assigned_role) {
+        $user->addRole($auto_assigned_role);
+      }
+      $user->save();
+    }
+
+    return $user;
+  }
+
+  /**
+   * Attempts to log the user in to the Drupal site.
    *
    * @param CasPropertyBag $property_bag
    *   CasPropertyBag containing username and attributes from CAS.
@@ -93,7 +120,7 @@ class CasLogin {
    * @throws CasLoginException
    *   Thrown if there was a problem logging in the user.
    */
-  public function loginToDrupal(CasPropertyBag $property_bag, $ticket) {
+  public function login(CasPropertyBag $property_bag, $ticket) {
     // Dispatch an event that allows modules to change user data we received
     // from CAS before attempting to use it to load a Drupal user.
     // Auto-registration can also be disabled for this user if their account
@@ -101,12 +128,14 @@ class CasLogin {
     $user_load_event = new CasUserLoadEvent($property_bag);
     $this->eventDispatcher->dispatch(CasHelper::EVENT_USER_LOAD, $user_load_event);
 
-    $account = $this->userLoadByName($property_bag->getUsername());
-    if (!$account) {
+    $account = $this->externalAuth->load($property_bag->getUsername(), $this->provider);
+    // No user exists.
+    if ($account === FALSE) {
+      // Check if we should create the user or not.
       $config = $this->settings->get('cas.settings');
       if ($config->get('user_accounts.auto_register') === TRUE) {
         if ($user_load_event->allowAutoRegister) {
-          $account = $this->registerUser($property_bag->getUsername(), $config->get('user_accounts.auto_assigned_roles'));
+          $account = $this->register($property_bag->getUsername(), $config->get('user_accounts.auto_assigned_roles'));
         }
         else {
           throw new CasLoginException("Cannot register user, an event listener denied access.");
@@ -129,70 +158,8 @@ class CasLogin {
       throw new CasLoginException("Cannot login, an event listener denied access.");
     }
 
-    $this->userLoginFinalize($account);
+    $this->externalAuth->userLoginFinalize($account, $property_bag->getUsername(), $this->provider);
     $this->storeLoginSessionData($this->session->getId(), $ticket);
-  }
-
-  /**
-   * Register a CAS user.
-   *
-   * @param string $username
-   *   Register a new account with the provided username.
-   * @param array $auto_assigned_roles
-   *   A list of role IDs to automatically assign to the created user.
-   *
-   * @return \Drupal\user\UserInterface
-   *   The created user entity.
-   *
-   * @throws CasLoginException
-   *   Thrown if there was a problem registering the user.
-   */
-  protected function registerUser($username, $auto_assigned_roles) {
-    try {
-      $user_storage = $this->entityTypeManager->getStorage('user');
-      $account = $user_storage->create(array(
-        'name' => $username,
-        'status' => 1,
-        'pass' => $this->randomPassword(),
-        'roles' => $auto_assigned_roles,
-      ));
-      $account->enforceIsNew();
-      return $account;
-    }
-    catch (EntityStorageException $e) {
-      throw new CasLoginException("Error registering user: " . $e->getMessage());
-    }
-  }
-
-  /**
-   * Encapsulate user_load_by_name.
-   *
-   * See https://www.drupal.org/node/2157657
-   *
-   * @param string $username
-   *   The username to lookup a User entity by.
-   *
-   * @return object|bool
-   *   A loaded $user object or FALSE on failure.
-   *
-   * @codeCoverageIgnore
-   */
-  protected function userLoadByName($username) {
-    return user_load_by_name($username);
-  }
-
-  /**
-   * Encapsulate user_login_finalize.
-   *
-   * See https://www.drupal.org/node/2157657
-   *
-   * @param \Drupal\user\UserInterface $account
-   *   The user entity.
-   *
-   * @codeCoverageIgnore
-   */
-  protected function userLoginFinalize(UserInterface $account) {
-    user_login_finalize($account);
   }
 
   /**
@@ -202,8 +169,6 @@ class CasLogin {
    *   The session ID, to be used to kill the session later.
    * @param string $ticket
    *   The CAS service ticket to be used as the lookup key.
-   *
-   * @codeCoverageIgnore
    */
   protected function storeLoginSessionData($session_id, $ticket) {
     if ($this->settings->get('cas.settings')->get('logout.enable_single_logout') === TRUE) {
@@ -218,16 +183,6 @@ class CasLogin {
         array(Crypt::hashBase64($session_id), $plainsid, $ticket)
       )
       ->execute();
-  }
-
-  /**
-   * Wrapper for Drupal function user_password so we can stub it in unit tests.
-   *
-   * @return string
-   *   A random password.
-   */
-  protected function randomPassword() {
-    return user_password(30);
   }
 
 }
