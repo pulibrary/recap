@@ -90,7 +90,7 @@ ul li.responsive-tab {
 
     nav > ul li.responsive-tab a {
       background: url("images/menu.png") no-repeat;
-      background-position: 95% -35%;
+      background-position: calc(95% - 35%);
     }
 
     nav > ul > li {
