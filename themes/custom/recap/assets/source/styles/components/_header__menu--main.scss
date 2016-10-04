@@ -84,17 +84,42 @@ ul li.responsive-tab {
       width: 100%;
     }
 
-    nav > ul li.responsive-tab {
-      display: block;
+    nav li:hover {
+      background: none;
     }
 
-    nav > ul li.responsive-tab a {
-      background: url("images/menu.png") no-repeat;
-      background-position: 95% -35%;
+    nav > ul li.responsive-tab {
+      display: block;
+      height: 35px;
+      padding: 1em;
+    }
+
+    .responsive-logo {
+      background: url("/themes/custom/recap/assets/public/images/recap-logo.svg") center center no-repeat;
+      background-size: contain;
+      display: block;
+      float: left;
+      height: 15px;
+      width: 105px;
+
+      img {
+        display: none;
+      }
+    }
+
+    .responsive-menu {
+      background: $black;
+      border: 0;
+      color: $white;
+      float: right;
+      font: 300 24px "Oswald", $font-sans;
+      margin: 0 12px;
+      text-transform: uppercase;
     }
 
     nav > ul > li {
       display: none;
+      padding: 0;
       text-align: left;
     }
 
@@ -110,6 +135,7 @@ ul li.responsive-tab {
       background: $white;
       border: 0 none;
       display: none;
+      margin: 0;
       position: static;
       width: 100%;
     }
@@ -126,11 +152,17 @@ ul li.responsive-tab {
 
     nav > ul li > a {
       background-image: none;
+      display: block;
       text-align: left;
+      width: 100%;
     }
 
     nav > ul > li > a.is-active {
       border: 0;
+    }
+
+    .collapsed a {
+      padding: 1em;
     }
   }
 }

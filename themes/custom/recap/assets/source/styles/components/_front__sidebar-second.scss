@@ -1,15 +1,19 @@
 .layout-content {
-  float: left;
-  width: 70%;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    float: left;
+    width: 70%;
+  }
 }
 
 .layout-sidebar-second {
-  float: left;
-  padding-left: 4%;
-  padding-top: 2.875em;
-  width: 25%;
-}
+  width: 100%;
 
-.members {
-  clear: both;
+  @media (min-width: 768px) {
+    float: left;
+    padding-left: 4%;
+    padding-top: 2.875em;
+    width: 25%;
+  }
 }

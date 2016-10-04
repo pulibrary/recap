@@ -22,30 +22,51 @@ header {
 
 .banner {
   @include linear-gradient(lighten($blue-3, 5), lighten($blue-3, 20));
-
-  height: 530px;
+  height: 100px;
   position: relative;
 
+  @media (min-width: 480px) {
+    height: 340px;
+  }
+
+  @media (min-width: 768px) {
+    height: 430px;
+  }
+
+  @media (min-width: 1000px) {
+    height: 530px;
+  }
+
   h1 {
-    font: 150px "Oswald";
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    margin: 0;
-    padding: 20px 0 0;
-    position: relative;
-    text-align: center;
-    z-index: 2;
+    display: none;
+
+    @media (min-width: 480px) {
+      display: block;
+      font: 150px "Oswald";
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin: 0;
+      padding: 20px 0 0;
+      position: relative;
+      text-align: center;
+      z-index: 2;
+    }
   }
 
   h2 {
     font: 18px "Vollkorn";
     font-style: italic;
     font-weight: bold;
-    margin: 0;
+    padding: 1.5em;
     position: relative;
     text-align: center;
     text-transform: capitalize;
     z-index: 2;
+
+    @media (min-width: 480px) {
+      margin: 0;
+      padding: 0;
+    }
   }
 
   img {

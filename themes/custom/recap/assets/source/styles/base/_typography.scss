@@ -26,6 +26,10 @@ h4 {
 
 h1 {
   font-size: 2.074em;
+  margin: 0.5em 0;
+  @media (min-width: 480px) {
+    margin: 1.414em 0 0.5em;
+  }
 }
 
 .layout-container h1 {
