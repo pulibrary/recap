@@ -1,12 +1,4 @@
 $(document).ready(function() {
-    var $header = $("header.front"),
-        $clone = $header.before($header.clone().addClass("clone"));
-
-    $(window).on("scroll", function() {
-        var fromTop = $(window).scrollTop();
-        $("body").toggleClass("down", (fromTop > 500));
-    });
-
     // menu shows active parent
     $('#block-recap-main-menu li li:has(a.is-active)').parents('li').children('a').addClass('is-active');
 
@@ -16,7 +8,7 @@ $(document).ready(function() {
     var listItems = menu.find('li').not('#responsive-tab');
 
     // Create responsive trigger
-    menuList.prepend('<li id="responsive-tab" class="responsive-tab"><a href="#">Menu</a></li>');
+    menuList.prepend('<li class="responsive-tab"><a href="/" class="responsive-logo"><img src="/themes/custom/recap/assets/public/images/recap-logo.png" /></a><button id="responsive-tab" class="responsive-menu">Menu</button></li>');
 
     // Toggle menu visibility
     menu.on('click', '#responsive-tab', function(){
