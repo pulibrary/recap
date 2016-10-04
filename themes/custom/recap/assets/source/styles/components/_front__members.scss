@@ -1,20 +1,35 @@
 .members {
+  clear: both;
   padding: 36px 0 55px;
 
   h2 {
-    font-family: "Oswald";
+    font-family: "Oswald", $font-sans;
     margin-bottom: 36px;
     text-align: center;
     text-transform: uppercase;
   }
 
-  li {
-    @include span(4 of 12);
+  ul {
+    padding: 0;
+  }
 
-    display: inline-block;
+  li {
+    list-style: none;
+    margin-bottom: 2.5em;
+    width: 100%;
 
     &:last-child {
-      @include last;
+      margin-bottom: 0;
+    }
+
+    @media (min-width: 768px) {
+      @include span(4 of 12);
+
+      display: inline-block;
+
+      &:last-child {
+        @include last;
+      }
     }
   }
 

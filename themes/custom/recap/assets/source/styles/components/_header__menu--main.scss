@@ -108,14 +108,12 @@ ul li.responsive-tab {
     }
 
     .responsive-menu {
-      background: transparent;
+      background: $black;
       border: 0;
-      color: $black;
+      color: $white;
       float: right;
       font: 300 24px "Oswald", $font-sans;
-      // letter-spacing: 0.1em;
       margin: 0 12px;
-      // padding: 10px 0;
       text-transform: uppercase;
     }
 
