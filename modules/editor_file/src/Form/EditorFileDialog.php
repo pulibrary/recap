@@ -111,7 +111,7 @@ class EditorFileDialog extends FormBase implements BaseFormIdInterface {
       '#upload_location' => $file_upload['scheme'] . '://' . $file_upload['directory'],
       '#default_value' => $fid ? array($fid) : NULL,
       '#upload_validators' => array(
-        'file_validate_extensions' => !empty($file_upload['extensions']) ? $file_upload['extensions'] : array('txt'),
+        'file_validate_extensions' => !empty($file_upload['extensions']) ? array($file_upload['extensions']) : array('txt'),
         'file_validate_size' => array($max_filesize),
       ),
       '#required' => TRUE,

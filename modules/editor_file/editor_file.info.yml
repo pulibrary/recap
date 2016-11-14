@@ -9,8 +9,8 @@ dependencies:
   - file
 configure: filter.admin_overview
 
-# Information added by Drupal.org packaging script on 2016-01-25
-version: '8.x-1.1'
+# Information added by Drupal.org packaging script on 2016-11-01
+version: '8.x-1.2'
 core: '8.x'
 project: 'editor_file'
-datestamp: 1453744915
+datestamp: 1478039640
