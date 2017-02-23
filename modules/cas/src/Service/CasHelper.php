@@ -60,18 +60,32 @@ class CasHelper {
   const CHECK_ALWAYS = 0;
 
   /**
-   * Event type identifier for user load events.
+   * Event type identifier for the CasPreUserLoadEvent.
    *
    * @var string
    */
-  const EVENT_USER_LOAD = 'cas.user_load';
+  const EVENT_PRE_USER_LOAD = 'cas.pre_user_load';
+
+  /**
+   * Event type identifier for the CasPreRegisterEvent.
+   *
+   * @var string
+   */
+  const EVENT_PRE_REGISTER = 'cas.pre_register';
+
+  /**
+   * Event type identifier for the CasPreLoginEvent.
+   *
+   * @var string
+   */
+  const EVENT_PRE_LOGIN = 'cas.pre_login';
 
   /**
    * Event type identifier for pre auth events.
    *
    * @var string
    */
-  const EVENT_PRE_AUTH = 'cas.pre_auth';
+  const EVENT_PRE_REDIRECT = 'cas.pre_redirect';
 
   /**
    * Stores database connection.
@@ -129,29 +143,6 @@ class CasHelper {
 
     $this->settings = $config_factory->get('cas.settings');
     $this->loggerChannel = $logger_factory->get('cas');
-  }
-
-  /**
-   * Return the login URL to the CAS server.
-   *
-   * @param array $service_params
-   *   An array of query string parameters to add to the service URL.
-   * @param bool $gateway
-   *   TRUE if this should be a gateway request.
-   *
-   * @return string
-   *   The fully constructed server login URL.
-   */
-  public function getServerLoginUrl($service_params = array(), $gateway = FALSE) {
-    $login_url = $this->getServerBaseUrl() . 'login';
-
-    $params = array();
-    if ($gateway) {
-      $params['gateway'] = 'true';
-    }
-    $params['service'] = $this->getCasServiceUrl($service_params);
-
-    return $login_url . '?' . UrlHelper::buildQuery($params);
   }
 
   /**
@@ -232,7 +223,7 @@ class CasHelper {
    * @return string
    *   The fully constructed service URL to use for CAS server.
    */
-  private function getCasServiceUrl($service_params = array()) {
+  public function getCasServiceUrl($service_params = array()) {
     return $this->urlGenerator->generate('cas.service', $service_params, TRUE);
   }
 
@@ -245,7 +236,7 @@ class CasHelper {
   public function getServerBaseUrl() {
     $url = 'https://' . $this->settings->get('server.hostname');
     $port = $this->settings->get('server.port');
-    if (!empty($port)) {
+    if (!empty($port) && $port != 443) {
       $url .= ':' . $this->settings->get('server.port');
     }
     $url .= $this->settings->get('server.path');

@@ -2,13 +2,16 @@
 
 namespace Drupal\cas\Subscriber;
 
-use Drupal\cas\CasRedirectResponse;
+use Drupal\cas\CasRedirectData;
+use Drupal\cas\Service\CasRedirector;
+
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\EventSubscriber\HttpExceptionSubscriberBase;
 use Drupal\Core\Session\AccountInterface;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Condition\ConditionManager;
@@ -17,7 +20,7 @@ use Drupal\cas\Service\CasHelper;
 /**
  * Provides a CasSubscriber.
  */
-class CasSubscriber implements EventSubscriberInterface {
+class CasSubscriber extends HttpExceptionSubscriberBase {
 
   /**
    * The request.
@@ -62,6 +65,41 @@ class CasSubscriber implements EventSubscriberInterface {
   protected $casHelper;
 
   /**
+   * CasRedirector.
+   *
+   * @var \Drupal\cas\Service\CasRedirector
+   */
+  protected $casRedirector;
+
+  /**
+   * Frequency to check for gateway login.
+   *
+   * @var array
+   */
+  protected $gatewayCheckFrequency;
+
+  /**
+   * Paths to check for gateway login.
+   *
+   * @var array
+   */
+  protected $gatewayPaths = [];
+
+  /**
+   * Is forced login configuration setting enabled.
+   *
+   * @var bool
+   */
+  protected $forcedLoginEnabled = FALSE;
+
+  /**
+   * Paths to check for forced login.
+   *
+   * @var array
+   */
+  protected $forcedLoginPaths = [];
+
+  /**
    * Constructs a new CasSubscriber.
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
@@ -76,14 +114,22 @@ class CasSubscriber implements EventSubscriberInterface {
    *   The condition manager.
    * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CAS Helper service.
+   * @param CasRedirector $cas_redirector
+   *   The CAS Redirector Service.
    */
-  public function __construct(RequestStack $request_stack, RouteMatchInterface $route_matcher, ConfigFactoryInterface $config_factory, AccountInterface $current_user, ConditionManager $condition_manager, CasHelper $cas_helper) {
+  public function __construct(RequestStack $request_stack, RouteMatchInterface $route_matcher, ConfigFactoryInterface $config_factory, AccountInterface $current_user, ConditionManager $condition_manager, CasHelper $cas_helper, CasRedirector $cas_redirector) {
     $this->requestStack = $request_stack;
     $this->routeMatcher = $route_matcher;
     $this->configFactory = $config_factory;
     $this->currentUser = $current_user;
     $this->conditionManager = $condition_manager;
     $this->casHelper = $cas_helper;
+    $this->casRedirector = $cas_redirector;
+    $settings = $this->configFactory->get('cas.settings');
+    $this->gatewayCheckFrequency = $settings->get('gateway.check_frequency');
+    $this->gatewayPaths = $settings->get('gateway.paths');
+    $this->forcedLoginPaths = $settings->get('forced_login.paths');
+    $this->forcedLoginEnabled = $settings->get('forced_login.enabled');
   }
 
   /**
@@ -93,6 +139,7 @@ class CasSubscriber implements EventSubscriberInterface {
     // Priority is just before the Dynamic Page Cache subscriber, but after
     // important services like route matcher and maintenance mode subscribers.
     $events[KernelEvents::REQUEST][] = array('handle', 29);
+    $events[KernelEvents::EXCEPTION][] = ['onException', 0];
     return $events;
   }
 
@@ -108,11 +155,6 @@ class CasSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    // Nothing to do if the user is already logged in.
-    if ($this->currentUser->isAuthenticated()) {
-      return;
-    }
-
     // Some routes we don't want to run on.
     if ($this->isIgnoreableRoute()) {
       return;
@@ -122,65 +164,74 @@ class CasSubscriber implements EventSubscriberInterface {
     // should not be automatically sent to CAS for authentication checking.
     // This is to prevent infinite redirect loops.
     $session = $this->requestStack->getCurrentRequest()->getSession();
-    if ($session->has('cas_temp_disable_auto_auth')) {
+    if ($session && $session->has('cas_temp_disable_auto_auth')) {
       $session->remove('cas_temp_disable_auto_auth');
       $this->casHelper->log("Temp disable flag set, skipping CAS subscriber.");
       return;
     }
 
-    // Check to see if we should require a forced login. It will set a response
-    // on the event if so.
-    if ($this->handleForcedPath($event)) {
-      return;
+    $return_to = $this->requestStack->getCurrentRequest()->getUri();
+    $redirect_data = new CasRedirectData(['returnto' => $return_to]);
+
+    // Nothing to do if the user is already logged in.
+    if ($this->currentUser->isAuthenticated()) {
+      $redirect_data->preventRedirection();
+    }
+    else {
+      // Default assumption is that we don't want to redirect unless page
+      // critera matches.
+      $redirect_data->preventRedirection();
+
+      // Check to see if we should initiate a gateway auth check.
+      if ($this->handleGateway()) {
+        $redirect_data->setParameter('gateway', 'true');
+        $this->casHelper->log('Gateway Login Requested');
+        $redirect_data->forceRedirection();
+      };
+      // Check to see if we should require a forced login.
+      if ($this->handleForcedPath()) {
+        $this->casHelper->log('Force Login Requested');
+        $redirect_data->setParameter('gateway', NULL);
+        $redirect_data->setIsCacheable(TRUE);
+        $redirect_data->forceRedirection();
+      };
     }
 
-    // Check to see if we should initiate a gateway auth check. It will set a
-    // response on the event if so.
-    $this->handleGateway($event);
+    // If we're still going to redirect, lets do it.
+    $response = $this->casRedirector->buildRedirectResponse($redirect_data);
+    if ($response) {
+      $event->setResponse($response);
+    }
   }
 
   /**
-   * Check if a forced login path is configured, and force login if so.
-   *
-   * @param GetResponseEvent $event
-   *   The response event from the kernel.
+   * Check if the current path is a forced login path.
    *
    * @return bool
-   *   TRUE if we are forcing the login, FALSE otherwise
+   *   TRUE if current path is a forced login path, FALSE otherwise.
    */
-  private function handleForcedPath(GetResponseEvent $event) {
-    $config = $this->configFactory->get('cas.settings');
-    if ($config->get('forced_login.enabled') != TRUE) {
+  private function handleForcedPath() {
+    if (!$this->forcedLoginEnabled) {
       return FALSE;
     }
 
     // Check if user provided specific paths to force/not force a login.
     $condition = $this->conditionManager->createInstance('request_path');
-    $condition->setConfiguration($config->get('forced_login.paths'));
+    $condition->setConfiguration($this->forcedLoginPaths);
 
     if ($this->conditionManager->execute($condition)) {
-      $cas_login_url = $this->casHelper->getServerLoginUrl(array(
-        'returnto' => $this->requestStack->getCurrentRequest()->getUri(),
-      ));
-      $this->casHelper->log("Forced login path detected, redirecting to: $cas_login_url");
-
-      $event->setResponse(new CasRedirectResponse($cas_login_url));
-
       return TRUE;
     }
     return FALSE;
   }
 
   /**
-   * Check if we should implement the CAS gateway feature.
-   *
-   * @param GetResponseEvent $event
-   *   The response event from the kernel.
+   * Check if the current path is a gateway path.
    *
    * @return bool
-   *   TRUE if gateway mode was implemented, FALSE otherwise.
+   *   TRUE if current path is a gateway path, FALSE otherwise.
    */
-  private function handleGateway(GetResponseEvent $event) {
+  private function handleGateway() {
     // Don't do anything if this is a request from cron, drush, crawler, etc.
     if ($this->isCrawlerRequest()) {
       return FALSE;
@@ -192,15 +243,13 @@ class CasSubscriber implements EventSubscriberInterface {
       return FALSE;
     }
 
-    $config = $this->configFactory->get('cas.settings');
-    $check_frequency = $config->get('gateway.check_frequency');
-    if ($check_frequency === CasHelper::CHECK_NEVER) {
+    if ($this->gatewayCheckFrequency === CasHelper::CHECK_NEVER) {
       return FALSE;
     }
 
     // User can indicate specific paths to enable (or disable) gateway mode.
     $condition = $this->conditionManager->createInstance('request_path');
-    $condition->setConfiguration($config->get('gateway.paths'));
+    $condition->setConfiguration($this->gatewayPaths);
     if (!$this->conditionManager->execute($condition)) {
       return FALSE;
     }
@@ -208,7 +257,7 @@ class CasSubscriber implements EventSubscriberInterface {
     // If set to only implement gateway once per session, we use a session
     // variable to store the fact that we've already done the gateway check
     // so we don't keep doing it.
-    if ($check_frequency === CasHelper::CHECK_ONCE) {
+    if ($this->gatewayCheckFrequency === CasHelper::CHECK_ONCE) {
       // If the session var is already set, we know to back out.
       if ($this->requestStack->getCurrentRequest()->getSession()->has('cas_gateway_checked')) {
         $this->casHelper->log("Gateway already checked, will not check again.");
@@ -216,14 +265,6 @@ class CasSubscriber implements EventSubscriberInterface {
       }
       $this->requestStack->getCurrentRequest()->getSession()->set('cas_gateway_checked', TRUE);
     }
-
-    $cas_login_url = $this->casHelper->getServerLoginUrl(array(
-      'returnto' => $this->requestStack->getCurrentRequest()->getUri(),
-    ), TRUE);
-    $this->casHelper->log("Gateway activated, redirecting to $cas_login_url");
-
-    $event->setResponse(new CasRedirectResponse($cas_login_url));
-
     return TRUE;
   }
 
@@ -296,6 +337,45 @@ class CasSubscriber implements EventSubscriberInterface {
     }
 
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getHandledFormats() {
+    return ['html'];
+  }
+
+  /**
+   * Handle 403 errors.
+   *
+   * Other request subscribers with a higher priority may intercept the request
+   * and return a 403 before our request subscriber can handle it. In those
+   * instances we handle the forced login redirect if applicable here instead,
+   * using an exception subscriber.
+   *
+   * @param \Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent $event
+   *   The event to process.
+   */
+  public function on403(GetResponseForExceptionEvent $event) {
+    if ($this->currentUser->isAnonymous()) {
+      $return_to = $this->requestStack->getCurrentRequest()->getUri();
+      $redirect_data = new CasRedirectData(['returnto' => $return_to]);
+      if ($this->handleForcedPath()) {
+        $this->casHelper->log('Force Login Requested');
+        $redirect_data->forceRedirection();
+        $redirect_data->setIsCacheable(TRUE);
+      }
+      else {
+        $redirect_data->preventRedirection();
+      }
+
+      // If we're still going to redirect, lets do it.
+      $response = $this->casRedirector->buildRedirectResponse($redirect_data);
+      if ($response) {
+        $event->setResponse($response);
+      }
+    }
   }
 
 }

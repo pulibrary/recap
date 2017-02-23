@@ -1,9 +1,15 @@
 # Configuration schema for the CAS module
 
 cas.settings:
-  type: mapping
+  type: config_object
   label: 'CAS settings'
   mapping:
+    login_link_enabled:
+      type: boolean
+      label: 'Login Link Enabled'
+    login_link_label:
+      type: label
+      label: 'Login Link Label'
     server:
       type: mapping
       label: 'CAS Server'
@@ -53,11 +59,26 @@ cas.settings:
         auto_register:
           type: boolean
           label: 'Auto Register Users'
+        email_assignment_strategy:
+          type: integer
+          label: 'Email Assignment Strategy'
+        email_hostname:
+          type: string
+          label: 'Email Hostname'
+        email_attribute:
+          type: string
+          label: 'Email Attribute'
         auto_assigned_roles:
           type: sequence
           label: 'Auto assigned roles'
           sequence:
             type: string
+        restrict_password_management:
+          type: boolean
+          label: 'Restrict password management'
+        restrict_email_management:
+          type: boolean
+          label: 'Restrict email management'
     logout:
       type: mapping
       label: 'Logout'
@@ -71,6 +92,9 @@ cas.settings:
         enable_single_logout:
           type: boolean
           label: 'Enable'
+        single_logout_session_lifetime:
+          type: integer
+          label: 'Single Logout Session Lifetime'
     proxy:
       type: mapping
       label: 'Proxy'

@@ -68,6 +68,12 @@ abstract class LibraryTypeBase implements
   public function onLibraryCreate(LibraryInterface $library) {
     if ($library instanceof LocalLibraryInterface) {
       $library->getLocator($this->locatorFactory)->locate($library);
+      // Fallback on global locators.
+      // @todo Consider if global locators should be checked as a fallback or as
+      // the primary locator source.
+      if (!$library->isInstalled()) {
+        $this->locatorFactory->createInstance('global')->locate($library);
+      }
     }
     if ($library instanceof VersionedLibraryInterface) {
       $library->getVersionDetector($this->detectorFactory)->detectVersion($library);

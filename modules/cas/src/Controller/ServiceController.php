@@ -5,8 +5,8 @@ namespace Drupal\cas\Controller;
 use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\Exception\CasSloException;
 use Drupal\cas\Service\CasHelper;
-use Drupal\cas\Service\CasLogin;
 use Drupal\cas\Exception\CasValidateException;
+use Drupal\cas\Service\CasUserManager;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -42,9 +42,9 @@ class ServiceController implements ContainerInjectionInterface {
   /**
    * Used to log a user in after they've been validated.
    *
-   * @var \Drupal\cas\Service\CasLogin
+   * @var \Drupal\cas\Service\CasUserManager
    */
-  protected $casLogin;
+  protected $casUserManager;
 
   /**
    * Used to log a user out due to a single log out request.
@@ -74,17 +74,17 @@ class ServiceController implements ContainerInjectionInterface {
    *   The CAS Helper service.
    * @param CasValidator $cas_validator
    *   The CAS Validator service.
-   * @param CasLogin $cas_login
-   *   The CAS Login service.
+   * @param CasUserManager $cas_user_manager
+   *   The CAS User Manager service.
    * @param CasLogout $cas_logout
    *   The CAS Logout service.
    * @param UrlGeneratorInterface $url_generator
    *   The URL generator.
    */
-  public function __construct(CasHelper $cas_helper, CasValidator $cas_validator, CasLogin $cas_login, CasLogout $cas_logout, RequestStack $request_stack, UrlGeneratorInterface $url_generator) {
+  public function __construct(CasHelper $cas_helper, CasValidator $cas_validator, CasUserManager $cas_user_manager, CasLogout $cas_logout, RequestStack $request_stack, UrlGeneratorInterface $url_generator) {
     $this->casHelper = $cas_helper;
     $this->casValidator = $cas_validator;
-    $this->casLogin = $cas_login;
+    $this->casUserManager = $cas_user_manager;
     $this->casLogout = $cas_logout;
     $this->requestStack = $request_stack;
     $this->urlGenerator = $url_generator;
@@ -94,7 +94,7 @@ class ServiceController implements ContainerInjectionInterface {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('cas.helper'), $container->get('cas.validator'), $container->get('cas.login'), $container->get('cas.logout'), $container->get('request_stack'), $container->get('url_generator'));
+    return new static($container->get('cas.helper'), $container->get('cas.validator'), $container->get('cas.user_manager'), $container->get('cas.logout'), $container->get('request_stack'), $container->get('url_generator'));
   }
 
   /**
@@ -168,7 +168,7 @@ class ServiceController implements ContainerInjectionInterface {
     // Now that the ticket has been validated, we can use the information from
     // validation request to authenticate the user locally on the Drupal site.
     try {
-      $this->casLogin->loginToDrupal($cas_validation_info, $ticket);
+      $this->casUserManager->login($cas_validation_info, $ticket);
       if ($this->casHelper->isProxy() && $cas_validation_info->getPgt()) {
         $this->casHelper->log("Storing PGT information for this session.");
         $this->casHelper->storePgtSession($cas_validation_info->getPgt());

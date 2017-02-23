@@ -22,10 +22,12 @@ use Drupal\Component\HttpFoundation\SecuredRedirectResponse;
  */
 class CasRedirectResponse extends SecuredRedirectResponse
 {
+
   /**
    * {@inheritdoc}
    */
   protected function isSafe($url) {
     return TRUE;
   }
+
 }
