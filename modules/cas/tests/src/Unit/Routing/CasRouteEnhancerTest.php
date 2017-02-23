@@ -46,14 +46,14 @@ class CasRouteEnhancerTest extends UnitTestCase {
     parent::setUp();
 
     $this->casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-                            ->disableOriginalConstructor()
-                            ->getMock();
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->request = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Request')
-                          ->disableOriginalConstructor()
-                          ->getMock();
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->route = $this->getMockBuilder('\Symfony\Component\Routing\Route')
-                        ->disableOriginalConstructor()
-                        ->getMock();
+      ->disableOriginalConstructor()
+      ->getMock();
   }
 
   /**

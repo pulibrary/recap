@@ -2,6 +2,7 @@
 
 namespace Drupal\cas\Form;
 
+use Drupal\cas\Service\CasUserManager;
 use Drupal\Component\Plugin\Factory\FactoryInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
@@ -74,15 +75,17 @@ class CasSettings extends ConfigFormBase {
       '#title' => $this->t('CAS Server'),
       '#open' => TRUE,
       '#tree' => TRUE,
+      '#description' => $this->t('Enter the details of the CAS server to authentication against.'),
     );
     $form['server']['version'] = array(
       '#type' => 'radios',
-      '#title' => $this->t('Version'),
+      '#title' => $this->t('Protocol Version'),
       '#options' => array(
         '1.0' => $this->t('1.0'),
         '2.0' => $this->t('2.0 or higher'),
       ),
       '#default_value' => $config->get('server.version'),
+      '#description' => $this->t('The CAS protocol version your CAS server supports.'),
     );
     $form['server']['hostname'] = array(
       '#type' => 'textfield',
@@ -100,19 +103,19 @@ class CasSettings extends ConfigFormBase {
     );
     $form['server']['path'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('URI'),
-      '#description' => $this->t('If CAS is not at the root of the host, include a URI (e.g., /cas).'),
+      '#title' => $this->t('Path'),
+      '#description' => $this->t('If the CAS endpoints (like /login) are not at the root of the host, specify the path to the endpoints (e.g., /cas).'),
       '#size' => 30,
       '#default_value' => $config->get('server.path'),
     );
     $form['server']['verify'] = array(
       '#type' => 'radios',
       '#title' => 'SSL Verification',
-      '#description' => $this->t('Choose an appropriate option for verifying the certificate of your CAS server.'),
+      '#description' => $this->t("Choose an appropriate option for verifying the SSL/TLS certificate of your CAS server."),
       '#options' => array(
-        CasHelper::CA_DEFAULT => $this->t('Verify using web server\'s default certificates.'),
-        CasHelper::CA_NONE => $this->t('Do not verify CAS server. (Note: this should NEVER be used in production.)'),
-        CasHelper::CA_CUSTOM => $this->t('Verify using a custom certificate in the local filesystem. Use the field below to provide path.'),
+        CasHelper::CA_DEFAULT => $this->t("Verify using your web server's default certificate authority (CA) chain."),
+        CasHelper::CA_NONE => $this->t('Do not verify. (Note: this should NEVER be used in production.)'),
+        CasHelper::CA_CUSTOM => $this->t('Verify using a specific CA certificate. Use the field below to provide path.'),
       ),
       '#default_value' => $config->get('server.verify'),
     );
@@ -128,63 +131,34 @@ class CasSettings extends ConfigFormBase {
       ),
     );
 
-    $form['gateway'] = array(
+    $form['general'] = array(
       '#type' => 'details',
-      '#title' => $this->t('Gateway Feature (Auto Login)'),
-      '#open' => FALSE,
+      '#title' => $this->t('General Settings'),
+      '#open' => TRUE,
       '#tree' => TRUE,
-      '#description' => $this->t(
-        'This implements the <a href="@cas-gateway">Gateway feature</a> of the CAS Protocol. ' .
-        'When enabled, Drupal will check if a visitor is already logged into your CAS server before ' .
-        'serving a page request. If they have an active CAS session, they will be automatically ' .
-        'logged into the Drupal site. This is done by quickly redirecting them to the CAS server to perform the ' .
-        'active session check, and then redirecting them back to page they initially requested.<br/><br/>' .
-        'If enabled, all pages on your site will trigger this feature. You can instead enable ' .
-        'this feature for only specific pages by listing them below.<br/><br/>' .
-        '<strong>WARNING:</strong> This feature is NOT compatible with the Internal Page Cache module or external ' .
-        'page caching software like Varnish.',
-        array('@cas-gateway' => 'https://wiki.jasig.org/display/CAS/gateway')
-      ),
     );
-    $form['gateway']['check_frequency'] = array(
-      '#type' => 'radios',
-      '#title' => $this->t('Check Frequency'),
-      '#default_value' => $config->get('gateway.check_frequency'),
-      '#options' => array(
-        CasHelper::CHECK_NEVER => 'Disable gateway feature',
-        CasHelper::CHECK_ONCE => 'Once per browser session',
-        CasHelper::CHECK_ALWAYS => 'Every page load (not recommended)',
-      ),
-    );
-    $this->gatewayPaths->setConfiguration($config->get('gateway.paths'));
-    $form['gateway']['paths'] = $this->gatewayPaths->buildConfigurationForm(array(), $form_state);
-
-    $form['forced_login'] = array(
-      '#type' => 'details',
-      '#title' => $this->t('Forced Login'),
-      '#open' => FALSE,
-      '#tree' => TRUE,
-      '#description' => $this->t(
-        'Anonymous users will be forced to login through CAS when enabled. ' .
-        'This differs from the "gateway feature" in that it will REQUIRE that a user be logged in to their CAS ' .
-        'account, instead of just checking if they already are.<br/><br/>' .
-        '<strong>WARNING:</strong> This feature is NOT compatible with the Internal Page Cache module or external ' .
-        'page caching software like Varnish.'
-      ),
-    );
-    $form['forced_login']['enabled'] = array(
+    $form['general']['login_link_enabled'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('Enable'),
-      '#description' => $this->t('When enabled, every path will force a CAS login, unless specific pages are listed below.'),
-      '#default_value' => $config->get('forced_login.enabled'),
+      '#title' => $this->t('Login Link Enabled'),
+      '#description' => $this->t('Display a link to login via CAS above the user login form.'),
+      '#default_value' => $config->get('login_link_enabled'),
     );
-    $this->forcedLoginPaths->setConfiguration($config->get('forced_login.paths'));
-    $form['forced_login']['paths'] = $this->forcedLoginPaths->buildConfigurationForm(array(), $form_state);
+    $form['general']['login_link_label'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Login Link Label'),
+      '#description' => $this->t('The text that makes up the login link to this CAS server.'),
+      '#default_value' => $config->get('login_link_label'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="general[login_link_enabled]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
 
     $form['user_accounts'] = array(
       '#type' => 'details',
       '#title' => $this->t('User Account Handling'),
-      '#open' => FALSE,
+      '#open' => TRUE,
       '#tree' => TRUE,
     );
     $form['user_accounts']['auto_register'] = array(
@@ -195,6 +169,47 @@ class CasSettings extends ConfigFormBase {
         'If disabled, users must be pre-registered before being allowed to log in.'
       ),
       '#default_value' => $config->get('user_accounts.auto_register'),
+    );
+
+    $form['user_accounts']['email_assignment_strategy'] = array(
+      '#type' => 'radios',
+      '#title' => t('Email address assignment'),
+      '#description' => t("Drupal requires every user have an email address. Select how you'd like to assign an email to automatically registered users."),
+      '#default_value' => $config->get('user_accounts.email_assignment_strategy'),
+      '#options' => array(
+        CasUserManager::EMAIL_ASSIGNMENT_STANDARD => $this->t('Use the CAS username combined with a custom domain name you specify.'),
+        CasUserManager::EMAIL_ASSIGNMENT_ATTRIBUTE => $this->t("Use a CAS attribute that contains the user's complete email address."),
+      ),
+      '#states' => array(
+        'visible' => array(
+          'input[name="user_accounts[auto_register]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+    $form['user_accounts']['email_hostname'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Email Hostname'),
+      '#description' => $this->t("The email domain name used to combine with the username to form the user's email address."),
+      '#field_prefix' => $this->t('username') . '@',
+      '#default_value' => $config->get('user_accounts.email_hostname'),
+      '#states' => array(
+        'visible' => array(
+          'input[name="user_accounts[auto_register]"]' => array('checked' => TRUE),
+          'input[name="user_accounts[email_assignment_strategy]"]' => array('value' => CasUserManager::EMAIL_ASSIGNMENT_STANDARD),
+        ),
+      ),
+    );
+    $form['user_accounts']['email_attribute'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Email Attribute'),
+      '#description' => $this->t("The CAS attribute that contains the user's email address."),
+      '#default_value' => $config->get('user_accounts.email_attribute'),
+      '#states' => array(
+        'visible' => array(
+          'input[name="user_accounts[auto_register]"]' => array('checked' => TRUE),
+          'input[name="user_accounts[email_assignment_strategy]"]' => array('value' => CasUserManager::EMAIL_ASSIGNMENT_ATTRIBUTE),
+        ),
+      ),
     );
 
     $auto_assigned_roles = $config->get('user_accounts.auto_assigned_roles');
@@ -223,6 +238,67 @@ class CasSettings extends ConfigFormBase {
         ),
       ),
     );
+    $form['user_accounts']['restrict_password_management'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Restrict Password Management'),
+      '#description' => $this->t('Prevents CAS users from changing their Drupal password by removing the password fields on the user profile form and disabling the "forgot password" functionality. Admins will still be able to change Drupal passwords for CAS users.'),
+      '#default_value' => $config->get('user_accounts.restrict_password_management'),
+    );
+    $form['user_accounts']['restrict_email_management'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Restrict Email Management'),
+      '#description' => $this->t("Prevents CAS users from changing their email by disabling the email field on the user profile form. Admins will still be able to change email addresses for CAS users. Note that Drupal requires a user enter their current password before changing their email, which your users may not know. Enable the restricted password management feature above to remove this password requirement."),
+      '#default_value' => $config->get('user_accounts.restrict_password_management'),
+    );
+
+    $form['gateway'] = array(
+      '#type' => 'details',
+      '#title' => $this->t('Gateway Feature (Auto Login)'),
+      '#open' => FALSE,
+      '#tree' => TRUE,
+      '#description' => $this->t(
+        'This implements the <a href="@cas-gateway">Gateway feature</a> of the CAS Protocol. ' .
+        'When enabled, Drupal will check if a visitor is already logged into your CAS server before ' .
+        'serving a page request. If they have an active CAS session, they will be automatically ' .
+        'logged into the Drupal site. This is done by quickly redirecting them to the CAS server to perform the ' .
+        'active session check, and then redirecting them back to page they initially requested.<br/><br/>' .
+        'If enabled, all pages on your site will trigger this feature by default. It is strongly recommended that ' .
+        'you specify specific pages to trigger this feature below.<br/><br/>' .
+        '<strong>WARNING:</strong> This feature will disable page caching on pages it is active on.',
+        array('@cas-gateway' => 'https://wiki.jasig.org/display/CAS/gateway')
+      ),
+    );
+    $form['gateway']['check_frequency'] = array(
+      '#type' => 'radios',
+      '#title' => $this->t('Check Frequency'),
+      '#default_value' => $config->get('gateway.check_frequency'),
+      '#options' => array(
+        CasHelper::CHECK_NEVER => 'Disable gateway feature',
+        CasHelper::CHECK_ONCE => 'Once per browser session',
+        CasHelper::CHECK_ALWAYS => 'Every page load (not recommended)',
+      ),
+    );
+    $this->gatewayPaths->setConfiguration($config->get('gateway.paths'));
+    $form['gateway']['paths'] = $this->gatewayPaths->buildConfigurationForm(array(), $form_state);
+
+    $form['forced_login'] = array(
+      '#type' => 'details',
+      '#title' => $this->t('Forced Login'),
+      '#open' => FALSE,
+      '#tree' => TRUE,
+      '#description' => $this->t(
+        'Anonymous users will be forced to login through CAS when enabled. ' .
+        'This differs from the "gateway feature" in that it will force a user to log in if they are not.'
+      ),
+    );
+    $form['forced_login']['enabled'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable'),
+      '#description' => $this->t('If enabled, all pages on your site will trigger this feature. It is strongly recommended that you specify specific pages to trigger this feature below.'),
+      '#default_value' => $config->get('forced_login.enabled'),
+    );
+    $this->forcedLoginPaths->setConfiguration($config->get('forced_login.paths'));
+    $form['forced_login']['paths'] = $this->forcedLoginPaths->buildConfigurationForm(array(), $form_state);
 
     $form['logout'] = array(
       '#type' => 'details',
@@ -251,8 +327,27 @@ class CasSettings extends ConfigFormBase {
       '#default_value' => $config->get('logout.enable_single_logout'),
       '#description' => $this->t('If enabled (and your CAS server supports it), ' .
         'users will be logged out of your Drupal site when they log out of your ' .
-        'CAS server. NOTE: THIS WILL REMOVE A SECURITY HARDENING FEATURE ADDED ' .
-        'IN DRUPAL 8! Session IDs to be stored unhashed in the database.'),
+        'CAS server. <strong>WARNING:</strong> THIS WILL BYPASS A SECURITY HARDENING FEATURE ADDED ' .
+        'IN DRUPAL 8, causing session IDs to be stored unhashed in the database.'),
+    );
+    $form['logout']['single_logout_session_lifetime'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Max lifetime of session mapping data'),
+      '#description' => $this->t('This module stores a mapping of Drupal session IDs ' .
+        'to CAS server session IDs to support single logout. Normally this data is ' .
+        'cleared automatically when a user is logged out, but not always. ' .
+        "To make sure this storage doesn't grow out of control, session mapping " .
+        'data older than the specified amout of days is cleared during cron. ' .
+        'This should be a length of time slightly longer than the session ' .
+        'lifetime of your Drupal site or CAS server.'),
+      '#default_value' => $config->get('logout.single_logout_session_lifetime'),
+      '#field_suffix' => $this->t('days'),
+      '#size' => 4,
+      '#states' => array(
+        'visible' => array(
+          'input[name="logout[enable_single_logout]"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     $form['proxy'] = array(
@@ -337,6 +432,20 @@ class CasSettings extends ConfigFormBase {
       $form_state->setErrorByName('server][cert', $this->t('The path you provided to the custom PEM certificate for your CAS server does not exist or is not readable. Verify this path and try again.'));
     }
 
+    if ($form_state->getValue(['user_accounts', 'auto_register'])) {
+      $email_assignment_strategy = $form_state->getValue(['user_accounts', 'email_assignment_strategy']);
+      if ($email_assignment_strategy == CasUserManager::EMAIL_ASSIGNMENT_STANDARD && empty($form_state->getValue(['user_accounts', 'email_hostname']))) {
+        $form_state->setErrorByName('user_accounts][email_hostname', $this->t('You must provide a hostname for the auto assigned email address.'));
+      }
+      elseif ($email_assignment_strategy == CasUserManager::EMAIL_ASSIGNMENT_ATTRIBUTE && empty($form_state->getValue(['user_accounts', 'email_attribute']))) {
+        $form_state->setErrorByName('user_accounts][email_attribute', $this->t('You must provide an attribute name for the auto assigned email address.'));
+      }
+
+      if ($form_state->getValue(['server', 'version']) == '1.0' && $email_assignment_strategy == CasUserManager::EMAIL_ASSIGNMENT_ATTRIBUTE) {
+        $form_state->setErrorByName('user_accounts][email_assignment_strategy', $this->t("The CAS protocol version you've specified does not support attributes, so you cannot assign user emails from a CAS attribute value."));
+      }
+    }
+
     return parent::validateForm($form, $form_state);
   }
 
@@ -355,6 +464,11 @@ class CasSettings extends ConfigFormBase {
       ->set('server.verify', $server_data['verify'])
       ->set('server.cert', $server_data['cert']);
 
+    $general_data = $form_state->getValue('general');
+    $config
+      ->set('login_link_enabled', $general_data['login_link_enabled'])
+      ->set('login_link_label', $general_data['login_link_label']);
+
     $condition_values = (new FormState())
       ->setValues($form_state->getValue(['gateway', 'paths']));
     $this->gatewayPaths->submitConfigurationForm($form, $condition_values);
@@ -372,13 +486,19 @@ class CasSettings extends ConfigFormBase {
     $config
       ->set('logout.logout_destination', $form_state->getValue(['logout', 'logout_destination']))
       ->set('logout.enable_single_logout', $form_state->getValue(['logout', 'enable_single_logout']))
-      ->set('logout.cas_logout', $form_state->getValue(['logout', 'cas_logout']));
+      ->set('logout.cas_logout', $form_state->getValue(['logout', 'cas_logout']))
+      ->set('logout.single_logout_session_lifetime', $form_state->getValue(['logout', 'single_logout_session_lifetime']));
     $config
       ->set('proxy.initialize', $form_state->getValue(['proxy', 'initialize']))
       ->set('proxy.can_be_proxied', $form_state->getValue(['proxy', 'can_be_proxied']))
       ->set('proxy.proxy_chains', $form_state->getValue(['proxy', 'proxy_chains']));
     $config
-      ->set('user_accounts.auto_register', $form_state->getValue(['user_accounts', 'auto_register']));
+      ->set('user_accounts.auto_register', $form_state->getValue(['user_accounts', 'auto_register']))
+      ->set('user_accounts.email_assignment_strategy', $form_state->getValue(['user_accounts', 'email_assignment_strategy']))
+      ->set('user_accounts.email_hostname', $form_state->getValue(['user_accounts', 'email_hostname']))
+      ->set('user_accounts.email_attribute', $form_state->getValue(['user_accounts', 'email_attribute']))
+      ->set('user_accounts.restrict_password_management', $form_state->getValue(['user_accounts', 'restrict_password_management']))
+      ->set('user_accounts.restrict_email_management', $form_state->getValue(['user_accounts', 'restrict_email_management']));
 
     $auto_assigned_roles = [];
     if ($form_state->getValue(['user_accounts', 'auto_assigned_roles_enable'])) {

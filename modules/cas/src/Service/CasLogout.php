@@ -13,14 +13,14 @@ class CasLogout {
   /**
    * The CAS helper.
    *
-   * @var \Drupal\cas\Service\CasHelper;
+   * @var CasHelper
    */
   protected $casHelper;
 
   /**
    * The database connection used to find the user's session ID.
    *
-   * @var \Drupal\Core\Database\Connection;
+   * @var Connection
    */
   protected $connection;
 
@@ -47,7 +47,7 @@ class CasLogout {
     $this->casHelper->log("Attempting to handle SLO request.");
 
     // Only look up tickets if they were stored to begin with.
-    if (!$this->casHelper->getSingleLogout()) {
+    if (!$this->casHelper->getSingleLogOut()) {
       $this->casHelper->log("Aborting; SLO is not enabled in CAS settings.");
       return;
     }
@@ -62,6 +62,7 @@ class CasLogout {
     }
 
     $this->destroySession($sid);
+    $this->removeSessionMapping($sid);
 
     $this->casHelper->log("SLO request completed successfully.");
   }
@@ -75,6 +76,7 @@ class CasLogout {
    * @codeCoverageIgnore
    */
   protected function destroySession($sid) {
+    session_start();
     session_id($sid);
     session_unset();
     session_destroy();
@@ -132,6 +134,21 @@ class CasLogout {
     if (!empty($result)) {
       return $result->plainsid;
     }
+    else {
+      return NULL;
+    }
+  }
+
+  /**
+   * Remove the SLO session mapping data for the passed in session ID.
+   *
+   * @param string $sid
+   *   The user's session ID.
+   */
+  private function removeSessionMapping($sid) {
+    $this->connection->delete('cas_login_data')
+      ->condition('plainsid', $sid)
+      ->execute();
   }
 
 }
