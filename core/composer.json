@@ -31,7 +31,7 @@
         "symfony/psr-http-message-bridge": "v0.2",
         "zendframework/zend-diactoros": "~1.1",
         "composer/semver": "~1.0",
-        "paragonie/random_compat": "~1.0",
+        "paragonie/random_compat": "^1|^2",
         "asm89/stack-cors": "~1.0"
     },
     "require-dev": {
@@ -40,7 +40,7 @@
         "jcalderonzumba/gastonjs": "~1.0.2",
         "jcalderonzumba/mink-phantomjs-driver": "~0.3.1",
         "mikey179/vfsStream": "~1.2",
-        "phpunit/phpunit": "~4.8",
+        "phpunit/phpunit": ">=4.8.28 <5",
         "symfony/css-selector": "~2.8"
     },
     "replace": {
