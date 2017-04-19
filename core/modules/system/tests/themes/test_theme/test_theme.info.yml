@@ -66,8 +66,8 @@ regions:
   left: Left
   right: Right
 
-# Information added by Drupal.org packaging script on 2017-04-06
-version: '8.3.0'
+# Information added by Drupal.org packaging script on 2017-04-19
+version: '8.3.1'
 core: '8.x'
 project: 'drupal'
-datestamp: 1491439130
+datestamp: 1492622988
