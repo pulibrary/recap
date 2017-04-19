@@ -6,9 +6,17 @@ use Symfony\Component\EventDispatcher\Event;
 use Drupal\cas\CasPropertyBag;
 
 /**
- * Class CasUserLoadEvent.
+ * Class CasPreUserLoadEvent.
+ *
+ * The CAS module dispatches this event during the authentication process just
+ * before an attempt is made to find a local Drupal user account that's
+ * associated with the user attempting to login.
+ *
+ * Subscribers to this event can:
+ *  - Alter the CAS username that is used when looking up an existing Drupal
+ *    user account.
  */
-class CasUserLoadEvent extends Event {
+class CasPreUserLoadEvent extends Event {
 
   /**
    * Store the CAS property bag.
@@ -17,13 +25,6 @@ class CasUserLoadEvent extends Event {
    *   The CasPropertyBag for context.
    */
   protected $casPropertyBag;
-
-  /**
-   * Whether or not to allow CAS to auto-register this user.
-   *
-   * @var bool
-   */
-  public $allowAutoRegister = TRUE;
 
   /**
    * Constructor.

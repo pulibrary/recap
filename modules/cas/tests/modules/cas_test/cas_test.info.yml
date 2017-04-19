@@ -1,10 +1,10 @@
-name: CAS
-description: 'Provides CAS authentication for Drupal.'
+name: 'CAS test'
 type: module
+description: 'Used by the automated tests for the CAS module.'
 # core: 8.x
-configure: cas.settings
+package: Testing
 dependencies:
-  - externalauth:externalauth
+  - cas:cas
 
 # Information added by Drupal.org packaging script on 2017-03-21
 version: '8.x-1.0-beta3'

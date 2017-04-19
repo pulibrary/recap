@@ -46,35 +46,35 @@ class CasValidatorTest extends UnitTestCase {
     $httpClient = new Client(['handler' => $handler]);
 
     $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-                      ->disableOriginalConstructor()
-                      ->getMock();
+      ->disableOriginalConstructor()
+      ->getMock();
     $casValidator = new CasValidator($httpClient, $casHelper);
 
     $casHelper->expects($this->any())
-              ->method('getCasProtocolVersion')
-              ->will($this->returnValue($version));
+      ->method('getCasProtocolVersion')
+      ->will($this->returnValue($version));
 
     $casHelper->expects($this->once())
-              ->method('getSslVerificationMethod')
-              ->willReturn($ssl_verification);
+      ->method('getSslVerificationMethod')
+      ->willReturn($ssl_verification);
 
     $casHelper->expects($this->any())
-              ->method('getCertificateAuthorityPem')
-              ->will($this->returnValue('foo'));
+      ->method('getCertificateAuthorityPem')
+      ->will($this->returnValue('foo'));
 
     $casHelper->expects($this->any())
-              ->method('isProxy')
-              ->will($this->returnValue($is_proxy));
+      ->method('isProxy')
+      ->will($this->returnValue($is_proxy));
 
     $casHelper->expects($this->any())
-              ->method('canBeProxied')
-              ->will($this->returnValue($can_be_proxied));
+      ->method('canBeProxied')
+      ->will($this->returnValue($can_be_proxied));
 
     $casHelper->expects($this->any())
-              ->method('getProxyChains')
-              ->will($this->returnValue($proxy_chains));
+      ->method('getProxyChains')
+      ->will($this->returnValue($proxy_chains));
 
-    $property_bag = $casValidator->validateTicket($version, $ticket, array());
+    $property_bag = $casValidator->validateTicket($version, $ticket);
 
     // Test that we sent the correct ssl option to the http client.
     foreach ($container as $transaction) {
@@ -82,9 +82,11 @@ class CasValidatorTest extends UnitTestCase {
         case CasHelper::CA_CUSTOM:
           $this->assertEquals('foo', $transaction['options']['verify']);
           break;
+
         case CasHelper::CA_NONE:
           $this->assertEquals(FALSE, $transaction['options']['verify']);
           break;
+
         default:
           $this->assertEquals(TRUE, $transaction['options']['verify']);
       }

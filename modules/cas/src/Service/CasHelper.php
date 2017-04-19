@@ -7,7 +7,7 @@ use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Logger\LoggerChannelFactory;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -60,18 +60,32 @@ class CasHelper {
   const CHECK_ALWAYS = 0;
 
   /**
-   * Event type identifier for user load events.
+   * Event type identifier for the CasPreUserLoadEvent.
    *
    * @var string
    */
-  const EVENT_USER_LOAD = 'cas.user_load';
+  const EVENT_PRE_USER_LOAD = 'cas.pre_user_load';
+
+  /**
+   * Event type identifier for the CasPreRegisterEvent.
+   *
+   * @var string
+   */
+  const EVENT_PRE_REGISTER = 'cas.pre_register';
+
+  /**
+   * Event type identifier for the CasPreLoginEvent.
+   *
+   * @var string
+   */
+  const EVENT_PRE_LOGIN = 'cas.pre_login';
 
   /**
    * Event type identifier for pre auth events.
    *
    * @var string
    */
-  const EVENT_PRE_AUTH = 'cas.pre_auth';
+  const EVENT_PRE_REDIRECT = 'cas.pre_redirect';
 
   /**
    * Stores database connection.
@@ -117,41 +131,18 @@ class CasHelper {
    *   The URL generator.
    * @param Connection $database_connection
    *   The database service.
-   * @param LoggerChannelFactory $logger_factory
+   * @param LoggerChannelFactoryInterface $logger_factory
    *   The logger channel factory.
    * @param SessionInterface $session
    *   The session handler.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, Connection $database_connection, LoggerChannelFactory $logger_factory, SessionInterface $session) {
+  public function __construct(ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, Connection $database_connection, LoggerChannelFactoryInterface $logger_factory, SessionInterface $session) {
     $this->urlGenerator = $url_generator;
     $this->connection = $database_connection;
     $this->session = $session;
 
     $this->settings = $config_factory->get('cas.settings');
     $this->loggerChannel = $logger_factory->get('cas');
-  }
-
-  /**
-   * Return the login URL to the CAS server.
-   *
-   * @param array $service_params
-   *   An array of query string parameters to add to the service URL.
-   * @param bool $gateway
-   *   TRUE if this should be a gateway request.
-   *
-   * @return string
-   *   The fully constructed server login URL.
-   */
-  public function getServerLoginUrl($service_params = array(), $gateway = FALSE) {
-    $login_url = $this->getServerBaseUrl() . 'login';
-
-    $params = array();
-    if ($gateway) {
-      $params['gateway'] = 'true';
-    }
-    $params['service'] = $this->getCasServiceUrl($service_params);
-
-    return $login_url . '?' . UrlHelper::buildQuery($params);
   }
 
   /**
@@ -232,7 +223,7 @@ class CasHelper {
    * @return string
    *   The fully constructed service URL to use for CAS server.
    */
-  private function getCasServiceUrl($service_params = array()) {
+  public function getCasServiceUrl($service_params = array()) {
     return $this->urlGenerator->generate('cas.service', $service_params, TRUE);
   }
 
@@ -245,7 +236,7 @@ class CasHelper {
   public function getServerBaseUrl() {
     $url = 'https://' . $this->settings->get('server.hostname');
     $port = $this->settings->get('server.port');
-    if (!empty($port)) {
+    if (!empty($port) && $port != 443) {
       $url .= ':' . $this->settings->get('server.port');
     }
     $url .= $this->settings->get('server.path');
@@ -359,7 +350,7 @@ class CasHelper {
    *   The message to log.
    */
   public function log($message) {
-    if ($this->settings->get('debugging.log') == TRUE) {
+    if ($this->settings->get('advanced.debug_log') == TRUE) {
       $this->loggerChannel->log(RfcLogLevel::DEBUG, $message);
     }
   }
@@ -379,16 +370,25 @@ class CasHelper {
       $destination = $this->settings->get('logout.logout_destination');
       if ($destination == '<front>') {
         // If we have '<front>', resolve the path.
-        $params['service'] = $this->urlGenerator->generate($destination, array(), TRUE);
+        $return_url = $this->urlGenerator->generate($destination, array(), TRUE);
       }
       elseif ($this->isExternal($destination)) {
         // If we have an absolute URL, use that.
-        $params['service'] = $destination;
+        $return_url = $destination;
       }
       else {
         // This is a regular Drupal path.
-        $params['service'] = $request->getSchemeAndHttpHost() . '/' . ltrim($destination, '/');
+        $return_url = $request->getSchemeAndHttpHost() . '/' . ltrim($destination, '/');
       }
+
+      // CAS 2.0 uses 'url' param, while newer versions use 'service'.
+      if ($this->getCasProtocolVersion() == '2.0') {
+        $params['url'] = $return_url;
+      }
+      else {
+        $params['service'] = $return_url;
+      }
+
       return $base_url . '?' . UrlHelper::buildQuery($params);
     }
     else {
@@ -459,6 +459,16 @@ class CasHelper {
    */
   public function getSingleLogOut() {
     return $this->settings->get('logout.enable_single_logout');
+  }
+
+  /**
+   * The amount of time to allow a connection to the CAS server to take.
+   *
+   * @return int
+   *   The timeout in seconds.
+   */
+  public function getConnectionTimeout() {
+    return $this->settings->get('advanced.connection_timeout');
   }
 
 }

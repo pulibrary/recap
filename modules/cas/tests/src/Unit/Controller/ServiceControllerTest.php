@@ -8,6 +8,7 @@ use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\CasPropertyBag;
 use Drupal\Tests\cas\Unit\Controller\TestServiceController;
 use Drupal\cas\Controller\ServiceController;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * ServiceController unit tests.
@@ -41,11 +42,11 @@ class ServiceControllerTest extends UnitTestCase {
   protected $casValidator;
 
   /**
-   * The mocked CasLogin.
+   * The mocked CasUserManager.
    *
-   * @var \Drupal\cas\Service\CasLogin|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasUserManager|\PHPUnit_Framework_MockObject_MockObject
    */
-  protected $casLogin;
+  protected $casUserManager;
 
   /**
    * The mocked CasLogout.
@@ -81,7 +82,7 @@ class ServiceControllerTest extends UnitTestCase {
     $this->casValidator = $this->getMockBuilder('\Drupal\cas\Service\CasValidator')
       ->disableOriginalConstructor()
       ->getMock();
-    $this->casLogin = $this->getMockBuilder('\Drupal\cas\Service\CasLogin')
+    $this->casUserManager = $this->getMockBuilder('\Drupal\cas\Service\CasUserManager')
       ->disableOriginalConstructor()
       ->getMock();
     $this->casLogout = $this->getMockBuilder('\Drupal\cas\Service\CasLogout')
@@ -90,19 +91,19 @@ class ServiceControllerTest extends UnitTestCase {
     $this->requestStack = $this->getMock('\Symfony\Component\HttpFoundation\RequestStack');
     $this->urlGenerator = $this->getMock('\Drupal\Core\Routing\UrlGeneratorInterface');
 
-    $this->requestObject = new \Symfony\Component\HttpFoundation\Request();
+    $this->requestObject = new Request();
     $request_bag = $this->getMock('\Symfony\Component\HttpFoundation\ParameterBag');
     $query_bag = $this->getMock('\Symfony\Component\HttpFoundation\ParameterBag');
     $this->requestObject->query = $query_bag;
     $this->requestObject->request = $request_bag;
 
     $storage = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage')
-                    ->setMethods(NULL)
-                    ->getMock();
+      ->setMethods(NULL)
+      ->getMock();
     $session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
-                    ->setConstructorArgs(array($storage))
-                    ->setMethods(NULL)
-                    ->getMock();
+      ->setConstructorArgs(array($storage))
+      ->setMethods(NULL)
+      ->getMock();
     $session->start();
 
     $this->requestObject->setSession($session);
@@ -111,7 +112,7 @@ class ServiceControllerTest extends UnitTestCase {
     $this->serviceController = new TestServiceController(
         $this->casHelper,
         $this->casValidator,
-        $this->casLogin,
+        $this->casUserManager,
         $this->casLogout,
         $this->requestStack,
         $this->urlGenerator
@@ -130,7 +131,7 @@ class ServiceControllerTest extends UnitTestCase {
       ->will($this->onConsecutiveCalls(
         $this->casHelper,
         $this->casValidator,
-        $this->casLogin,
+        $this->casUserManager,
         $this->casLogout,
         $this->requestStack,
         $this->urlGenerator
@@ -220,8 +221,8 @@ class ServiceControllerTest extends UnitTestCase {
     $this->assertSuccessfulValidation($returnto);
 
     // Login should be called.
-    $this->casLogin->expects($this->once())
-      ->method('loginToDrupal')
+    $this->casUserManager->expects($this->once())
+      ->method('login')
       ->with($this->equalTo($validation_data), $this->equalTo('ST-foobar'));
 
     $this->assertRedirectedToFrontPageOnHandle();
@@ -261,8 +262,8 @@ class ServiceControllerTest extends UnitTestCase {
     $validation_data->setPgt('testpgt');
 
     // Login should be called.
-    $this->casLogin->expects($this->once())
-      ->method('loginToDrupal')
+    $this->casUserManager->expects($this->once())
+      ->method('login')
       ->with($this->equalTo($validation_data), $this->equalTo('ST-foobar'));
 
     // PGT should be saved.
@@ -302,8 +303,8 @@ class ServiceControllerTest extends UnitTestCase {
       ->will($this->throwException(new CasValidateException()));
 
     // Login should not be called.
-    $this->casLogin->expects($this->never())
-      ->method('loginToDrupal');
+    $this->casUserManager->expects($this->never())
+      ->method('login');
 
     $this->assertRedirectedToFrontPageOnHandle();
   }
@@ -334,8 +335,8 @@ class ServiceControllerTest extends UnitTestCase {
     $this->assertSuccessfulValidation($returnto);
 
     // Login should throw an exception.
-    $this->casLogin->expects($this->once())
-      ->method('loginToDrupal')
+    $this->casUserManager->expects($this->once())
+      ->method('login')
       ->will($this->throwException(new CasLoginException()));
 
     $this->assertRedirectedToFrontPageOnHandle();

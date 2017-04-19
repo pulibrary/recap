@@ -5,7 +5,6 @@ namespace Drupal\Tests\cas\Functional;
 use Drupal\cas\CasPropertyBag;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
-use Drupal\user\Entity\User;
 
 /**
  * Tests CAS admin settings form.
@@ -27,7 +26,9 @@ class CasAdminSettingsTest extends BrowserTestBase {
   protected $adminUser;
 
   /**
-   * @todo fix the config schema.
+   * Disable strict schema cheking.
+   *
+   * @var bool
    */
   protected $strictConfigSchema = FALSE;
 
@@ -36,33 +37,43 @@ class CasAdminSettingsTest extends BrowserTestBase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->drupalLogin($this->drupalCreateUser(['administer account settings']));
+    $this->adminUser = $this->drupalCreateUser(['administer account settings']);
+    $this->drupalLogin($this->adminUser);
   }
 
   /**
-   * Tests Standard installation profile.
+   * Tests that access to the password reset form is disabled.
+   *
+   * @dataProvider restrictedPasswordEnabledProvider
    */
-  public function testCasAutoAssignedRoles() {
-    $role_id = $this->drupalCreateRole([]);
-    $role_id_2 = $this->drupalCreateRole([]);
+  public function testPasswordResetBehavior($restricted_password_enabled) {
     $edit = [
-      'user_accounts[auto_register]' => TRUE,
-      'user_accounts[auto_assigned_roles_enable]' => TRUE,
-      'user_accounts[auto_assigned_roles][]' => [$role_id, $role_id_2],
+      'user_accounts[restrict_password_management]' => $restricted_password_enabled,
+      'user_accounts[email_hostname]' => 'sample.com',
     ];
     $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
 
-    $this->assertEquals([$role_id, $role_id_2], $this->config('cas.settings')->get('user_accounts.auto_assigned_roles'));
+    // The menu router info needs to be rebuilt after saving this form so the
+    // CAS menu alter runs again.
+    $this->container->get('router.builder')->rebuild();
 
-    $cas_property_bag = new CasPropertyBag('test_cas_user_name');
-    \Drupal::service('cas.login')->loginToDrupal($cas_property_bag, 'fake_ticket_string');
-    $user = user_load_by_name('test_cas_user_name');
-    $this->assertTrue($user->hasRole($role_id), 'The user has the auto assigned role: ' . $role_id);
-    $this->assertTrue($user->hasRole($role_id_2), 'The user has the auto assigned role: ' . $role_id_2);
+    $this->drupalLogout();
+    $this->drupalGet('user/password');
+    if ($restricted_password_enabled) {
+      $this->assertSession()->pageTextContains(t('Access denied'));
+      $this->assertSession()->pageTextNotContains(t('Reset your password'));
+    }
+    else {
+      $this->assertSession()->pageTextNotContains(t('Access denied'));
+      $this->assertSession()->pageTextContains(t('Reset your password'));
+    }
+  }
 
-    Role::load($role_id_2)->delete();
-
-    $this->assertEquals([$role_id], $this->config('cas.settings')->get('user_accounts.auto_assigned_roles'));
+  /**
+   * Data provider for testPasswordResetBehavior.
+   */
+  public function restrictedPasswordEnabledProvider() {
+    return [[FALSE], [TRUE]];
   }
 
 }

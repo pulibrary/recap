@@ -32,10 +32,10 @@
   },
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
-  "require": { },
   "extra": {
     "branch-alias": {
       "dev-8.x-1.x": "8.1.x-dev"
     }
   }
 }
+

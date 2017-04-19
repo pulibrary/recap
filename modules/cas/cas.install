@@ -5,6 +5,8 @@
  * The Drupal install file.
  */
 
+use Drupal\Core\Database\Database;
+
 /**
  * Implements hook_schema().
  */
@@ -21,7 +23,7 @@ function cas_schema() {
         'not null' => TRUE,
       ),
       'plainsid' => array(
-        'description' => 'An unhashed session ID. Only stored if single logout is configured.',
+        'description' => 'An unhashed session ID.',
         'type' => 'varchar',
         'length' => 128,
         'not null' => TRUE,
@@ -32,6 +34,12 @@ function cas_schema() {
         'length' => 256,
         'not null' => TRUE,
         'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The timestamp when this user session was created.',
+        'type' => 'int',
+        'length' => 11,
+        'not null' => TRUE,
       ),
     ),
     'primary key' => array(
@@ -76,4 +84,34 @@ function cas_schema() {
     'primary key' => array('pgt_iou'),
   );
   return $schema;
+}
+
+/**
+ * Adds the 'created' field to the cas_login_data table and new related config.
+ */
+function cas_update_8001(&$sandbox) {
+  $created_spec = array(
+    'type' => 'int',
+    'description' => 'The timestamp when this user session was created.',
+    'length' => 11,
+    'not null' => TRUE,
+  );
+  $schema = Database::getConnection()->schema();
+  $schema->addField('cas_login_data', 'created', $created_spec);
+
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('cas.settings');
+  $config->set('logout.single_logout_session_lifetime', 25);
+  $config->save(TRUE);
+}
+
+/**
+ * Rename the configuration setting for debug log.
+ */
+function cas_update_8002(&$sandbox) {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('cas.settings');
+  $config->set('advanced.debug_log', $config->get('debugging.log'));
+  $config->clear('debugging');
+  $config->save();
 }
