@@ -108,7 +108,7 @@ class CasProxyHelper {
     $cas_url = $this->getServerProxyUrl($target_service);
     try {
       $this->casHelper->log("Retrieving proxy ticket from: $cas_url");
-      $response = $this->httpClient->get($cas_url);
+      $response = $this->httpClient->get($cas_url, ['timeout' => $this->casHelper->getConnectionTimeout()]);
       $this->casHelper->log("Received: " . htmlspecialchars($response->getBody()->__toString()));
     }
     catch (ClientException $e) {
@@ -125,7 +125,7 @@ class CasProxyHelper {
     $cookie_jar = new CookieJar();
     try {
       $this->casHelper->log("Contacting service: $service_url");
-      $this->httpClient->get($service_url, ['cookies' => $cookie_jar]);
+      $this->httpClient->get($service_url, ['cookies' => $cookie_jar, 'timeout' => $this->casHelper->getConnectionTimeout()]);
     }
     catch (ClientException $e) {
       throw new CasProxyException($e->getMessage());

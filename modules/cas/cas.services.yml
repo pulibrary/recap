@@ -1,18 +1,21 @@
 services:
   cas.subscriber:
     class: Drupal\cas\Subscriber\CasSubscriber
-    arguments: ['@request_stack', '@current_route_match', '@config.factory',  '@current_user', '@plugin.manager.condition', '@cas.helper']
+    arguments: ['@request_stack', '@current_route_match', '@config.factory',  '@current_user', '@plugin.manager.condition', '@cas.helper', '@cas.redirector']
     tags:
       - { name: 'event_subscriber' }
   cas.helper:
     class: Drupal\cas\Service\CasHelper
     arguments: ['@config.factory', '@url_generator.non_bubbling', '@database', '@logger.factory', '@session']
+  cas.redirector:
+    class: Drupal\cas\Service\CasRedirector
+    arguments: ['@cas.helper', '@event_dispatcher']
   cas.validator:
     class: Drupal\cas\Service\CasValidator
     arguments: ['@http_client', '@cas.helper']
-  cas.login:
-    class: Drupal\cas\Service\CasLogin
-    arguments: ['@config.factory', '@entity_type.manager', '@session', '@database', '@event_dispatcher']
+  cas.user_manager:
+    class: Drupal\cas\Service\CasUserManager
+    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@config.factory', '@session', '@database', '@event_dispatcher']
   cas.logout:
     class: Drupal\cas\Service\CasLogout
     arguments: ['@cas.helper', '@database']
@@ -24,3 +27,23 @@ services:
     arguments: ['@cas.helper']
     tags:
       - { name: route_enhancer }
+  cas.external_auth_subscriber:
+    class: Drupal\cas\Subscriber\ExternalAuthSubscriber
+    tags:
+      - { name: 'event_subscriber' }
+  cas.prevent_password_reset_subscriber:
+    class: Drupal\cas\Subscriber\PreventPasswordResetSubscriber
+    arguments: ['@config.factory']
+    tags:
+      - { name: 'event_subscriber' }
+  cas.page_cache_response_policy.deny_cas:
+    class: Drupal\cas\PageCache\DenyCas
+    arguments: ['@config.factory', '@plugin.manager.condition']
+    public: false
+    tags:
+      - { name: page_cache_response_policy }
+  cas.auto_assign_roles_subscriber:
+    class: Drupal\cas\Subscriber\CasAutoAssignRolesSubscriber
+    arguments: ['@config.factory']
+    tags:
+      - { name: 'event_subscriber' }

@@ -50,8 +50,8 @@ class CasValidator {
    * @param array $service_params
    *   An array of query string parameters to add to the service URL.
    *
-   * @return array
-   *   An array containing validation result data from the CAS server.
+   * @return CasPropertyBag
+   *   Contains user info from the CAS server.
    *
    * @throws CasValidateException
    *   Thrown if there was a problem making the validation request or
@@ -75,6 +75,8 @@ class CasValidator {
         // This triggers for CasHelper::CA_DEFAULT.
         $options['verify'] = TRUE;
     }
+
+    $options['timeout'] = $this->casHelper->getConnectionTimeout();
 
     $validate_url = $this->casHelper->getServerValidateUrl($ticket, $service_params);
     $this->casHelper->log("Attempting to validate service ticket using URL $validate_url");
@@ -105,8 +107,8 @@ class CasValidator {
    * @param string $data
    *   The raw validation response data from CAS server.
    *
-   * @return array
-   *   An array containing validation result data from the CAS server.
+   * @return CasPropertyBag
+   *   Contains user info from the CAS server.
    *
    * @throws CasValidateException
    *   Thrown if there was a problem parsing the validation data.
@@ -132,8 +134,8 @@ class CasValidator {
    * @param string $data
    *   The raw validation response data from CAS server.
    *
-   * @return array
-   *   An array containing validation result data from the CAS server.
+   * @return CasPropertyBag
+   *   Contains user info from the CAS server.
    *
    * @throws CasValidateException
    *   Thrown if there was a problem parsing the validation data.

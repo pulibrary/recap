@@ -57,7 +57,7 @@ class PhpFileLibrary extends LibraryBase implements PhpFileLibraryInterface {
 
     $processed_files = [];
     foreach ($this->files as $file) {
-      $processed_files[] = $this->getLocalPath() . DIRECTORY_SEPARATOR . $file;
+      $processed_files[] = $this->getLocalPath() . '/' . $file;
     }
     return $processed_files;
   }
@@ -66,7 +66,8 @@ class PhpFileLibrary extends LibraryBase implements PhpFileLibraryInterface {
    * {@inheritdoc}
    */
   public function getLocator(FactoryInterface $locator_factory) {
-    return $locator_factory->createInstance('stream', ['scheme' => 'php-file']);
+    // @todo Consider refining the stream wrapper used here.
+    return $locator_factory->createInstance('uri', ['uri' => 'php-file://']);
   }
 
 }
