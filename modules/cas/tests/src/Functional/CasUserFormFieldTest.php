@@ -12,7 +12,7 @@ class CasAccountAndRegistrationFormTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['cas'];
+  public static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
 
   /**
    * Tests that the CAS username field works as expected.

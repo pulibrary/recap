@@ -14,18 +14,12 @@ class CasForcedLoginControllerTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['cas'];
+  public static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
 
   /**
    * Tests the the forced login route that redirects users authenticate.
-   *
-   * @param array $params
-   *   Testing parameters.
-   *
-   * @dataProvider queryStringDataProvider
-   *   Data provider
    */
-  public function testForcedLoginRoute(array $params = []) {
+  public function testForcedLoginRoute() {
     $admin = $this->drupalCreateUser(['administer account settings']);
     $this->drupalLogin($admin);
 
@@ -44,26 +38,20 @@ class CasForcedLoginControllerTest extends CasBrowserTestBase {
     // We want to test that query string parameters that are present on the
     // request to the forced login route are passed along to the service
     // URL as well, so test each of these cases individually.
-    $path = $this->buildUrl('cas', ['query' => $params, 'absolute' => TRUE]);
-
-    $session->visit($path);
-
-    $this->assertEquals(302, $session->getStatusCode());
-    $expected_redirect_location = 'https://fakecasserver.localhost/auth/login?' . UrlHelper::buildQuery(['service' => $this->buildServiceUrlWithParams($params)]);
-    $this->assertEquals($expected_redirect_location, $session->getResponseHeader('Location'));
-  }
-
-  /**
-   * Data provider for testForcedLoginRoute.
-   *
-   * Provides various different query strings to the forced login route.
-   */
-  public function queryStringDataProvider() {
-    return [
-      [[]],
-      [['returnto' => 'node/1']],
-      [['foo' => 'bar', 'buzz' => 'baz']],
+    $params_to_test = [
+      [],
+      ['returnto' => 'node/1'],
+      ['foo' => 'bar', 'buzz' => 'baz'],
     ];
+    foreach ($params_to_test as $params) {
+      $path = $this->buildUrl('cas', ['query' => $params, 'absolute' => TRUE]);
+
+      $session->visit($path);
+
+      $this->assertEquals(302, $session->getStatusCode());
+      $expected_redirect_location = 'https://fakecasserver.localhost/auth/login?' . UrlHelper::buildQuery(['service' => $this->buildServiceUrlWithParams($params)]);
+      $this->assertEquals($expected_redirect_location, $session->getResponseHeader('Location'));
+    }
   }
 
 }

@@ -45,9 +45,14 @@ class CasRedirectData {
   /**
    * Cache contexts to apply to cacheable redirect responses.
    *
+   * We need to vary the redirect response based on the URL because:
+   * 1. The site domain is included in the service parameter in the redirect.
+   * 2. Paramters on the URL are passed along as query params to the service
+   * URL as well.
+   *
    * @var array
    */
-  protected $cacheContexts = [];
+  protected $cacheContexts = ['url'];
 
   /**
    * CasRedirectData constructor.

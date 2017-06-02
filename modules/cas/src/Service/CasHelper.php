@@ -172,6 +172,15 @@ class CasHelper {
           $path = 'serviceValidate';
         }
         break;
+
+      case "3.0":
+        if ($this->canBeProxied()) {
+          $path = 'p3/proxyValidate';
+        }
+        else {
+          $path = 'p3/serviceValidate';
+        }
+        break;
     }
     $validate_url .= $path;
 

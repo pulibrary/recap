@@ -8,6 +8,7 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Tests\cas\Unit\Mock\MockCondition;
 use Drupal\Tests\cas\Unit\Mock\MockSession;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ServerBag;
@@ -226,6 +227,17 @@ class CasSubscriberTest extends UnitTestCase {
     $this->event->method('setResponse')->willReturnCallback([$this, 'setEventResponse']);
     $this->event->method('getRequestType')->willReturnCallback([$this, 'getEventRequestType']);
 
+    // We have to mock the cache context manager which is called when we
+    // add cache contexts to a cacheable metadata.
+    $cache_contexts_manager = $this->getMockBuilder('Drupal\Core\Cache\Context\CacheContextsManager')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $cache_contexts_manager->method('assertValidTokens')->willReturn(TRUE);
+    $cache_contexts_manager->expects($this->any())
+      ->method('validate_tokens');
+    $container = new Container();
+    $container->set('cache_contexts_manager', $cache_contexts_manager);
+    \Drupal::setContainer($container);
   }
 
   /**
