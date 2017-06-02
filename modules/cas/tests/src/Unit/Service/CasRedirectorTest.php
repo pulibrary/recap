@@ -9,6 +9,7 @@ use Drupal\cas\Service\CasRedirector;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\DependencyInjection\Container;
 
 /**
  * Cas Redirector Unit Tests.
@@ -66,6 +67,18 @@ class CasRedirectorTest extends UnitTestCase {
     $this->eventDispatcher = $this->getMockBuilder('\Symfony\Component\EventDispatcher\EventDispatcherInterface')
       ->disableOriginalConstructor()
       ->getMock();
+
+    // We have to mock the cache context manager which is called when we
+    // add cache contexts to a cacheable metadata.
+    $cache_contexts_manager = $this->getMockBuilder('Drupal\Core\Cache\Context\CacheContextsManager')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $cache_contexts_manager->method('assertValidTokens')->willReturn(TRUE);
+    $cache_contexts_manager->expects($this->any())
+      ->method('validate_tokens');
+    $container = new Container();
+    $container->set('cache_contexts_manager', $cache_contexts_manager);
+    \Drupal::setContainer($container);
   }
 
   /**

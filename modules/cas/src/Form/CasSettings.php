@@ -82,7 +82,8 @@ class CasSettings extends ConfigFormBase {
       '#title' => $this->t('Protocol Version'),
       '#options' => array(
         '1.0' => $this->t('1.0'),
-        '2.0' => $this->t('2.0 or higher'),
+        '2.0' => $this->t('2.0'),
+        '3.0' => $this->t('3.0 or higher'),
       ),
       '#default_value' => $config->get('server.version'),
       '#description' => $this->t('The CAS protocol version your CAS server supports.'),
@@ -202,7 +203,7 @@ class CasSettings extends ConfigFormBase {
     $form['user_accounts']['email_attribute'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Email Attribute'),
-      '#description' => $this->t("The CAS attribute that contains the user's email address."),
+      '#description' => $this->t("The CAS attribute name (case sensitive) that contains the user's email address."),
       '#default_value' => $config->get('user_accounts.email_attribute'),
       '#states' => array(
         'visible' => array(

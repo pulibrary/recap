@@ -14,7 +14,14 @@ class CasSubscriberTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['cas', 'path', 'filter', 'node'];
+  public static $modules = [
+    'cas',
+    'path',
+    'filter',
+    'node',
+    'page_cache',
+    'dynamic_page_cache',
+  ];
 
   /**
    * Test that the CasSubscriber properly forces CAS authentication as expected.

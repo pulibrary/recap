@@ -6,8 +6,8 @@ package: Testing
 dependencies:
   - cas:cas
 
-# Information added by Drupal.org packaging script on 2017-03-21
-version: '8.x-1.0-beta3'
+# Information added by Drupal.org packaging script on 2017-05-14
+version: '8.x-1.0-rc1'
 core: '8.x'
 project: 'cas'
-datestamp: 1490138887
+datestamp: 1494724991

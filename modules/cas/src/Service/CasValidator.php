@@ -95,6 +95,7 @@ class CasValidator {
         return $this->validateVersion1($response_data);
 
       case "2.0":
+      case "3.0":
         return $this->validateVersion2($response_data);
     }
 
