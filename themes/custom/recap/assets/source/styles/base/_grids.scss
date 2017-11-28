@@ -39,20 +39,6 @@ ul {
   margin: 0;
 }
 
-// @include border-box-sizing;
-
-// nav {
-//   @include clearfix;
-//   // tablet view
-//   @include breakpoint($tab-desk) {
-//     @include span(2 of 6 last);
-//   }
-//   // desktop view
-//   @include breakpoint($desk) {
-//     @include span(2 of 12);
-//   }
-// }
-
 
 // sticky footer
 html,
@@ -64,7 +50,7 @@ body {
   margin-bottom: -60px;
   min-height: 100%;
 
-  &:after {
+  &::after {
     content: "";
     display: block;
     height: 60px;
