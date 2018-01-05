@@ -26,7 +26,7 @@ header nav {
 
   > ul > li > a.is-active {
     border-bottom: $blue-1 6px solid;
-    color: darken($blue-1, 10);
+    color: darken($blue-1, 15);
   }
 
   li:hover a.is-active {
