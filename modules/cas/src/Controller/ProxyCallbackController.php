@@ -3,6 +3,7 @@
 namespace Drupal\cas\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -13,6 +14,7 @@ use Drupal\cas\Service\CasHelper;
  * Class ProxyCallbackController.
  */
 class ProxyCallbackController implements ContainerInjectionInterface {
+
   /**
    * Used when inserting the CAS PGT into the database.
    *
@@ -37,11 +39,11 @@ class ProxyCallbackController implements ContainerInjectionInterface {
   /**
    * Constructor.
    *
-   * @param Connection $database_connection
+   * @param \Drupal\Core\Database\Connection $database_connection
    *   The database service.
-   * @param RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The Symfony request stack.
-   * @param CasHelper $cas_helper
+   * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CasHelper.
    */
   public function __construct(Connection $database_connection, RequestStack $request_stack, CasHelper $cas_helper) {
@@ -54,8 +56,6 @@ class ProxyCallbackController implements ContainerInjectionInterface {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    // This needs to get the necessary __construct requirements from
-    // the container.
     return new static($container->get('database'), $container->get('request_stack'), $container->get('cas.helper'));
   }
 
@@ -66,13 +66,16 @@ class ProxyCallbackController implements ContainerInjectionInterface {
    * the incoming response from the CAS Server can be looked up.
    */
   public function callback() {
+    $this->casHelper->log(LogLevel::DEBUG, 'Proxy callback processing started.');
+
     // @TODO: Check that request is coming from configured CAS server to avoid
     // filling up the table with bogus pgt values.
     $request = $this->requestStack->getCurrentRequest();
+
     // Check for both a pgtIou and pgtId parameter. If either is not present,
     // inform CAS Server of an error.
     if (!($request->query->get('pgtId') && $request->query->get('pgtIou'))) {
-      $this->casHelper->log("Missing necessary parameters for PGT.");
+      $this->casHelper->log(LogLevel::ERROR, "Either pgtId or pgtIou parameters are missing from the request.");
       return Response::create('Missing necessary parameters', 400);
     }
     else {
@@ -80,7 +83,11 @@ class ProxyCallbackController implements ContainerInjectionInterface {
       $pgt_id = $request->query->get('pgtId');
       $pgt_iou = $request->query->get('pgtIou');
       $this->storePgtMapping($pgt_iou, $pgt_id);
-      $this->casHelper->log("Storing pgtId $pgt_id with pgtIou $pgt_iou");
+      $this->casHelper->log(
+        LogLevel::DEBUG,
+        "Storing pgtId %pgt_id with pgtIou %pgt_iou",
+        array('%pgt_id' => $pgt_id, '%pgt_iou' => $pgt_iou)
+      );
       // PGT stored properly, tell CAS Server to proceed.
       return Response::create('OK', 200);
     }

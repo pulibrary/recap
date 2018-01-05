@@ -8,6 +8,7 @@ use Drupal\cas\Service\CasRedirector;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\EventSubscriber\HttpExceptionSubscriberBase;
 use Drupal\Core\Session\AccountInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
@@ -114,7 +115,7 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
    *   The condition manager.
    * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CAS Helper service.
-   * @param CasRedirector $cas_redirector
+   * @param \Drupal\cas\Service\CasRedirector $cas_redirector
    *   The CAS Redirector Service.
    */
   public function __construct(RequestStack $request_stack, RouteMatchInterface $route_matcher, ConfigFactoryInterface $config_factory, AccountInterface $current_user, ConditionManager $condition_manager, CasHelper $cas_helper, CasRedirector $cas_redirector) {
@@ -146,7 +147,7 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
   /**
    * The entry point for our subscriber.
    *
-   * @param GetResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   The response event from the kernel.
    */
   public function handle(GetResponseEvent $event) {
@@ -166,7 +167,7 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
     $session = $this->requestStack->getCurrentRequest()->getSession();
     if ($session && $session->has('cas_temp_disable_auto_auth')) {
       $session->remove('cas_temp_disable_auto_auth');
-      $this->casHelper->log("Temp disable flag set, skipping CAS subscriber.");
+      $this->casHelper->log(LogLevel::DEBUG, "Temp disable flag set, skipping CAS subscriber.");
       return;
     }
 
@@ -185,12 +186,12 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
       // Check to see if we should initiate a gateway auth check.
       if ($this->handleGateway()) {
         $redirect_data->setParameter('gateway', 'true');
-        $this->casHelper->log('Gateway Login Requested');
+        $this->casHelper->log(LogLevel::DEBUG, 'Initializing gateway auth from CasSubscriber.');
         $redirect_data->forceRedirection();
       };
       // Check to see if we should require a forced login.
       if ($this->handleForcedPath()) {
-        $this->casHelper->log('Force Login Requested');
+        $this->casHelper->log(LogLevel::DEBUG, 'Initializing forced login auth from CasSubscriber.');
         $redirect_data->setParameter('gateway', NULL);
         $redirect_data->setIsCacheable(TRUE);
         $redirect_data->forceRedirection();
@@ -260,7 +261,7 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
     if ($this->gatewayCheckFrequency === CasHelper::CHECK_ONCE) {
       // If the session var is already set, we know to back out.
       if ($this->requestStack->getCurrentRequest()->getSession()->has('cas_gateway_checked')) {
-        $this->casHelper->log("Gateway already checked, will not check again.");
+        $this->casHelper->log(LogLevel::DEBUG, 'CAS gateway auth has already been performed for this session.');
         return FALSE;
       }
       $this->requestStack->getCurrentRequest()->getSession()->set('cas_gateway_checked', TRUE);
@@ -306,7 +307,7 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
       // Return on the first find.
       foreach ($crawlers as $c) {
         if (stripos($current_request->server->get('HTTP_USER_AGENT'), $c) !== FALSE) {
-          $this->casHelper->log('CasSubscriber ignoring request from suspected crawler "$c"');
+          $this->casHelper->log(LogLevel::DEBUG, 'CasSubscriber ignoring request from suspected crawler "%crawler"', array('%crawler' => $c));
           return TRUE;
         }
       }
@@ -362,7 +363,7 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
       $return_to = $this->requestStack->getCurrentRequest()->getUri();
       $redirect_data = new CasRedirectData(['returnto' => $return_to]);
       if ($this->handleForcedPath()) {
-        $this->casHelper->log('Force Login Requested');
+        $this->casHelper->log(LogLevel::DEBUG, 'Initializing forced login auth from CasSubscriber.');
         $redirect_data->forceRedirection();
         $redirect_data->setIsCacheable(TRUE);
       }

@@ -6,9 +6,12 @@ use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\Exception\CasSloException;
 use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Exception\CasValidateException;
+use Drupal\cas\Service\CasProxyHelper;
 use Drupal\cas\Service\CasUserManager;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\cas\Service\CasValidator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -26,11 +29,18 @@ class ServiceController implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
-   * Used for misc. services required.
+   * CAS Helper.
    *
    * @var \Drupal\cas\Service\CasHelper
    */
   protected $casHelper;
+
+  /**
+   * CAS proxy helper.
+   *
+   * @var \Drupal\cas\Service\CasProxyHelper
+   */
+  protected $casProxyHelper;
 
   /**
    * Used to validate CAS service tickets.
@@ -68,33 +78,48 @@ class ServiceController implements ContainerInjectionInterface {
   protected $urlGenerator;
 
   /**
+   * Stores settings object.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $settings;
+
+  /**
    * Constructor.
    *
-   * @param CasHelper $cas_helper
+   * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CAS Helper service.
-   * @param CasValidator $cas_validator
+   * @param \Drupal\cas\Service\CasProxyHelper $cas_proxy_helper
+   *   The CAS Proxy helper.
+   * @param \Drupal\cas\Service\CasValidator $cas_validator
    *   The CAS Validator service.
-   * @param CasUserManager $cas_user_manager
+   * @param \Drupal\cas\Service\CasUserManager $cas_user_manager
    *   The CAS User Manager service.
-   * @param CasLogout $cas_logout
+   * @param \Drupal\cas\Service\CasLogout $cas_logout
    *   The CAS Logout service.
-   * @param UrlGeneratorInterface $url_generator
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The URL generator.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
-  public function __construct(CasHelper $cas_helper, CasValidator $cas_validator, CasUserManager $cas_user_manager, CasLogout $cas_logout, RequestStack $request_stack, UrlGeneratorInterface $url_generator) {
+  public function __construct(CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper, CasValidator $cas_validator, CasUserManager $cas_user_manager, CasLogout $cas_logout, RequestStack $request_stack, UrlGeneratorInterface $url_generator, ConfigFactoryInterface $config_factory) {
     $this->casHelper = $cas_helper;
+    $this->casProxyHelper = $cas_proxy_helper;
     $this->casValidator = $cas_validator;
     $this->casUserManager = $cas_user_manager;
     $this->casLogout = $cas_logout;
     $this->requestStack = $request_stack;
     $this->urlGenerator = $url_generator;
+    $this->settings = $config_factory->get('cas.settings');
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('cas.helper'), $container->get('cas.validator'), $container->get('cas.user_manager'), $container->get('cas.logout'), $container->get('request_stack'), $container->get('url_generator'));
+    return new static($container->get('cas.helper'), $container->get('cas.proxy_helper'), $container->get('cas.validator'), $container->get('cas.user_manager'), $container->get('cas.logout'), $container->get('request_stack'), $container->get('url_generator'), $container->get('config.factory'));
   }
 
   /**
@@ -115,15 +140,19 @@ class ServiceController implements ContainerInjectionInterface {
         $this->casLogout->handleSlo($request->request->get('logoutRequest'));
       }
       catch (CasSloException $e) {
-        $this->casHelper->log($e->getMessage());
+        $this->casHelper->log(
+          LogLevel::ERROR,
+          'Error when handling single-log-out request: %error',
+          ['%error' => $e->getMessage()]
+        );
       }
-      // Always return a 200 code. CAS Server doesn’t care either way what
+      // Always return a 200 response. CAS Server doesn’t care either way what
       // happens here, since it is a fire-and-forget approach taken.
       return Response::create('', 200);
     }
 
     // We will be redirecting the user below. To prevent the CasSubscriber from
-    // initiating an automatic authentiation on the that request (like forced
+    // initiating an automatic authentiation on that request (like forced
     // auth or gateway auth) and potentially creating an authentication loop,
     // we set a session variable instructing the CasSubscriber skip auto auth
     // for that request.
@@ -138,7 +167,7 @@ class ServiceController implements ContainerInjectionInterface {
      * In either case, we just want to redirect them away from this controller.
      */
     if (!$request->query->has('ticket')) {
-      $this->casHelper->log("No ticket detected, move along.");
+      $this->casHelper->log(LogLevel::DEBUG, "No CAS ticket found in request to service controller; backing out.");
       $this->handleReturnToParameter($request);
       return RedirectResponse::create($this->urlGenerator->generate('<front>'));
     }
@@ -147,9 +176,10 @@ class ServiceController implements ContainerInjectionInterface {
     // to the Drupal site so we can authenticate the user locally using the
     // ticket.
     $ticket = $request->query->get('ticket');
+
     // Our CAS service will need to reconstruct the original service URL
     // when validating the ticket. We always know what the base URL for
-    // the service URL (it's this page), but there may be some query params
+    // the service URL is (it's this page), but there may be some query params
     // attached as well (like a destination param) that we need to pass in
     // as well. So, detach the ticket param, and pass the rest off.
     $service_params = $request->query->all();
@@ -159,7 +189,11 @@ class ServiceController implements ContainerInjectionInterface {
     }
     catch (CasValidateException $e) {
       // Validation failed, redirect to homepage and set message.
-      $this->casHelper->log($e->getMessage());
+      $this->casHelper->log(
+        LogLevel::ERROR,
+        'Error when validating ticket: %error',
+        ['%error' => $e->getMessage()]
+      );
       $this->setMessage($this->t('There was a problem validating your login, please contact a site administrator.'), 'error');
       $this->handleReturnToParameter($request);
       return RedirectResponse::create($this->urlGenerator->generate('<front>'));
@@ -169,14 +203,14 @@ class ServiceController implements ContainerInjectionInterface {
     // validation request to authenticate the user locally on the Drupal site.
     try {
       $this->casUserManager->login($cas_validation_info, $ticket);
-      if ($this->casHelper->isProxy() && $cas_validation_info->getPgt()) {
-        $this->casHelper->log("Storing PGT information for this session.");
-        $this->casHelper->storePgtSession($cas_validation_info->getPgt());
+      if ($this->settings->get('proxy.initialize') && $cas_validation_info->getPgt()) {
+        $this->casHelper->log(LogLevel::DEBUG, "Storing PGT information for this session.");
+        $this->casProxyHelper->storePgtSession($cas_validation_info->getPgt());
       }
       $this->setMessage($this->t('You have been logged in.'));
     }
     catch (CasLoginException $e) {
-      $this->casHelper->log($e->getMessage());
+      $this->casHelper->log(LogLevel::ERROR, $e->getMessage());
       $this->setMessage($this->t('There was a problem logging in, please contact a site administrator.'), 'error');
     }
 
@@ -207,12 +241,12 @@ class ServiceController implements ContainerInjectionInterface {
    * we can then convert it back to a "destination" parameter and let Drupal
    * do it's thing when redirecting.
    *
-   * @param Request $request
+   * @param \Symfony\Component\HttpFoundation\Request $request
    *   The Symfony request object.
    */
   private function handleReturnToParameter(Request $request) {
     if ($request->query->has('returnto')) {
-      $this->casHelper->log("Converting returnto parameter to destination.");
+      $this->casHelper->log(LogLevel::DEBUG, "Converting query parameter 'returnto' to 'destination'.");
       $request->query->set('destination', $request->query->get('returnto'));
     }
   }

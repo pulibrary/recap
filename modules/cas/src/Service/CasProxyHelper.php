@@ -2,12 +2,15 @@
 
 namespace Drupal\cas\Service;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Drupal\Component\Utility\UrlHelper;
 use GuzzleHttp\Cookie\CookieJar;
 use Drupal\cas\Exception\CasProxyException;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Drupal\Core\Database\Connection;
 
 /**
  * Class CasProxyHelper.
@@ -36,19 +39,39 @@ class CasProxyHelper {
   protected $session;
 
   /**
+   * Stores settings object.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $settings;
+
+  /**
+   * Stores database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $connection;
+
+  /**
    * Constructor.
    *
-   * @param Client $http_client
+   * @param \GuzzleHttp\Client $http_client
    *   The HTTP Client library.
-   * @param CasHelper $cas_helper
+   * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CAS Helper service.
-   * @param SessionInterface $session
+   * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
    *   The session manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Drupal\Core\Database\Connection $database_connection
+   *   The database connection.
    */
-  public function __construct(Client $http_client, CasHelper $cas_helper, SessionInterface $session) {
+  public function __construct(Client $http_client, CasHelper $cas_helper, SessionInterface $session, ConfigFactoryInterface $config_factory, Connection $database_connection) {
     $this->httpClient = $http_client;
     $this->casHelper = $cas_helper;
     $this->session = $session;
+    $this->settings = $config_factory->get('cas.settings');
+    $this->connection = $database_connection;
   }
 
   /**
@@ -95,11 +118,11 @@ class CasProxyHelper {
       }
       $domain = $cookie['Domain'];
       $jar = CookieJar::fromArray($cookies, $domain);
-      $this->casHelper->log("$target_service already proxied. Returning information from session.");
+      $this->casHelper->log(LogLevel::DEBUG, "%target_service already proxied. Returning information from session.", array('%target_service' => $target_service));
       return $jar;
     }
 
-    if (!($this->casHelper->isProxy() && $this->session->has('cas_pgt'))) {
+    if (!($this->settings->get('proxy.initialize') && $this->session->has('cas_pgt'))) {
       // We can't perform proxy authentication in this state.
       throw new CasProxyException("Session state not sufficient for proxying.");
     }
@@ -107,15 +130,14 @@ class CasProxyHelper {
     // Make request to CAS server to retrieve a proxy ticket for this service.
     $cas_url = $this->getServerProxyUrl($target_service);
     try {
-      $this->casHelper->log("Retrieving proxy ticket from: $cas_url");
-      $response = $this->httpClient->get($cas_url, ['timeout' => $this->casHelper->getConnectionTimeout()]);
-      $this->casHelper->log("Received: " . htmlspecialchars($response->getBody()->__toString()));
+      $this->casHelper->log(LogLevel::DEBUG, "Retrieving proxy ticket from %cas_url", array('%cas_url' => $cas_url));
+      $response = $this->httpClient->get($cas_url, ['timeout' => $this->settings->get('advanced.connection_timeout')]);
     }
     catch (ClientException $e) {
       throw new CasProxyException($e->getMessage());
     }
     $proxy_ticket = $this->parseProxyTicket($response->getBody());
-    $this->casHelper->log("Extracted proxy ticket: $proxy_ticket");
+    $this->casHelper->log(LogLevel::DEBUG, "Extracted proxy ticket %ticket", array('%ticket' => $proxy_ticket));
 
     // Make request to target service with our new proxy ticket.
     // The target service will validate this ticket against the CAS server
@@ -124,8 +146,8 @@ class CasProxyHelper {
     $service_url = $target_service . "?" . UrlHelper::buildQuery($params);
     $cookie_jar = new CookieJar();
     try {
-      $this->casHelper->log("Contacting service: $service_url");
-      $this->httpClient->get($service_url, ['cookies' => $cookie_jar, 'timeout' => $this->casHelper->getConnectionTimeout()]);
+      $this->casHelper->log(LogLevel::DEBUG, "Contacting service: %service", array('%service' => $service_url));
+      $this->httpClient->get($service_url, ['cookies' => $cookie_jar, 'timeout' => $this->settings->get('advanced.connection_timeout')]);
     }
     catch (ClientException $e) {
       throw new CasProxyException($e->getMessage());
@@ -133,7 +155,7 @@ class CasProxyHelper {
     // Store in session storage for later reuse.
     $cas_proxy_helper[$target_service] = $cookie_jar->toArray();
     $this->session->set('cas_proxy_helper', $cas_proxy_helper);
-    $this->casHelper->log("Stored cookies from $target_service in session.");
+    $this->casHelper->log(LogLevel::DEBUG, "Stored cookies from %service in session.", array('%service' => $target_service));
     return $cookie_jar;
   }
 
@@ -173,6 +195,29 @@ class CasProxyHelper {
       throw new CasProxyException("CAS Server provided invalid or malformed ticket.");
     }
     return $proxy_ticket->item(0)->nodeValue;
+  }
+
+  /**
+   * Store the PGT in the user session.
+   *
+   * @param string $pgt_iou
+   *   A pgtIou to identify the PGT.
+   */
+  public function storePgtSession($pgt_iou) {
+    $pgt = $this->connection->select('cas_pgt_storage', 'c')
+      ->fields('c', array('pgt'))
+      ->condition('pgt_iou', $pgt_iou)
+      ->execute()
+      ->fetch()
+      ->pgt;
+
+    $this->session->set('cas_pgt', $pgt);
+
+    // Now that we have the pgt in the session,
+    // we can delete the database mapping.
+    $this->connection->delete('cas_pgt_storage')
+      ->condition('pgt_iou', $pgt_iou)
+      ->execute();
   }
 
 }

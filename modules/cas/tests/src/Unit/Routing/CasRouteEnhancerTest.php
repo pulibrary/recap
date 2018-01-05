@@ -62,7 +62,7 @@ class CasRouteEnhancerTest extends UnitTestCase {
    * @covers ::__construct
    */
   public function testConstruct() {
-    $this->assertInstanceOf('\Drupal\cas\Routing\CasRouteEnhancer', new CasRouteEnhancer($this->casHelper));
+    $this->assertInstanceOf('\Drupal\cas\Routing\CasRouteEnhancer', new CasRouteEnhancer($this->getConfigFactoryStub()));
   }
 
   /**
@@ -74,9 +74,10 @@ class CasRouteEnhancerTest extends UnitTestCase {
    */
   public function testApplies($path, $return) {
     $this->route->expects($this->once())
-                ->method('getPath')
-                ->willReturn($path);
-    $enhancer = new CasRouteEnhancer($this->casHelper);
+      ->method('getPath')
+      ->willReturn($path);
+
+    $enhancer = new CasRouteEnhancer($this->getConfigFactoryStub());
     $this->assertEquals($return, $enhancer->applies($this->route));
   }
 
@@ -101,14 +102,28 @@ class CasRouteEnhancerTest extends UnitTestCase {
    *
    * @dataProvider enhanceDataProvider
    */
-  public function testEnhance($config) {
-    $this->casHelper->expects($this->once())
-                    ->method('provideCasLogoutOverride')
-                    ->willReturn($config);
-    $enhancer = new CasRouteEnhancer($this->casHelper);
-    $defaults = array();
-    $defaults = $enhancer->enhance($defaults, $this->request);
-    if ($config) {
+  public function testEnhance($cas_logout_enabled, $is_cas_user) {
+    $session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session')
+      ->disableOriginalConstructor()
+      ->setMethods(['get'])
+      ->getMock();
+    $session->expects($this->any())
+      ->method('get')
+      ->with('is_cas_user')
+      ->willReturn($is_cas_user);
+    $this->request->expects($this->any())
+      ->method('getSession')
+      ->willReturn($session);
+
+    $enhancer = new CasRouteEnhancer($this->getConfigFactoryStub([
+      'cas.settings' => ['logout.cas_logout' => $cas_logout_enabled],
+    ]));
+
+    $defaults = $enhancer->enhance([], $this->request);
+    // The controller should only be changed to our custom logout controller
+    // if CAS logout is enabled AND the currently logged in user logged in
+    // via CAS.
+    if ($cas_logout_enabled && $is_cas_user) {
       $this->assertArraySubset(['_controller' => '\Drupal\cas\Controller\LogoutController::logout'], $defaults);
     }
     else {
@@ -125,7 +140,12 @@ class CasRouteEnhancerTest extends UnitTestCase {
    * @see \Drupal\Tests\cas\Unit\Routing\CasRouteEnhancerTest::testEnhance
    */
   public function enhanceDataProvider() {
-    $params = [[TRUE], [FALSE]];
+    $params = [
+      [FALSE, FALSE],
+      [TRUE, FALSE],
+      [FALSE, TRUE],
+      [TRUE, TRUE],
+    ];
     return $params;
   }
 

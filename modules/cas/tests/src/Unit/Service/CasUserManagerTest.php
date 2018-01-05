@@ -69,6 +69,8 @@ class CasUserManagerTest extends UnitTestCase {
    */
   protected $userManager;
 
+  protected $casHelper;
+
   /**
    * {@inheritdoc}
    */
@@ -85,13 +87,15 @@ class CasUserManagerTest extends UnitTestCase {
       ->getMock();
     $this->session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
       ->setConstructorArgs(array($storage))
-      ->setMethods(NULL)
       ->getMock();
     $this->session->start();
     $this->connection = $this->getMockBuilder('\Drupal\Core\Database\Connection')
       ->disableOriginalConstructor()
       ->getMock();
     $this->eventDispatcher = $this->getMockBuilder('\Symfony\Component\EventDispatcher\EventDispatcherInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
       ->disableOriginalConstructor()
       ->getMock();
   }
@@ -127,6 +131,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->session,
         $this->connection,
         $this->eventDispatcher,
+        $this->casHelper,
       ))
       ->getMock();
 
@@ -156,6 +161,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->session,
         $this->connection,
         $this->eventDispatcher,
+        $this->casHelper,
       ))
       ->getMock();
 
@@ -199,6 +205,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->session,
         $this->connection,
         $this->eventDispatcher,
+        $this->casHelper,
       ))
       ->getMock();
 
@@ -253,6 +260,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->session,
         $this->connection,
         $this->eventDispatcher,
+        $this->casHelper,
       ))
       ->getMock();
 
@@ -320,6 +328,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->session,
         $this->connection,
         $this->eventDispatcher,
+        $this->casHelper,
       ))
       ->getMock();
 
@@ -367,6 +376,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->session,
         $this->connection,
         $this->eventDispatcher,
+        $this->casHelper,
       ))
       ->getMock();
 
@@ -409,6 +419,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->session,
         $this->connection,
         $this->eventDispatcher,
+        $this->casHelper,
       ))
       ->getMock();
 
@@ -427,6 +438,11 @@ class CasUserManagerTest extends UnitTestCase {
     $this->externalAuth
       ->expects($this->once())
       ->method('userLoginFinalize');
+
+    $this->session
+      ->expects($this->once())
+      ->method('set')
+      ->with('is_cas_user', TRUE);
 
     $cas_user_manager->login(new CasPropertyBag('test'), 'ticket');
   }

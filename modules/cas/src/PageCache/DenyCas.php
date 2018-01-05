@@ -34,8 +34,10 @@ class DenyCas implements ResponsePolicyInterface {
   /**
    * Constructs a response policy for disabling cache on specific CAS paths.
    *
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The current route match.
+   * @param \Drupal\Core\Executable\ExecutableManagerInterface $condition_manager
+   *   The condition manager.
    */
   public function __construct(ConfigFactoryInterface $config_factory, ExecutableManagerInterface $condition_manager) {
     $this->configFactory = $config_factory;

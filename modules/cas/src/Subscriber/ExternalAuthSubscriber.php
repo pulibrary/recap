@@ -26,7 +26,7 @@ class ExternalAuthSubscriber implements EventSubscriberInterface {
    * registered using the externalauth module. We don't want that, so remove
    * the prefix.
    *
-   * @param ExternalAuthAuthmapAlterEvent $event
+   * @param \Drupal\externalauth\Event\ExternalAuthAuthmapAlterEvent $event
    *   The authmap alter event from the externalauth module.
    *
    * @see https://www.drupal.org/node/2798323

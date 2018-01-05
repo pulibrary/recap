@@ -44,4 +44,52 @@ class CasLoginFormTest extends BrowserTestBase {
     $this->assertSession()->linkExists('Click here to login!');
   }
 
+  /**
+   * Tests the "prevent normal login" feature.
+   */
+  public function testPreventNormalLogin() {
+    // Should be enabled by default.
+    $config = $this->config('cas.settings');
+    $this->assertTrue($config->get('user_accounts.prevent_normal_login'));
+
+    $normal_user = $this->drupalCreateUser([], 'normal_user');
+    $normal_user->setPassword('password');
+    $normal_user->save();
+    $cas_user = $this->drupalCreateUser([], 'cas_user');
+    $cas_user->setPassword('password');
+    $cas_user->save();
+    $this->container->get('cas.user_manager')->setCasUsernameForAccount($cas_user, 'cas_user');
+
+    // Log in in as normal user should work.
+    $this->drupalPostForm('/user/login', [
+      'name' => 'normal_user',
+      'pass' => 'password',
+    ], 'Log in');
+    $this->assertSession()->addressEquals('/user/' . $normal_user->id());
+    $this->drupalLogout();
+
+    // Log in as CAS user should not work.
+    $this->drupalPostForm('/user/login', [
+      'name' => 'cas_user',
+      'pass' => 'password',
+    ], 'Log in');
+    $this->assertSession()->addressEquals('/user/login');
+    $this->assertSession()->pageTextContains('This account must log in using');
+
+    // Now turn off the setting and try again.
+    $this->drupalLogin($this->drupalCreateUser(['administer account settings']));
+    $edit = [
+      'user_accounts[prevent_normal_login]' => FALSE,
+    ];
+    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalLogout();
+
+    // Log in as CAS user should work now.
+    $this->drupalPostForm('/user/login', [
+      'name' => 'cas_user',
+      'pass' => 'password',
+    ], 'Log in');
+    $this->assertSession()->addressEquals('/user/' . $cas_user->id());
+  }
+
 }

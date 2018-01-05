@@ -36,9 +36,9 @@ class CasSettings extends ConfigFormBase {
   /**
    * Constructs a \Drupal\cas\Form\CasSettings object.
    *
-   * @param ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
-   * @param FactoryInterface $plugin_factory
+   * @param \Drupal\Component\Plugin\Factory\FactoryInterface $plugin_factory
    *   The condition plugin factory.
    */
   public function __construct(ConfigFactoryInterface $config_factory, FactoryInterface $plugin_factory) {
@@ -72,14 +72,14 @@ class CasSettings extends ConfigFormBase {
 
     $form['server'] = array(
       '#type' => 'details',
-      '#title' => $this->t('CAS Server'),
+      '#title' => $this->t('CAS server'),
       '#open' => TRUE,
       '#tree' => TRUE,
       '#description' => $this->t('Enter the details of the CAS server to authentication against.'),
     );
     $form['server']['version'] = array(
       '#type' => 'radios',
-      '#title' => $this->t('Protocol Version'),
+      '#title' => $this->t('Protocol version'),
       '#options' => array(
         '1.0' => $this->t('1.0'),
         '2.0' => $this->t('2.0'),
@@ -140,13 +140,13 @@ class CasSettings extends ConfigFormBase {
     );
     $form['general']['login_link_enabled'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('Login Link Enabled'),
+      '#title' => $this->t('Login link lnabled'),
       '#description' => $this->t('Display a link to login via CAS above the user login form.'),
       '#default_value' => $config->get('login_link_enabled'),
     );
     $form['general']['login_link_label'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Login Link Label'),
+      '#title' => $this->t('Login link label'),
       '#description' => $this->t('The text that makes up the login link to this CAS server.'),
       '#default_value' => $config->get('login_link_label'),
       '#states' => array(
@@ -164,7 +164,7 @@ class CasSettings extends ConfigFormBase {
     );
     $form['user_accounts']['auto_register'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('Auto Register Users'),
+      '#title' => $this->t('Auto register users'),
       '#description' => $this->t(
         'Enable to automatically create local Drupal accounts for first-time CAS logins. ' .
         'If disabled, users must be pre-registered before being allowed to log in.'
@@ -189,7 +189,7 @@ class CasSettings extends ConfigFormBase {
     );
     $form['user_accounts']['email_hostname'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Email Hostname'),
+      '#title' => $this->t('Email hostname'),
       '#description' => $this->t("The email domain name used to combine with the username to form the user's email address."),
       '#field_prefix' => $this->t('username') . '@',
       '#default_value' => $config->get('user_accounts.email_hostname'),
@@ -202,7 +202,7 @@ class CasSettings extends ConfigFormBase {
     );
     $form['user_accounts']['email_attribute'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Email Attribute'),
+      '#title' => $this->t('Email attribute'),
       '#description' => $this->t("The CAS attribute name (case sensitive) that contains the user's email address."),
       '#default_value' => $config->get('user_accounts.email_attribute'),
       '#states' => array(
@@ -239,15 +239,24 @@ class CasSettings extends ConfigFormBase {
         ),
       ),
     );
+    $form['user_accounts']['prevent_normal_login'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Prevent normal login for CAS users'),
+      '#description' => $this->t(
+        'If enabled, this will prevent any user associated with CAS from authenticating using the normal login form. ' .
+        'If attempted, users will be presented with an error message and a link to login via CAS instead.'
+      ),
+      '#default_value' => $config->get('user_accounts.prevent_normal_login'),
+    );
     $form['user_accounts']['restrict_password_management'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Restrict Password Management'),
+      '#title' => t('Restrict password management'),
       '#description' => $this->t('Prevents CAS users from changing their Drupal password by removing the password fields on the user profile form and disabling the "forgot password" functionality. Admins will still be able to change Drupal passwords for CAS users.'),
       '#default_value' => $config->get('user_accounts.restrict_password_management'),
     );
     $form['user_accounts']['restrict_email_management'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Restrict Email Management'),
+      '#title' => t('Restrict email management'),
       '#description' => $this->t("Prevents CAS users from changing their email by disabling the email field on the user profile form. Admins will still be able to change email addresses for CAS users. Note that Drupal requires a user enter their current password before changing their email, which your users may not know. Enable the restricted password management feature above to remove this password requirement."),
       '#default_value' => $config->get('user_accounts.restrict_email_management'),
     );
@@ -271,7 +280,7 @@ class CasSettings extends ConfigFormBase {
     );
     $form['gateway']['check_frequency'] = array(
       '#type' => 'radios',
-      '#title' => $this->t('Check Frequency'),
+      '#title' => $this->t('Check frequency'),
       '#default_value' => $config->get('gateway.check_frequency'),
       '#options' => array(
         CasHelper::CHECK_NEVER => 'Disable gateway feature',
@@ -284,7 +293,7 @@ class CasSettings extends ConfigFormBase {
 
     $form['forced_login'] = array(
       '#type' => 'details',
-      '#title' => $this->t('Forced Login'),
+      '#title' => $this->t('Forced login'),
       '#open' => FALSE,
       '#tree' => TRUE,
       '#description' => $this->t(
@@ -303,19 +312,19 @@ class CasSettings extends ConfigFormBase {
 
     $form['logout'] = array(
       '#type' => 'details',
-      '#title' => $this->t('Logout Behavior'),
+      '#title' => $this->t('Log out behavior'),
       '#open' => FALSE,
       '#tree' => TRUE,
     );
     $form['logout']['cas_logout'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('Drupal Logout Triggers CAS Logout'),
+      '#title' => $this->t('Drupal logout triggers CAS logout'),
       '#description' => $this->t('When enabled, users that log out of your Drupal site will then be logged out of your CAS server as well. This is done by redirecting the user to the CAS logout page.'),
       '#default_value' => $config->get('logout.cas_logout'),
     );
     $form['logout']['logout_destination'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Logout destination'),
+      '#title' => $this->t('Log out destination'),
       '#description' => $this->t(
         'Drupal path or URL. Enter a destination if you want the CAS Server to ' .
         'redirect the user after logging out of CAS.'
@@ -499,6 +508,7 @@ class CasSettings extends ConfigFormBase {
       ->set('proxy.can_be_proxied', $form_state->getValue(['proxy', 'can_be_proxied']))
       ->set('proxy.proxy_chains', $form_state->getValue(['proxy', 'proxy_chains']));
     $config
+      ->set('user_accounts.prevent_normal_login', $form_state->getValue(['user_accounts', 'prevent_normal_login']))
       ->set('user_accounts.auto_register', $form_state->getValue(['user_accounts', 'auto_register']))
       ->set('user_accounts.email_assignment_strategy', $form_state->getValue(['user_accounts', 'email_assignment_strategy']))
       ->set('user_accounts.email_hostname', $form_state->getValue(['user_accounts', 'email_hostname']))

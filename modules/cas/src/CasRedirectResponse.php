@@ -20,8 +20,7 @@ use Drupal\Component\HttpFoundation\SecuredRedirectResponse;
  * This response simply allows us to redirect a user to another site without
  * worrying about Drupal caching that redirect response.
  */
-class CasRedirectResponse extends SecuredRedirectResponse
-{
+class CasRedirectResponse extends SecuredRedirectResponse {
 
   /**
    * {@inheritdoc}

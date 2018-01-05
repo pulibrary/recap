@@ -4,6 +4,9 @@ namespace Drupal\Tests\cas\Unit\Controller;
 
 use Drupal\cas\Controller\ServiceController;
 
+/**
+ * Class TestServiceController.
+ */
 class TestServiceController extends ServiceController {
 
   /**
@@ -17,7 +20,6 @@ class TestServiceController extends ServiceController {
    *   Whether identical messages should all be shown.
    */
   public function setMessage($message, $type = 'status', $repeat = FALSE) {
-
   }
 
   /**
@@ -28,9 +30,10 @@ class TestServiceController extends ServiceController {
    * @param array $args
    *   Array of post-translation replacments.
    * @param array $options
-   *   Additional options
+   *   Additional options.
    */
   protected function t($string, array $args = array(), array $options = array()) {
     return $string;
   }
+
 }

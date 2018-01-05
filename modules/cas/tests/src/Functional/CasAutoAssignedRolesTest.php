@@ -5,7 +5,6 @@ namespace Drupal\Tests\cas\Functional;
 use Drupal\cas\CasPropertyBag;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
-use Drupal\user\Entity\User;
 
 /**
  * Tests CAS admin settings form.

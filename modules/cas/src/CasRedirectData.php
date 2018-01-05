@@ -62,7 +62,7 @@ class CasRedirectData {
    * @param array $redirect_parameters
    *   Default redirect parameters.
    */
-  public function __construct($service_parameters = [], $redirect_parameters = []) {
+  public function __construct(array $service_parameters = [], array $redirect_parameters = []) {
     $this->serviceParameters = $service_parameters;
     $this->redirectParameters = $redirect_parameters;
   }

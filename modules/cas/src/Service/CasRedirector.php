@@ -8,8 +8,9 @@ use Drupal\cas\Event\CasPreRedirectEvent;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Psr\Log\LogLevel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 
 /**
  * Class CasRedirector.
@@ -26,9 +27,16 @@ class CasRedirector {
   /**
    * The EventDispatcher.
    *
-   * @var EventDispatcher
+   * @var \Symfony\Component\EventDispatcher\EventDispatcher
    */
   protected $eventDispatcher;
+
+  /**
+   * Stores URL generator.
+   *
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
+   */
+  protected $urlGenerator;
 
   /**
    * CasRedirector constructor.
@@ -37,23 +45,26 @@ class CasRedirector {
    *   The CasHelper service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The EventDispatcher service.
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
+   *   The URL generator service.
    */
-  public function __construct(CasHelper $cas_helper, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(CasHelper $cas_helper, EventDispatcherInterface $event_dispatcher, UrlGeneratorInterface $url_generator) {
     $this->casHelper = $cas_helper;
     $this->eventDispatcher = $event_dispatcher;
+    $this->urlGenerator = $url_generator;
   }
 
   /**
    * Determine login URL response.
    *
-   * @param CasRedirectData $data
+   * @param \Drupal\cas\CasRedirectData $data
    *   Data used to generate redirector.
    * @param bool $force
    *   True implies that you always want to generate a redirector as occurs with
    *   the ForceRedirectController. False implies redirector is controlled by
    *   the allow_redirect property in the CasRedirectData object.
    *
-   * @return TrustedRedirectResponse|CasRedirectResponse|null
+   * @return \Drupal\Core\Routing\TrustedRedirectResponse|\Drupal\cas\CasRedirectResponse|null
    *   The RedirectResponse or NULL if a redirect shouldn't be done.
    */
   public function buildRedirectResponse(CasRedirectData $data, $force = FALSE) {
@@ -69,7 +80,7 @@ class CasRedirector {
     // Determine the service URL.
     $service_parameters = $data->getAllServiceParameters();
     $parameters = $data->getAllParameters();
-    $parameters['service'] = $this->casHelper->getCasServiceUrl($service_parameters);
+    $parameters['service'] = $this->urlGenerator->generate('cas.service', $service_parameters, UrlGeneratorInterface::ABSOLUTE_URL);
 
     $login_url .= '?' . UrlHelper::buildQuery($parameters);
 
@@ -92,7 +103,7 @@ class CasRedirector {
         $response = new TrustedRedirectResponse($login_url);
         $response->addCacheableDependency($cacheable_metadata);
       }
-      $this->casHelper->log("Cas redirecting to: $login_url");
+      $this->casHelper->log(LogLevel::DEBUG, "Cas redirecting to %url", array('%url' => $login_url));
     }
     return $response;
   }

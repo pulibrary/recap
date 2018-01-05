@@ -16,13 +16,6 @@ abstract class CasBrowserTestBase extends BrowserTestBase {
   public static $modules = ['cas'];
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-  }
-
-  /**
    * Tell mink not to automatically follow redirects.
    */
   protected function disableRedirects() {

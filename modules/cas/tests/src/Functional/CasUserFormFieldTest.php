@@ -100,9 +100,12 @@ class CasAccountAndRegistrationFormTest extends CasBrowserTestBase {
     $this->container->get('cas.user_manager')->setCasUsernameForAccount($cas_user, 'cas_user');
 
     // Enable the "restrict password management" feature.
+    // And disable the "prevent normal login" feature so it doesn't interfere
+    // with out logins.
     $this->drupalLogin($admin);
     $edit = [
       'user_accounts[restrict_password_management]' => TRUE,
+      'user_accounts[prevent_normal_login]' => FALSE,
     ];
     $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
     $this->assertEquals(TRUE, $this->config('cas.settings')->get('user_accounts.restrict_password_management'));
@@ -201,9 +204,12 @@ class CasAccountAndRegistrationFormTest extends CasBrowserTestBase {
     $this->container->get('cas.user_manager')->setCasUsernameForAccount($cas_user, 'cas_user');
 
     // Enable the "restrict email management" feature.
+    // Disable the "prevent normal login" feature so it doesn't interfere with
+    // out logins.
     $this->drupalLogin($admin);
     $edit = [
       'user_accounts[restrict_email_management]' => TRUE,
+      'user_accounts[prevent_normal_login]' => FALSE,
     ];
     $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
     $this->assertEquals(TRUE, $this->config('cas.settings')->get('user_accounts.restrict_email_management'));

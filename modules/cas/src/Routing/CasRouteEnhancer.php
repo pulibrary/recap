@@ -2,10 +2,10 @@
 
 namespace Drupal\cas\Routing;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\Enhancer\RouteEnhancerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
-use Drupal\cas\Service\CasHelper;
 
 /**
  * Class CasRouteEnhancer.
@@ -18,27 +18,31 @@ use Drupal\cas\Service\CasHelper;
 class CasRouteEnhancer implements RouteEnhancerInterface {
 
   /**
-   * Stores CAS helper object.
+   * Stores settings object.
    *
-   * @var \Drupal\cas\Service\CasHelper
+   * @var \Drupal\Core\Config\Config
    */
-  protected $casHelper;
+  protected $settings;
 
   /**
    * Constructor.
    *
-   * @param CasHelper $cas_helper
-   *   The CAS helper service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
-  public function __construct(CasHelper $cas_helper) {
-    $this->casHelper = $cas_helper;
+  public function __construct(ConfigFactoryInterface $config_factory) {
+    $this->settings = $config_factory->get('cas.settings');
   }
 
   /**
    * {@inheritdoc}
    */
   public function enhance(array $defaults, Request $request) {
-    if ($this->casHelper->provideCasLogoutOverride($request)) {
+    // Replace the logout controller with our own if the logged in user logged
+    // in using CAS and if we're configured to perform a CAS server logout
+    // during normal Drupal logouts. Overriding the controller allows us to
+    // redirect the user to the CAS server logout after logging out locally.
+    if ($this->settings->get('logout.cas_logout') && $request->getSession() && $request->getSession()->get('is_cas_user')) {
       $defaults['_controller'] = '\Drupal\cas\Controller\LogoutController::logout';
     }
 
@@ -49,7 +53,7 @@ class CasRouteEnhancer implements RouteEnhancerInterface {
    * {@inheritdoc}
    */
   public function applies(Route $route) {
-    return ($route->getPath() == '/user/logout');
+    return $route->getPath() == '/user/logout';
   }
 
 }
