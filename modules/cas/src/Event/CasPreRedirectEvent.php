@@ -30,7 +30,7 @@ class CasPreRedirectEvent extends Event {
   /**
    * Data used to decide on final redirection.
    *
-   * @var CasRedirectData
+   * @var \Drupal\cas\CasRedirectData
    */
   protected $casRedirectData;
 

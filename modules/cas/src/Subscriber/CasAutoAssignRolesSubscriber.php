@@ -42,7 +42,7 @@ class CasAutoAssignRolesSubscriber implements EventSubscriberInterface {
    *
    * Assign roles to a user that just registered via CAS.
    *
-   * @param CasPreRegisterEvent $event
+   * @param \Drupal\cas\Event\CasPreRegisterEvent $event
    *   The event object.
    */
   public function assignRolesOnRegistration(CasPreRegisterEvent $event) {

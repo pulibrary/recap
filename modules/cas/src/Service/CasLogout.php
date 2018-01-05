@@ -3,7 +3,9 @@
 namespace Drupal\cas\Service;
 
 use Drupal\cas\Exception\CasSloException;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
+use Psr\Log\LogLevel;
 
 /**
  * Class CasLogout.
@@ -20,9 +22,16 @@ class CasLogout {
   /**
    * The database connection used to find the user's session ID.
    *
-   * @var Connection
+   * @var \Drupal\Core\Database\Connection
    */
   protected $connection;
+
+  /**
+   * Stores settings object.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $settings;
 
   /**
    * CasLogout constructor.
@@ -31,10 +40,13 @@ class CasLogout {
    *   The CAS helper.
    * @param \Drupal\Core\Database\Connection $database_connection
    *   The database connection.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
-  public function __construct(CasHelper $cas_helper, Connection $database_connection) {
+  public function __construct(CasHelper $cas_helper, Connection $database_connection, ConfigFactoryInterface $config_factory) {
     $this->casHelper = $cas_helper;
     $this->connection = $database_connection;
+    $this->settings = $config_factory->get('cas.settings');
   }
 
   /**
@@ -44,27 +56,37 @@ class CasLogout {
    *   The raw data posted to us from the CAS server.
    */
   public function handleSlo($data) {
-    $this->casHelper->log("Attempting to handle SLO request.");
+    $this->casHelper->log(LogLevel::DEBUG, "Attempting to handle single-log-out request.");
 
     // Only look up tickets if they were stored to begin with.
-    if (!$this->casHelper->getSingleLogOut()) {
-      $this->casHelper->log("Aborting; SLO is not enabled in CAS settings.");
+    if (!$this->settings->get('logout.enable_single_logout')) {
+      $this->casHelper->log(LogLevel::DEBUG, "Aborting single-log-out handling; it's not enabled in the CAS settings.");
       return;
     }
 
     $service_ticket = $this->getServiceTicketFromData($data);
+    $this->casHelper->log(
+      LogLevel::DEBUG,
+      'Service ticket %ticket extracted from single-log-out request.',
+      ['%ticket' => $service_ticket]
+    );
 
     // Look up the session ID by the service ticket, then load up that
     // session and destroy it.
     $sid = $this->lookupSessionIdByServiceTicket($service_ticket);
     if (!$sid) {
+      $this->casHelper->log(
+        LogLevel::DEBUG,
+        'No matching session found for %ticket',
+        ['%ticket' => $service_ticket]
+      );
       return;
     }
 
     $this->destroySession($sid);
     $this->removeSessionMapping($sid);
 
-    $this->casHelper->log("SLO request completed successfully.");
+    $this->casHelper->log(LogLevel::DEBUG, "Single-log-out request completed successfully.");
   }
 
   /**

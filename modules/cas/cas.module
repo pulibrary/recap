@@ -94,12 +94,45 @@ function cas_form_user_register_form_alter(&$form, FormStateInterface $form_stat
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function cas_form_user_pass_alter(&$form, FormStateInterface $form_state) {
+  if (\Drupal::config('cas.settings')->get('user_accounts.restrict_password_management')) {
+    $form['#validate'][] = '_cas_validate_user_pass_form';
+  }
+}
+
+/**
+ * Custom form validator for the password reset form.
+ */
+function _cas_validate_user_pass_form(array &$form, FormStateInterface $form_state) {
+  if (\Drupal::config('cas.settings')->get('user_accounts.restrict_password_management')) {
+    $name = trim($form_state->getValue('name'));
+    // Verify that there is a valid user account with the provided name.
+    $user_storage = \Drupal::service('entity.manager')->getStorage('user');
+    $users = $user_storage->loadByProperties(['mail' => $name]);
+    if (empty($users)) {
+      $users = $user_storage->loadByProperties(['name' => $name]);
+    }
+    $account = reset($users);
+    if ($account && $account->id()) {
+      // Now check if this user account is associated with CAS and set an error
+      // if so.
+      $cas_user_manager = \Drupal::service('cas.user_manager');
+      if ($cas_user_manager->getCasUsernameForAccount($account->id())) {
+        $form_state->setErrorByName('name', t("The requested account is associated with CAS and its password cannot be managed from this website."));
+      }
+    }
+  }
+}
+
+/**
  * Alter the user entity form to include a textfield for CAS username.
  *
  * @param array $form
  *   The user entity form.
  */
-function _cas_add_cas_username_to_user_form(&$form) {
+function _cas_add_cas_username_to_user_form(array &$form) {
   $form['cas_username'] = [
     '#type' => 'textfield',
     '#title' => t('CAS Username'),
@@ -124,7 +157,7 @@ function _cas_add_cas_username_to_user_form(&$form) {
  * @param \Drupal\Core\Form\FormStateInterface $form_state
  *   The form state object.
  */
-function _cas_user_form_validate(&$form, FormStateInterface $form_state) {
+function _cas_user_form_validate(array &$form, FormStateInterface $form_state) {
   // Verify that it was the save / register button that was clicked. We don't
   // want to run our validation if this was for a 'cancel account' action.
   if (in_array('::save', $form_state->getTriggeringElement()['#submit'])) {
@@ -153,7 +186,7 @@ function _cas_user_form_validate(&$form, FormStateInterface $form_state) {
  * @param \Drupal\Core\Form\FormStateInterface $form_state
  *   The form state object.
  */
-function _cas_user_form_submit($form, FormStateInterface $form_state) {
+function _cas_user_form_submit(array $form, FormStateInterface $form_state) {
   $cas_user_manager = \Drupal::service('cas.user_manager');
   $account = $form_state->getFormObject()->getEntity();
   if ($form_state->getValue('cas_username')) {
@@ -167,7 +200,7 @@ function _cas_user_form_submit($form, FormStateInterface $form_state) {
 /**
  * Implements hook_form_FORM_ID_alter().
  *
- * Add a link to login via CAS on the user login form.
+ * Modify the user login form.
  */
 function cas_form_user_login_form_alter(&$form, FormStateInterface $form_state) {
   $config = Drupal::config('cas.settings');
@@ -175,6 +208,7 @@ function cas_form_user_login_form_alter(&$form, FormStateInterface $form_state) 
   // Cached form must be busted if we alter CAS settings.
   $form['#cache']['tags'] = array_merge($form['#cache']['tags'], $config->getCacheTags());
 
+  // Add a link to login via CAS on the user login form.
   $enabled = $config->get('login_link_enabled');
   if ($enabled) {
     $url = new Url('cas.login', array(), array(
@@ -189,6 +223,28 @@ function cas_form_user_login_form_alter(&$form, FormStateInterface $form_state) 
       '#title' => $config->get('login_link_label'),
       '#weight' => -1,
     ];
+  }
+
+  $form['#validate'][] = '_cas_user_login_validate';
+}
+
+/**
+ * Custom validation function added to user login form.
+ */
+function _cas_user_login_validate(&$form, FormStateInterface $form_state) {
+  // If the user attempting to log in is a CAS user, prevent log in if
+  // configured to do so. This forces users to log in using CAS even if
+  // they somehow know their Drupal account password.
+  // The UID of the user attempting to log in is set from an earlier validate
+  // function from the main UserLoginForm.
+  $uid = $form_state->get('uid');
+  $config = Drupal::config('cas.settings');
+  if ($config->get('user_accounts.prevent_normal_login') && !empty($uid)) {
+    $cas_user_manager = \Drupal::service('cas.user_manager');
+    if ($cas_user_manager->getCasUsernameForAccount($uid)) {
+      $login_url = new Url('cas.login');
+      $form_state->setErrorByName('name', t('This account must log in using <a href="@cas">CAS</a>.', ['@cas' => $login_url->toString()]));
+    }
   }
 }
 

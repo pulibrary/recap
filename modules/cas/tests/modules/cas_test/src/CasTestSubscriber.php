@@ -31,4 +31,5 @@ class CasTestSubscriber implements EventSubscriberInterface {
     $new_username = 'testing_' . $username;
     $event->setDrupalUsername($new_username);
   }
+
 }

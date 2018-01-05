@@ -11,6 +11,7 @@ use Drupal\cas\Exception\CasLoginException;
 use Drupal\externalauth\ExternalAuthInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\user\UserInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Drupal\Core\Database\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -72,6 +73,13 @@ class CasUserManager {
   protected $connection;
 
   /**
+   * The CAS Helper.
+   *
+   * @var \Drupal\cas\Service\CasHelper
+   */
+  protected $casHelper;
+
+  /**
    * Used to dispatch CAS login events.
    *
    * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
@@ -95,14 +103,17 @@ class CasUserManager {
    *   The database connection.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
+   * @param \Drupal\cas\Service\CasHelper $cas_helper
+   *   The CAS helper.
    */
-  public function __construct(ExternalAuthInterface $external_auth, AuthmapInterface $authmap, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(ExternalAuthInterface $external_auth, AuthmapInterface $authmap, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher, CasHelper $cas_helper) {
     $this->externalAuth = $external_auth;
     $this->authmap = $authmap;
     $this->settings = $settings;
     $this->session = $session;
     $this->connection = $database_connection;
     $this->eventDispatcher = $event_dispatcher;
+    $this->casHelper = $cas_helper;
   }
 
   /**
@@ -133,7 +144,7 @@ class CasUserManager {
   /**
    * Attempts to log the user in to the Drupal site.
    *
-   * @param CasPropertyBag $property_bag
+   * @param \Drupal\cas\CasPropertyBag $property_bag
    *   CasPropertyBag containing username and attributes from CAS.
    * @param string $ticket
    *   The service ticket.
@@ -142,20 +153,39 @@ class CasUserManager {
    *   Thrown if there was a problem logging in the user.
    */
   public function login(CasPropertyBag $property_bag, $ticket) {
+    $original_username = $property_bag->getUsername();
+
+    $this->casHelper->log(LogLevel::DEBUG, 'Starting login process for CAS user %username', ['%username' => $original_username]);
+
     // Dispatch an event that allows modules to alter any of the CAS data
     // before it's used to lookup a Drupal user account via the authmap table.
+    $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_USER_LOAD.');
     $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_USER_LOAD, new CasPreUserLoadEvent($property_bag));
+
+    if ($property_bag->getUsername() !== $original_username) {
+      $this->casHelper->log(
+        LogLevel::DEBUG,
+        'Username was changed from %original to %new from a subscriber.',
+        ['%original' => $original_username, '%new' => $property_bag->getUsername()]
+      );
+    }
 
     $account = $this->externalAuth->load($property_bag->getUsername(), $this->provider);
     if ($account === FALSE) {
       // Check if we should create the user or not.
       $config = $this->settings->get('cas.settings');
       if ($config->get('user_accounts.auto_register') === TRUE) {
+        $this->casHelper->log(
+          LogLevel::DEBUG,
+          'Existing account not found for user, attempting to auto-register.'
+        );
+
         // Dispatch an event that allows modules to deny automatic registration
         // for this user account or to set properties for the user that will
         // be created.
         $cas_pre_register_event = new CasPreRegisterEvent($property_bag);
         $cas_pre_register_event->setPropertyValue('mail', $this->getEmailForNewAccount($property_bag));
+        $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_REGISTER.');
         $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_REGISTER, $cas_pre_register_event);
         if ($cas_pre_register_event->getAllowAutomaticRegistration()) {
           $account = $this->register($cas_pre_register_event->getDrupalUsername(), $cas_pre_register_event->getPropertyValues());
@@ -172,6 +202,7 @@ class CasUserManager {
     // Dispatch an event that allows modules to prevent this user from logging
     // in and/or alter the user entity before we save it.
     $pre_login_event = new CasPreLoginEvent($account, $property_bag);
+    $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_LOGIN.');
     $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_LOGIN, $pre_login_event);
 
     // Save user entity since event listeners may have altered it.
@@ -183,6 +214,7 @@ class CasUserManager {
 
     $this->externalAuth->userLoginFinalize($account, $property_bag->getUsername(), $this->provider);
     $this->storeLoginSessionData($this->session->getId(), $ticket);
+    $this->session->set('is_cas_user', TRUE);
   }
 
   /**

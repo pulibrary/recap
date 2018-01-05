@@ -56,6 +56,9 @@ cas.settings:
       type: mapping
       label: 'User Accounts'
       mapping:
+        prevent_normal_login:
+          type: boolean
+          label: 'Prevent normal login'
         auto_register:
           type: boolean
           label: 'Auto Register Users'

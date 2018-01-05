@@ -10,8 +10,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Class ForceLoginController.
+ *
+ * Used to force CAS authentication for anonymous users.
  */
 class ForceLoginController implements ContainerInjectionInterface {
+
   /**
    * The cas helper to get config settings from.
    *
@@ -22,16 +25,16 @@ class ForceLoginController implements ContainerInjectionInterface {
   /**
    * Used to get query string parameters from the request.
    *
-   * @var RequestStack
+   * @var \Symfony\Component\HttpFoundation\RequestStack
    */
   protected $requestStack;
 
   /**
    * Constructor.
    *
-   * @param CasRedirector $cas_redirector
+   * @param \Drupal\cas\Service\CasRedirector $cas_redirector
    *   The CAS Redirector service.
-   * @param RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   Symfony request stack.
    */
   public function __construct(CasRedirector $cas_redirector, RequestStack $request_stack) {

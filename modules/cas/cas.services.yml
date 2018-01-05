@@ -6,34 +6,29 @@ services:
       - { name: 'event_subscriber' }
   cas.helper:
     class: Drupal\cas\Service\CasHelper
-    arguments: ['@config.factory', '@url_generator.non_bubbling', '@database', '@logger.factory', '@session']
+    arguments: ['@config.factory', '@logger.factory']
   cas.redirector:
     class: Drupal\cas\Service\CasRedirector
-    arguments: ['@cas.helper', '@event_dispatcher']
+    arguments: ['@cas.helper', '@event_dispatcher', '@url_generator.non_bubbling']
   cas.validator:
     class: Drupal\cas\Service\CasValidator
-    arguments: ['@http_client', '@cas.helper']
+    arguments: ['@http_client', '@cas.helper', '@config.factory', '@url_generator.non_bubbling']
   cas.user_manager:
     class: Drupal\cas\Service\CasUserManager
-    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@config.factory', '@session', '@database', '@event_dispatcher']
+    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@config.factory', '@session', '@database', '@event_dispatcher', '@cas.helper']
   cas.logout:
     class: Drupal\cas\Service\CasLogout
-    arguments: ['@cas.helper', '@database']
+    arguments: ['@cas.helper', '@database', '@config.factory']
   cas.proxy_helper:
     class: Drupal\cas\Service\CasProxyHelper
-    arguments: ['@http_client', '@cas.helper', '@session']
+    arguments: ['@http_client', '@cas.helper', '@session', '@config.factory', '@database']
   cas.route_enhancer:
     class: Drupal\cas\Routing\CasRouteEnhancer
-    arguments: ['@cas.helper']
+    arguments: ['@config.factory']
     tags:
       - { name: route_enhancer }
   cas.external_auth_subscriber:
     class: Drupal\cas\Subscriber\ExternalAuthSubscriber
-    tags:
-      - { name: 'event_subscriber' }
-  cas.prevent_password_reset_subscriber:
-    class: Drupal\cas\Subscriber\PreventPasswordResetSubscriber
-    arguments: ['@config.factory']
     tags:
       - { name: 'event_subscriber' }
   cas.page_cache_response_policy.deny_cas:

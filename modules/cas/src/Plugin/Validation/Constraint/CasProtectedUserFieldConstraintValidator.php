@@ -18,7 +18,7 @@ class CasProtectedUserFieldConstraintValidator extends ProtectedUserFieldConstra
   /**
    * The CasUserManager service.
    *
-   * @var CasUserManager
+   * @var \Drupal\cas\Service\CasUserManager
    */
   protected $casUserManager;
 

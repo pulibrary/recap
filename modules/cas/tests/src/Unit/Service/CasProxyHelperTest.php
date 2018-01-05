@@ -27,6 +27,20 @@ class CasProxyHelperTest extends UnitTestCase {
   protected $session;
 
   /**
+   * The mocked CAS helper.
+   *
+   * @var \Drupal\cas\Service\CasHelper|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $casHelper;
+
+  /**
+   * The mocked database connection object.
+   *
+   * @var \Drupal\Core\Database\Connection|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $database;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
@@ -40,6 +54,14 @@ class CasProxyHelperTest extends UnitTestCase {
       ->setMethods(NULL)
       ->getMock();
     $this->session->start();
+
+    $this->casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $this->database = $this->getMockBuilder('\Drupal\Core\Database\Connection')
+      ->disableOriginalConstructor()
+      ->getMock();
   }
 
   /**
@@ -68,10 +90,14 @@ class CasProxyHelperTest extends UnitTestCase {
       $this->session->set('cas_proxy_helper', $session_cas_proxy_helper);
 
       $httpClient = new Client();
-      $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-        ->disableOriginalConstructor()
-        ->getMock();
-      $casProxyHelper = new CasProxyHelper($httpClient, $casHelper, $this->session);
+      $configFactory = $this->getConfigFactoryStub(array(
+        'cas.settings' => array(
+          'server.hostname' => 'example-server.com',
+          'server.port' => 443,
+          'server.path' => '/cas',
+        ),
+      ));
+      $casProxyHelper = new CasProxyHelper($httpClient, $this->casHelper, $this->session, $configFactory, $this->database);
 
       $jar = $casProxyHelper->proxyAuthenticate($target_service);
       $cookie_array = $jar->toArray();
@@ -94,18 +120,20 @@ class CasProxyHelperTest extends UnitTestCase {
       $handler = HandlerStack::create($mock);
       $httpClient = new Client(['handler' => $handler]);
 
-      $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-        ->disableOriginalConstructor()
-        ->getMock();
-      $casProxyHelper = new CasProxyHelper($httpClient, $casHelper, $this->session);
+      $configFactory = $this->getConfigFactoryStub(array(
+        'cas.settings' => array(
+          'server.hostname' => 'example-server.com',
+          'server.port' => 443,
+          'server.path' => '/cas',
+          'proxy.initialize' => TRUE,
+        ),
+      ));
+      $casProxyHelper = new CasProxyHelper($httpClient, $this->casHelper, $this->session, $configFactory, $this->database);
 
       // The casHelper expects to be called for a few things.
-      $casHelper->expects($this->once())
+      $this->casHelper->expects($this->once())
         ->method('getServerBaseUrl')
-        ->will($this->returnValue('https://example.com/cas/'));
-      $casHelper->expects($this->once())
-        ->method('isProxy')
-        ->will($this->returnValue(TRUE));
+        ->will($this->returnValue('https://example-server.com/cas/'));
 
       $jar = $casProxyHelper->proxyAuthenticate($target_service);
       $this->assertEquals('SESSION', $this->session->get('cas_proxy_helper')[$target_service][0]['Name']);
@@ -169,16 +197,18 @@ class CasProxyHelperTest extends UnitTestCase {
     // Set up properties so the http client callback knows about them.
     $cookie_value = $this->randomMachineName(24);
 
-    $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $casHelper->expects($this->any())
+    $this->casHelper->expects($this->any())
       ->method('getServerBaseUrl')
-      ->will($this->returnValue('https://example.com/cas/'));
-    $casHelper->expects($this->any())
-      ->method('isProxy')
-      ->will($this->returnValue($is_proxy));
+      ->will($this->returnValue('https://example-server.com/cas/'));
+
+    $configFactory = $this->getConfigFactoryStub(array(
+      'cas.settings' => array(
+        'server.hostname' => 'example-server.com',
+        'server.port' => 443,
+        'server.path' => '/cas',
+        'proxy.initialize' => $is_proxy,
+      ),
+    ));
 
     if ($client_exception == 'server') {
       $code = 404;
@@ -198,7 +228,7 @@ class CasProxyHelperTest extends UnitTestCase {
     $handler = HandlerStack::create($mock);
     $httpClient = new Client(['handler' => $handler]);
 
-    $casProxyHelper = new CasProxyHelper($httpClient, $casHelper, $this->session);
+    $casProxyHelper = new CasProxyHelper($httpClient, $this->casHelper, $this->session, $configFactory, $this->database);
     $this->setExpectedException($exception_type, $exception_message);
     $casProxyHelper->proxyAuthenticate($target_service);
 

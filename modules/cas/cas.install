@@ -115,3 +115,16 @@ function cas_update_8002(&$sandbox) {
   $config->clear('debugging');
   $config->save();
 }
+
+/**
+ * Disable the newly added "prevent normal login" feature.
+ */
+function cas_update_8003() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('cas.settings');
+  // Even though this is a recommended feature to turn on, we don't want to
+  // break any sites that may be relying on normal login working for CASified
+  // accounts.
+  $config->set('user_accounts.prevent_normal_login', FALSE);
+  $config->save();
+}

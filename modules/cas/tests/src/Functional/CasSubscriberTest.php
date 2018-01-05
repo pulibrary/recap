@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\Tests\cas\Functional;
+
 use Drupal\cas\Service\CasHelper;
 use Drupal\Component\Utility\UrlHelper;
 
