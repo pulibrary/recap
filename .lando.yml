@@ -1,0 +1,12 @@
+name: my-lando-app
+recipe: drupal8
+services:
+  solr:
+    type: solr:6.6
+    config:
+      conf: modules/contrib/search_api_solr/solr-conf/6.x
+    portforward: true
+    core: d8
+config:
+  webroot: .
+
