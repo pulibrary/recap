@@ -1,44 +1,23 @@
 # ReCAP
 ReCAP Drupal 8 Site
 
-## Drupal 8 Requirements
+## Requirements
 
 - Drush 8
 - PHP 5.5.9 or higher
 - MySQL 5.5.3/MariaDB 5.5.20/Percona Server 5.5.8 or higher with PDO and an InnoDB-compatible primary storage engine, PostgreSQL 8.3 or higher with PDO, SQLite 3.4.2 or higher
+- Docker
+- [Lando](https://docs.devwithlando.io/)
 
 ## Local Development
 
-- Set up an alias in your local drush alias file
-```
-/* D8 Sites */
-$aliases['recap-local'] = array(
-  'root' => '/path_to_drupal_root/recap',
-  'uri' => 'http://local-host-name.princeton.edu',
-  'path-aliases' => array(
-    '%dump-dir' => '/path_to_drupal_database_dump_dir/',
-    '%dump' => '/path_to_drupal_database_dump/recap_sql_sync_dump.sql',
-    '%sites' => '/path_to_drupal_root/sites/',
-    '%files' => 'sites/default/files',
-  ),
-  'command-specific' => array (
-    'sql-sync' => array (
-      'simulate' => '0',
-      'structure-tables' => array(
-        'custom' => array('cache', 'cache_filter', 'cache_menu', 'cache_page', 'history', 'watchdog'),
-      ),
-    ),
-    'rsync' => array (
-      'simulate' => '0',
-      'mode' => 'rlptDz',
-    ),
-  ),
-);
-```
-- Use Drush 8 instance to invoke command via alais
-```
-/path_to_drush_8/drush @recap-local status
-```
+- Set up an alias in `/drush/sites/` (copy the example and make adjustments)
+- Use Lando to start container with `lando start`
+- Get the latest dump from the production server with `drush @recap.prod sql-dump > dump.sql`
+- Restart Lando `lando restart`
+- Import the database `lando db-import`
+- `cd themes/custom/recap` and generate assets related to the theme `lando npm install` and `lando gulp deploy`
+- `cd ../../..` (path to recap) and rebuild the cache `lando drush cr`
 
 ## Syncing with Remote Environments
 
