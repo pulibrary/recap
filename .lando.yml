@@ -1,6 +1,14 @@
-name: my-lando-app
+name: recap
 recipe: drupal8
 services:
+  node:
+    type: node:6.10
+    globals:
+      gulp-cli: "latest"
+  appserver:
+    run:
+      - "mkdir -p ~/.drush/site-aliases"
+      - "ln -sf /app/drush/sites/recap.site.yml ~/.drush/site-aliases/recap.site.yml"
   solr:
     type: solr:6.6
     config:
@@ -9,4 +17,10 @@ services:
     core: d8
 config:
   webroot: .
-
+tooling:
+  npm:
+    service: node
+  node:
+    service: node
+  gulp:
+    service: node

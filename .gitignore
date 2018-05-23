@@ -25,3 +25,6 @@ sites/simpletest
 
 # Ignore node modules
 node_modules
+
+# Ignore site alias
+drush/sites/recap.site.yml

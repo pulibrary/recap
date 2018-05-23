@@ -1,0 +1,34 @@
+# use this example site alias config
+
+prod:
+  host: # enter value
+  options:
+    command-specific:
+      sql-sync:
+        simulate: '0'
+        structure-tables:
+          custom:
+            - cache
+            - cache_filter
+            - cache_menu
+            - cache_page
+            - history
+            - watchdog
+      rsync:
+        simulate: '0'
+    databases:
+      default:
+        default:
+          driver: mysql
+          username: # enter value
+          password: # enter value
+          port: ''
+          host: localhost
+          database: # enter value
+  paths:
+    dump-dir: /var/www/backups/recap/
+  root: /var/www/apps/recap
+  uri: 'http://recap.princeton.edu'
+  user: drupal
+  ssh:
+    options: '-o PasswordAuthentication=no -i /path/to/.ssh/id_rsa'
