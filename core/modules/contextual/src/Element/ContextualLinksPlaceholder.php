@@ -2,11 +2,11 @@
 
 namespace Drupal\contextual\Element;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Component\Render\FormattableMarkup;
 
 /**
  * Provides a contextual_links_placeholder element.

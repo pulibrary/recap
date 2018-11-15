@@ -335,7 +335,6 @@ class RequestSanitizerTest extends UnitTestCase {
     $data[] = ['//example.com/test'];
     // External URL is not allowed.
     $data[] = ['http://example.com'];
-    $data[] = ['http://example.com//?destination=http://www.evilsite.com%5C@http://www.drupalsite.com'];
     return $data;
   }
 
