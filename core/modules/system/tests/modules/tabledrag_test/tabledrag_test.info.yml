@@ -1,0 +1,12 @@
+type: module
+name: 'TableDrag test'
+description: 'Draggable table test module.'
+# core: 8.x
+package: Testing
+# version: VERSION
+
+# Information added by Drupal.org packaging script on 2019-02-08
+version: '8.6.9'
+core: '8.x'
+project: 'drupal'
+datestamp: 1549628750

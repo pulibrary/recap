@@ -7,8 +7,8 @@ package: Testing
 dependencies:
 - drupal:settings_tray
 
-# Information added by Drupal.org packaging script on 2019-01-16
-version: '8.6.6'
+# Information added by Drupal.org packaging script on 2019-02-08
+version: '8.6.9'
 core: '8.x'
 project: 'drupal'
-datestamp: 1547663724
+datestamp: 1549628750
