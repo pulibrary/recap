@@ -10,27 +10,21 @@
   }
 
   ul {
+    @media (max-width: $tab-desk) {
+      flex-wrap: wrap;
+    }
+
+    align-items: center;
+    display: flex;
+    justify-content: space-around;
     padding: 0;
+    width: 100%;
   }
 
   li {
+    flex-basis: content;
     list-style: none;
-    margin-bottom: 2.5em;
-    width: 100%;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    @media (min-width: 768px) {
-      @include span(4 of 12);
-
-      display: inline-block;
-
-      &:last-child {
-        @include last;
-      }
-    }
+    padding: 2em;
   }
 
   a {
