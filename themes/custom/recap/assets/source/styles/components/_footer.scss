@@ -8,10 +8,11 @@ footer {
   }
 
   .layout-container > div {
-    @include span(6 of 12);
+    width: span(6);
+    float: left;
 
     &:last-child {
-      @include last;
+      margin-right: gutter();
     }
   }
 

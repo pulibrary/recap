@@ -1,14 +1,10 @@
-@import "libraries/susy/susy/language/susy";
+// @import "libraries/susy/susy/language/susy";
 
 $tab: 44em;
 $tab-desk: 54em;
 $desk: 70em;
 
 $susy: (
-  columns: 12, // The number of columns in our grid
+  "columns": susy-repeat(12), // The number of columns in our grid
   gutters: 2/3, // The size of a gutter in relation to a single column
-  container: 80em,
-  global-box-sizing: border-box,
-  use-custom: (rem: true
-  )
 );

@@ -1,9 +1,10 @@
-@import "libraries/sass-toolkit/stylesheets/toolkit";
-@import "libraries/breakpoint-sass/stylesheets/breakpoint";
-@import "libraries/susy/susy/language/susy";
+@import "bourbon";
+@import "susy";
 
 .layout-container {
-  @include container;
+  max-width: 80em;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .l-header,
@@ -26,12 +27,12 @@
 }
 
 .l-main {
-  padding: 1em;
+  padding: 1em 1em calc( 1em + 60px);
 }
 
 .front .l-main {
   @include breakpoint($desk) {
-    padding: 0;
+    padding: 0 0 calc( 1em + 60px);
   }
 }
 
@@ -43,16 +44,11 @@ ul {
 // sticky footer
 html,
 body {
-  height: 100%;
+  height: 100vh;
+  margin: 0;
 }
 
 .page-wrapper {
   margin-bottom: -60px;
-  min-height: 100%;
-
-  &::after {
-    content: "";
-    display: block;
-    height: 60px;
-  }
+  min-height: 100vh;
 }
