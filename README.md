@@ -113,12 +113,3 @@
 1. `cd themes/custom/recap`
 1. `lando npm install`
 1. `lando gulp deploy` (or any other gulp task)
-
-### Solr / Search API
-
-1. In your browser, go to `http://recap.lndo.site/admin/config/search/search_api/server/recap_solr_core/edit`
-1. Edit **Solr host** to have the value of `search`
-1. Edit **Solr path** to have a value of `/solr/recap`
-1. Clear the search index in the browser on the view page (you should be there after the edit) `http://recap.lndo.site/admin/config/search/search_api/server/recap_solr_core` and click `Delete all indexed data` button on the bottom left of the page
-1. `lando drush search-api-index` will index all content to the local solr index
-1. `lando drush cc all` will update the caches to show the data
