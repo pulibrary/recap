@@ -8,11 +8,6 @@ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
 /**
  * Drupal 7 field instances source from database.
  *
- * @internal
- *
- * This class is marked as internal and should not be extended. Use
- * Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase instead.
- *
  * @MigrateSource(
  *   id = "d7_field_instance",
  *   source_module = "field"
@@ -132,6 +127,24 @@ class FieldInstance extends DrupalSqlBase {
       $translatable = $field_data['translatable'];
     }
     $row->setSourceProperty('translatable', $translatable);
+
+    // Get the vid for each allowed value for taxonomy term reference fields
+    // which is used in a migration_lookup in the process pipeline.
+    if ($row->getSourceProperty('type') == 'taxonomy_term_reference') {
+      $vocabulary = [];
+      $data = unserialize($field_definition['data']);
+      foreach ($data['settings']['allowed_values'] as $allowed_value) {
+        $vocabulary[] = $allowed_value['vocabulary'];
+      }
+      $query = $this->select('taxonomy_vocabulary', 'v')
+        ->fields('v', ['vid'])
+        ->condition('machine_name', $vocabulary, 'IN');
+      $allowed_vid = $query->execute()->fetchAllAssoc('vid');
+      $row->setSourceProperty('allowed_vid', $allowed_vid);
+    }
+
+    $field_data = unserialize($row->getSourceProperty('field_data'));
+    $row->setSourceProperty('field_settings', $field_data['settings']);
 
     return parent::prepareRow($row);
   }

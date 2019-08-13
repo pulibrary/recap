@@ -6,10 +6,10 @@ description: 'Allows users to stage content or preview a full site by using mult
 package: Core (Experimental)
 configure: entity.workspace.collection
 dependencies:
- - user
+ - drupal:user
 
-# Information added by Drupal.org packaging script on 2019-04-17
-version: '8.6.15'
+# Information added by Drupal.org packaging script on 2019-08-07
+version: '8.7.6'
 core: '8.x'
 project: 'drupal'
-datestamp: 1555533461
+datestamp: 1565206425

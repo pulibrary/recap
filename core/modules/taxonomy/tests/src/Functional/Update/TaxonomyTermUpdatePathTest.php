@@ -90,6 +90,22 @@ class TaxonomyTermUpdatePathTest extends UpdatePathTestBase {
   }
 
   /**
+   * Tests taxonomy term views updates succeed even if Views is not installed.
+   */
+  public function testPublishingStatusUpdateForTaxonomyTermViewsWithoutViews() {
+    // Uninstalling Views will trigger some activity in the menu tree storage
+    // system, which will cause errors until system_update_8001() is run. This
+    // is because, in the drupal-8.filled.standard database fixture used for
+    // this update test, the menu link titles are not serialized (this is what
+    // gets done by system_update_8001()). Since this method is not testing
+    // anything relating to menu links, it's OK to just truncate the menu_tree
+    // table before uninstalling Views.
+    $this->container->get('database')->truncate('menu_tree')->execute();
+    $this->container->get('module_installer')->uninstall(['views']);
+    $this->runUpdates();
+  }
+
+  /**
    * Tests handling of the publishing status in taxonomy term views updates.
    *
    * @see taxonomy_post_update_handle_publishing_status_addition_in_views()
@@ -127,6 +143,67 @@ class TaxonomyTermUpdatePathTest extends UpdatePathTestBase {
       $this->assertNotEmpty($display['display_options']['filters']);
       $this->assertEquals('status', $display['display_options']['filters']['status']['field']);
     }
+  }
+
+  /**
+   * Tests the conversion of taxonomy terms to be revisionable.
+   *
+   * @see taxonomy_post_update_make_taxonomy_term_revisionable()
+   */
+  public function testConversionToRevisionable() {
+    $this->runUpdates();
+
+    // Check the database tables and the field storage definitions.
+    $schema = \Drupal::database()->schema();
+    $this->assertTrue($schema->tableExists('taxonomy_term_data'));
+    $this->assertTrue($schema->tableExists('taxonomy_term_field_data'));
+    $this->assertTrue($schema->tableExists('taxonomy_term_revision'));
+    $this->assertTrue($schema->tableExists('taxonomy_term_field_revision'));
+
+    $field_storage_definitions = \Drupal::service('entity.last_installed_schema.repository')->getLastInstalledFieldStorageDefinitions('taxonomy_term');
+    $this->assertTrue($field_storage_definitions['langcode']->isRevisionable());
+    $this->assertTrue($field_storage_definitions['name']->isRevisionable());
+    $this->assertTrue($field_storage_definitions['description']->isRevisionable());
+    $this->assertTrue($field_storage_definitions['changed']->isRevisionable());
+
+    // Log in as user 1.
+    $account = User::load(1);
+    $account->passRaw = 'drupal';
+    $this->drupalLogin($account);
+
+    // Make sure our vocabulary exists.
+    $this->drupalGet('admin/structure/taxonomy/manage/test_vocabulary/overview');
+
+    // Make sure our terms exist.
+    $assert_session = $this->assertSession();
+    $assert_session->pageTextContains('Test root term');
+    $assert_session->pageTextContains('Test child term');
+
+    $this->drupalGet('taxonomy/term/3');
+    $assert_session->statusCodeEquals('200');
+
+    // Make sure the terms are still translated.
+    $this->drupalGet('taxonomy/term/2/translations');
+    $assert_session->linkExists('Test root term - Spanish');
+
+    $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+
+    // Check that taxonomy terms can be created, saved and then loaded.
+    /** @var \Drupal\taxonomy\TermInterface $term */
+    $term = $storage->create([
+      'name' => 'Test term',
+      'vid' => 'article',
+      'revision_log_message' => 'Initial revision.',
+    ]);
+    $term->save();
+
+    $storage->resetCache();
+    $term = $storage->loadRevision($term->getRevisionId());
+
+    $this->assertEquals('Test term', $term->label());
+    $this->assertEquals('article', $term->bundle());
+    $this->assertEquals('Initial revision.', $term->getRevisionLogMessage());
+    $this->assertTrue($term->isPublished());
   }
 
   /**

@@ -4,6 +4,7 @@ namespace Drupal\workspaces;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -57,23 +58,24 @@ class EntityOperations implements ContainerInjectionInterface {
   }
 
   /**
-   * Acts on entities when loaded.
+   * Acts on entity IDs before they are loaded.
    *
-   * @see hook_entity_load()
+   * @see hook_entity_preload()
    */
-  public function entityLoad(array &$entities, $entity_type_id) {
+  public function entityPreload(array $ids, $entity_type_id) {
+    $entities = [];
+
     // Only run if the entity type can belong to a workspace and we are in a
     // non-default workspace.
     if (!$this->workspaceManager->shouldAlterOperations($this->entityTypeManager->getDefinition($entity_type_id))) {
-      return;
+      return $entities;
     }
 
     // Get a list of revision IDs for entities that have a revision set for the
     // current active workspace. If an entity has multiple revisions set for a
     // workspace, only the one with the highest ID is returned.
-    $entity_ids = array_keys($entities);
     $max_revision_id = 'max_target_entity_revision_id';
-    $results = $this->entityTypeManager
+    $query = $this->entityTypeManager
       ->getStorage('workspace_association')
       ->getAggregateQuery()
       ->accessCheck(FALSE)
@@ -81,21 +83,13 @@ class EntityOperations implements ContainerInjectionInterface {
       ->aggregate('target_entity_revision_id', 'MAX', NULL, $max_revision_id)
       ->groupBy('target_entity_id')
       ->condition('target_entity_type_id', $entity_type_id)
-      ->condition('target_entity_id', $entity_ids, 'IN')
-      ->condition('workspace', $this->workspaceManager->getActiveWorkspace()->id())
-      ->execute();
+      ->condition('workspace', $this->workspaceManager->getActiveWorkspace()->id());
 
-    // Since hook_entity_load() is called on both regular entity load as well as
-    // entity revision load, we need to prevent infinite recursion by checking
-    // whether the default revisions were already swapped with the workspace
-    // revision.
-    // @todo This recursion protection should be removed when
-    //   https://www.drupal.org/project/drupal/issues/2928888 is resolved.
-    if ($results) {
-      $results = array_filter($results, function ($result) use ($entities, $max_revision_id) {
-        return $entities[$result['target_entity_id']]->getRevisionId() != $result[$max_revision_id];
-      });
+    if ($ids) {
+      $query->condition('target_entity_id', $ids, 'IN');
     }
+
+    $results = $query->execute();
 
     if ($results) {
       /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
@@ -108,6 +102,8 @@ class EntityOperations implements ContainerInjectionInterface {
         $entities[$revision->id()] = $revision;
       }
     }
+
+    return $entities;
   }
 
   /**
@@ -121,9 +117,10 @@ class EntityOperations implements ContainerInjectionInterface {
   public function entityPresave(EntityInterface $entity) {
     $entity_type = $entity->getEntityType();
 
-    // Only run if this is not an entity type provided by the Workspaces module
-    // and we are in a non-default workspace
-    if ($entity_type->getProvider() === 'workspaces' || $this->workspaceManager->getActiveWorkspace()->isDefaultWorkspace()) {
+    // Only run if we are not dealing with an entity type provided by the
+    // Workspaces module, an internal entity type or if we are in a non-default
+    // workspace.
+    if ($this->shouldSkipPreOperations($entity_type)) {
       return;
     }
 
@@ -133,8 +130,8 @@ class EntityOperations implements ContainerInjectionInterface {
       throw new \RuntimeException('This entity can only be saved in the default workspace.');
     }
 
-    /** @var \Drupal\Core\Entity\RevisionableInterface|\Drupal\Core\Entity\EntityPublishedInterface $entity */
-    if (!$entity->isNew() && !isset($entity->_isReplicating)) {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface|\Drupal\Core\Entity\EntityPublishedInterface $entity */
+    if (!$entity->isNew() && !$entity->isSyncing()) {
       // Force a new revision if the entity is not replicating.
       $entity->setNewRevision(TRUE);
 
@@ -229,9 +226,10 @@ class EntityOperations implements ContainerInjectionInterface {
   public function entityPredelete(EntityInterface $entity) {
     $entity_type = $entity->getEntityType();
 
-    // Only run if this is not an entity type provided by the Workspaces module
-    // and we are in a non-default workspace
-    if ($entity_type->getProvider() === 'workspaces' || $this->workspaceManager->getActiveWorkspace()->isDefaultWorkspace()) {
+    // Only run if we are not dealing with an entity type provided by the
+    // Workspaces module, an internal entity type or if we are in a non-default
+    // workspace.
+    if ($this->shouldSkipPreOperations($entity_type)) {
       return;
     }
 
@@ -250,11 +248,10 @@ class EntityOperations implements ContainerInjectionInterface {
    * the new information. Otherwise, a new WorkspaceAssociation entity is created to
    * store the passed-in entity's information.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\Core\Entity\RevisionableInterface $entity
    *   The entity to update or create from.
    */
-  protected function trackEntity(EntityInterface $entity) {
-    /** @var \Drupal\Core\Entity\RevisionableInterface|\Drupal\Core\Entity\EntityPublishedInterface $entity */
+  protected function trackEntity(RevisionableInterface $entity) {
     // If the entity is not new, check if there's an existing
     // WorkspaceAssociation entity for it.
     $workspace_association_storage = $this->entityTypeManager->getStorage('workspace_association');
@@ -344,6 +341,26 @@ class EntityOperations implements ContainerInjectionInterface {
     // Set the non-default revision flag so that validation constraints are also
     // aware that a pending revision is about to be created.
     $entity->isDefaultRevision(FALSE);
+  }
+
+  /**
+   * Determines whether we need to react on pre-save or pre-delete operations.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type to check.
+   *
+   * @return bool
+   *   Returns TRUE if the pre-save or pre-delete entity operations should not
+   *   be altered in the current request, FALSE otherwise.
+   */
+  protected function shouldSkipPreOperations(EntityTypeInterface $entity_type) {
+    // We should not react on pre-save and pre-delete entity operations if one
+    // of the following conditions are met:
+    // - the entity type is provided by the Workspaces module;
+    // - the entity type is internal, which means that it should not affect
+    //   anything in the default (Live) workspace;
+    // - we are in the default workspace.
+    return $entity_type->getProvider() === 'workspaces' || $entity_type->isInternal() || $this->workspaceManager->getActiveWorkspace()->isDefaultWorkspace();
   }
 
 }
