@@ -183,13 +183,15 @@ class EntityViewsData implements EntityHandlerInterface, EntityViewsDataInterfac
           'id' => 'entity_operations',
         ],
       ];
-      $data[$revision_table]['operations'] = [
-        'field' => [
-          'title' => $this->t('Operations links'),
-          'help' => $this->t('Provides links to perform entity operations.'),
-          'id' => 'entity_operations',
-        ],
-      ];
+      if ($revision_table) {
+        $data[$revision_table]['operations'] = [
+          'field' => [
+            'title' => $this->t('Operations links'),
+            'help' => $this->t('Provides links to perform entity operations.'),
+            'id' => 'entity_operations',
+          ],
+        ];
+      }
     }
 
     if ($this->entityType->hasViewBuilderClass()) {
@@ -250,6 +252,13 @@ class EntityViewsData implements EntityHandlerInterface, EntityViewsDataInterfac
         'help' => $this->t('Restrict the view to only revisions that are the latest revision of their entity.'),
         'filter' => ['id' => 'latest_revision'],
       ];
+      if ($this->entityType->isTranslatable()) {
+        $data[$revision_table]['latest_translation_affected_revision'] = [
+          'title' => $this->t('Is Latest Translation Affected Revision'),
+          'help' => $this->t('Restrict the view to only revisions that are the latest translation affected revision of their entity.'),
+          'filter' => ['id' => 'latest_translation_affected_revision'],
+        ];
+      }
     }
 
     $this->addEntityLinks($data[$base_table]);
