@@ -11,6 +11,7 @@ use Drupal\cas\Service\CasUserManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\Core\Url;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\cas\Service\CasValidator;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\cas\Service\CasLogout;
 use Symfony\Component\HttpFoundation\Response;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Class ServiceController.
@@ -85,6 +87,13 @@ class ServiceController implements ContainerInjectionInterface {
   protected $settings;
 
   /**
+   * Stores a Messenger object.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\cas\Service\CasHelper $cas_helper
@@ -103,8 +112,10 @@ class ServiceController implements ContainerInjectionInterface {
    *   The URL generator.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
    */
-  public function __construct(CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper, CasValidator $cas_validator, CasUserManager $cas_user_manager, CasLogout $cas_logout, RequestStack $request_stack, UrlGeneratorInterface $url_generator, ConfigFactoryInterface $config_factory) {
+  public function __construct(CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper, CasValidator $cas_validator, CasUserManager $cas_user_manager, CasLogout $cas_logout, RequestStack $request_stack, UrlGeneratorInterface $url_generator, ConfigFactoryInterface $config_factory, MessengerInterface $messenger) {
     $this->casHelper = $cas_helper;
     $this->casProxyHelper = $cas_proxy_helper;
     $this->casValidator = $cas_validator;
@@ -113,13 +124,14 @@ class ServiceController implements ContainerInjectionInterface {
     $this->requestStack = $request_stack;
     $this->urlGenerator = $url_generator;
     $this->settings = $config_factory->get('cas.settings');
+    $this->messenger = $messenger;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('cas.helper'), $container->get('cas.proxy_helper'), $container->get('cas.validator'), $container->get('cas.user_manager'), $container->get('cas.logout'), $container->get('request_stack'), $container->get('url_generator'), $container->get('config.factory'));
+    return new static($container->get('cas.helper'), $container->get('cas.proxy_helper'), $container->get('cas.validator'), $container->get('cas.user_manager'), $container->get('cas.logout'), $container->get('request_stack'), $container->get('url_generator'), $container->get('config.factory'), $container->get('messenger'));
   }
 
   /**
@@ -194,9 +206,12 @@ class ServiceController implements ContainerInjectionInterface {
         'Error when validating ticket: %error',
         ['%error' => $e->getMessage()]
       );
-      $this->setMessage($this->t('There was a problem validating your login, please contact a site administrator.'), 'error');
-      $this->handleReturnToParameter($request);
-      return RedirectResponse::create($this->urlGenerator->generate('<front>'));
+      $message_validation_failure = $this->settings->get('error_handling.message_validation_failure');
+      if (!empty($message_validation_failure)) {
+        $this->messenger->addError($message_validation_failure);
+      }
+
+      return $this->createRedirectResponse($request, TRUE);
     }
 
     // Now that the ticket has been validated, we can use the information from
@@ -207,18 +222,48 @@ class ServiceController implements ContainerInjectionInterface {
         $this->casHelper->log(LogLevel::DEBUG, "Storing PGT information for this session.");
         $this->casProxyHelper->storePgtSession($cas_validation_info->getPgt());
       }
-      $this->setMessage($this->t('You have been logged in.'));
+
+      $login_success_message = $this->settings->get('login_success_message');
+      if (!empty($login_success_message)) {
+        $this->messenger->addStatus($login_success_message);
+      }
     }
     catch (CasLoginException $e) {
       $this->casHelper->log(LogLevel::ERROR, $e->getMessage());
-      $this->setMessage($this->t('There was a problem logging in, please contact a site administrator.'), 'error');
+      $login_error_message = $this->getLoginErrorMessage($e);
+      if ($login_error_message) {
+        $this->messenger->addError($login_error_message, 'error');
+      }
+
+      return $this->createRedirectResponse($request, TRUE);
     }
 
-    // And finally redirect the user to the homepage, or so a specific
-    // destination found in the destination param (like the page they were on
-    // prior to initiating authentication).
-    $this->handleReturnToParameter($request);
-    return RedirectResponse::create($this->urlGenerator->generate('<front>'));
+    return $this->createRedirectResponse($request);
+  }
+
+  /**
+   * Create a redirect response that sends users somewhere after login.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   * @param bool $login_failed
+   *   Indicates if the login failed or not.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   The redirect response.
+   */
+  private function createRedirectResponse(Request $request, $login_failed = FALSE) {
+    // If login failed, we may have a special page to send them to.
+    if ($login_failed && $this->settings->get('error_handling.login_failure_page')) {
+      return RedirectResponse::create(Url::fromUserInput($this->settings->get('error_handling.login_failure_page'))->toString());
+    }
+    // Otherwise, send them to the homepage, or to the previous page they were
+    // on when login was initiated (which will be represented by the 'returnto'
+    // parameter).
+    else {
+      $this->handleReturnToParameter($request);
+      return RedirectResponse::create($this->urlGenerator->generate('<front>'));
+    }
   }
 
   /**
@@ -252,23 +297,48 @@ class ServiceController implements ContainerInjectionInterface {
   }
 
   /**
-   * Encapsulation of drupal_set_message.
+   * Get the error message to display when there is a login exception.
    *
-   * See https://www.drupal.org/node/2278383 for discussion about converting
-   * drupal_set_message to a service. In the meantime, in order to unit test
-   * the error handling here, we have to encapsulate the call in a method.
+   * @param \Drupal\cas\Exception\CasLoginException $e
+   *   The login exception.
    *
-   * @param string $message
-   *   The message text to set.
-   * @param string $type
-   *   The message type.
-   * @param bool $repeat
-   *   Whether identical messages should all be shown.
-   *
-   * @codeCoverageIgnore
+   * @return array|\Drupal\Core\StringTranslation\TranslatableMarkup|string
+   *   The error message.
    */
-  public function setMessage($message, $type = 'status', $repeat = FALSE) {
-    drupal_set_message($message, $type, $repeat);
+  private function getLoginErrorMessage(CasLoginException $e) {
+    $code = $e->getCode();
+    switch ($code) {
+      case CasLoginException::NO_LOCAL_ACCOUNT:
+        $msgKey = 'message_no_local_account';
+        break;
+
+      case CasLoginException::SUBSCRIBER_DENIED_REG:
+        $msgKey = 'message_subscriber_denied_reg';
+        break;
+
+      case CasLoginException::ACCOUNT_BLOCKED:
+        $msgKey = 'message_account_blocked';
+        break;
+
+      case CasLoginException::SUBSCRIBER_DENIED_LOGIN:
+        $msgKey = 'message_subscriber_denied_login';
+        break;
+
+      case CasLoginException::ATTRIBUTE_PARSING_ERROR:
+        // Re-use the normal validation error message.
+        $msgKey = 'message_validation_failure';
+        break;
+
+      case CasLoginException::USERNAME_ALREADY_EXISTS:
+        $msgKey = 'message_username_already_exists';
+        break;
+    }
+
+    if (!empty($msgKey)) {
+      return $this->settings->get('error_handling.' . $msgKey);
+    }
+
+    return $this->t('There was a problem logging in. Please contact a site administrator.');
   }
 
 }

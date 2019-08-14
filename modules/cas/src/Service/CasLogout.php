@@ -54,6 +54,9 @@ class CasLogout {
    *
    * @param string $data
    *   The raw data posted to us from the CAS server.
+   *
+   * @throws CasSloException
+   *   If the logout data could not be parsed.
    */
   public function handleSlo($data) {
     $this->casHelper->log(LogLevel::DEBUG, "Attempting to handle single-log-out request.");

@@ -4,7 +4,6 @@ namespace Drupal\Tests\cas\Unit\Service;
 
 use Drupal\cas\CasRedirectData;
 use Drupal\cas\Event\CasPreRedirectEvent;
-use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Service\CasRedirector;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Tests\UnitTestCase;
@@ -79,8 +78,7 @@ class CasRedirectorTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->getMock();
     $cache_contexts_manager->method('assertValidTokens')->willReturn(TRUE);
-    $cache_contexts_manager->expects($this->any())
-      ->method('validate_tokens');
+
     $container = new Container();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
     \Drupal::setContainer($container);

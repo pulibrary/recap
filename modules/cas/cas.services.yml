@@ -12,7 +12,7 @@ services:
     arguments: ['@cas.helper', '@event_dispatcher', '@url_generator.non_bubbling']
   cas.validator:
     class: Drupal\cas\Service\CasValidator
-    arguments: ['@http_client', '@cas.helper', '@config.factory', '@url_generator.non_bubbling']
+    arguments: ['@http_client', '@cas.helper', '@config.factory', '@url_generator.non_bubbling', '@event_dispatcher']
   cas.user_manager:
     class: Drupal\cas\Service\CasUserManager
     arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@config.factory', '@session', '@database', '@event_dispatcher', '@cas.helper']

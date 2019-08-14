@@ -3,8 +3,8 @@
 namespace Drupal\Tests\cas\Unit\Service;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\cas\Service\CasHelper;
 use Psr\Log\LogLevel;
+use Drupal\cas\Service\CasHelper;
 
 /**
  * CasHelper unit tests.
@@ -43,7 +43,7 @@ class CasHelperTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->loggerFactory = $this->getMock('\Drupal\Core\Logger\LoggerChannelFactory');
+    $this->loggerFactory = $this->createMock('\Drupal\Core\Logger\LoggerChannelFactory');
     $this->loggerChannel = $this->getMockBuilder('\Drupal\Core\Logger\LoggerChannel')
       ->disableOriginalConstructor()
       ->getMock();
@@ -84,6 +84,7 @@ class CasHelperTest extends UnitTestCase {
     /** @var \Drupal\Core\Config\ConfigFactory $config_factory */
     $config_factory = $this->getConfigFactoryStub(array(
       'cas.settings' => array(
+        'server.protocol' => 'https',
         'server.hostname' => 'example.com',
         'server.port' => 443,
         'server.path' => '/cas',
@@ -106,6 +107,7 @@ class CasHelperTest extends UnitTestCase {
     /** @var \Drupal\Core\Config\ConfigFactory $config_factory */
     $config_factory = $this->getConfigFactoryStub(array(
       'cas.settings' => array(
+        'server.protocol' => 'https',
         'server.hostname' => 'example.com',
         'server.port' => 4433,
         'server.path' => '/cas',
@@ -114,6 +116,29 @@ class CasHelperTest extends UnitTestCase {
     $cas_helper = new CasHelper($config_factory, $this->loggerFactory);
 
     $this->assertEquals('https://example.com:4433/cas/', $cas_helper->getServerBaseUrl());
+  }
+
+  /**
+   * Test constructing the CAS Server base url with non-standard protocol.
+   *
+   * Non-standard protocols should be included in the constructed URL.
+   *
+   * @covers ::getServerBaseUrl
+   * @covers ::__construct
+   */
+  public function testGetServerBaseUrlNonStandardHttpProtocol() {
+    /** @var \Drupal\Core\Config\ConfigFactory $config_factory */
+    $config_factory = $this->getConfigFactoryStub(array(
+      'cas.settings' => array(
+        'server.protocol' => 'http',
+        'server.hostname' => 'example.com',
+        'server.port' => 80,
+        'server.path' => '/cas',
+      ),
+    ));
+    $cas_helper = new CasHelper($config_factory, $this->loggerFactory);
+
+    $this->assertEquals('http://example.com/cas/', $cas_helper->getServerBaseUrl());
   }
 
   /**

@@ -62,7 +62,8 @@ function cas_form_user_form_alter(&$form, FormStateInterface $form_state, $form_
   // form field with its current value. Also remove the password management
   // fields if configured to do so.
   if ($cas_username) {
-    $form['cas_username']['#default_value'] = $cas_username;
+    $form['account']['cas_enabled']['#default_value'] = TRUE;
+    $form['account']['cas_username']['#default_value'] = $cas_username;
 
     if (!\Drupal::currentUser()->hasPermission('administer users')) {
       if (\Drupal::config('cas.settings')->get('user_accounts.restrict_password_management')) {
@@ -133,12 +134,24 @@ function _cas_validate_user_pass_form(array &$form, FormStateInterface $form_sta
  *   The user entity form.
  */
 function _cas_add_cas_username_to_user_form(array &$form) {
-  $form['cas_username'] = [
+  $form['account']['cas_enabled'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow user to log in via CAS'),
+    '#access' => \Drupal::currentUser()->hasPermission('administer users'),
+    '#weight' => 0,
+  ];
+  $form['account']['cas_username'] = [
     '#type' => 'textfield',
     '#title' => t('CAS Username'),
-    '#description' => t('The CAS username to associate with this user. Typically the same as the Drupal username. This must be entered to allow this user to authenticate with CAS.'),
+    '#description' => t('The username that this user logs into CAS with (typically the same as the Drupal username). Note that while the Drupal password field is required to be filled in, CAS users will not use it to log in.'),
     '#access' => \Drupal::currentUser()->hasPermission('administer users'),
     '#maxlength' => 128,
+    '#weight' => 0,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="cas_enabled"]' => ['checked' => TRUE],
+      ),
+    ),
   ];
 
   // We cannot apply form validation method directly to buttons on entity forms
@@ -161,6 +174,12 @@ function _cas_user_form_validate(array &$form, FormStateInterface $form_state) {
   // Verify that it was the save / register button that was clicked. We don't
   // want to run our validation if this was for a 'cancel account' action.
   if (in_array('::save', $form_state->getTriggeringElement()['#submit'])) {
+    // If the CAS enabled checkbox was checked, then ensure that the CAS
+    // username field is not empty.
+    if ($form_state->getValue('cas_enabled') && empty($form_state->getValue('cas_username'))) {
+      $form_state->setError($form['account']['cas_username'], t('Please provide a CAS username, or uncheck "Allow user to log in via CAS".'));
+    }
+
     // The externalauth module does not provide this validation so we have to
     // implement it ourselves. See https://drupal.org/node/2804797.
     $cas_username = $form_state->getValue('cas_username');
@@ -170,7 +189,7 @@ function _cas_user_form_validate(array &$form, FormStateInterface $form_state) {
       $user_being_edited = $form_state->getFormObject()->getEntity();
 
       if ($existing_uid && $existing_uid !== $user_being_edited->id()) {
-        $form_state->setError($form['cas_username'], t('The specified CAS username is already in use by another user.'));
+        $form_state->setError($form['account']['cas_username'], t('The specified CAS username is already in use by another user.'));
       }
     }
   }
@@ -189,7 +208,7 @@ function _cas_user_form_validate(array &$form, FormStateInterface $form_state) {
 function _cas_user_form_submit(array $form, FormStateInterface $form_state) {
   $cas_user_manager = \Drupal::service('cas.user_manager');
   $account = $form_state->getFormObject()->getEntity();
-  if ($form_state->getValue('cas_username')) {
+  if ($form_state->getValue('cas_username') && $form_state->getValue('cas_enabled')) {
     $cas_user_manager->setCasUsernameForAccount($account, $form_state->getValue('cas_username'));
   }
   else {
@@ -290,5 +309,26 @@ function cas_help($route_name, RouteMatchInterface $route_match) {
       }
     default:
       return NULL;
+  }
+}
+
+/**
+ * Implements hook_menu_links_discovered_alter().
+ */
+function cas_menu_links_discovered_alter(&$links) {
+  // The "admin toolbar tools" module adds a "Add a new user" menu item to
+  // the "People" admin menu. Here we supplement that with one for adding
+  // CAS users as well. We could also just add this via cas.links.menu.yml,
+  // but we only want it to appear if the admin toolbar tools module is also
+  // enabled.
+  if (\Drupal::moduleHandler()->moduleExists('admin_toolbar_tools')) {
+    $links['cas.bulk_add_users'] = [
+      'title' => t('Add CAS user(s)'),
+      'provider' => 'cas',
+      'route_name' => 'cas.bulk_add_cas_users',
+      'menu_name' => 'admin',
+      'parent' => 'entity.user.collection',
+      'weight' => -1,
+    ];
   }
 }

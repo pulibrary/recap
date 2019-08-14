@@ -48,3 +48,10 @@ cas.logout:
   options:
     _maintenance_access: TRUE
     no_cache: TRUE
+cas.bulk_add_cas_users:
+  path: '/admin/people/create/cas-bulk'
+  defaults:
+    _form: '\Drupal\cas\Form\BulkAddCasUsers'
+    _title: 'Bulk Add CAS Users'
+  requirements:
+    _permission: 'administer users'

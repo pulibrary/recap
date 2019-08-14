@@ -29,17 +29,14 @@ This module requires the following modules:
 
 * CAS Attributes (http://drupal.org/project/cas_attributes) allows user 
   attributes and roles to be set based on attributes provided by the cas 
-  server.  
-    
-* Markdown Filter (https://drupal.org/project/markdown) when enabled will 
-  display the project's help page (README.md) as rendered markdown.
+  server.
 
 # Installation
 
 Download and install the module as you would with any other Drupal module:
 
 * Download this module and move the folder it the DRUPAL_ROOT/modules 
-  directory.
+  directory. Using composer to download modules is the best practice.
 * Enable the module in your Drupal admin interface.
 * The configuration page for this module is in /admin/config/people/cas,
   and can be accessed in the admin menu under Configuration -> People -> CAS
@@ -60,7 +57,7 @@ section below to learn more.
 This module exposes a specific URL path on your website that will trigger
 the CAS authentication process for your users:
 
-http://yoursite.com/caslogin (/cas will also work)
+http://yoursite.com/cas (/caslogin will also work)
 
 Users will be redirected to your CAS server to authenticate. If they already
 have an active session with the CAS server, they will immediately be redirected
@@ -79,29 +76,24 @@ This module simply provides a way to authenticate these users.
 If a user attempts to login with an account that is not already registered on
 your Drupal site, they will see an error message.
 
-However, you can configure the module to automatically register users.
-This way, when a user authenticates with CAS, a local Drupal account will
+However, you can configure the module to automatically register users when
+they log in via CAS for the first time. A local Drupal account will
 automatically be created for that user. The password for the account will
 be randomly generated and is not revealed to the user.
 
-This module does NOT prevent local Drupal authentication (using the standard
-login form). If a user knew their randomly generated password, or used
-the password reset form, they could bypass CAS authentication and login to
-the Drupal site directly unless Forced Login is properly configured.
+You can configure this module to prevent CAS users from changing their password,
+using the password reset form, changing their email, and logging in using the
+normal Drupal login form. All of those options are recommended and enabled
+by default.
 
 ## Forced Login
 
 You can enable the Forced Login feature to force anonymous users to
-authenticate via CAS when they hit all or some of the pages on your site.
-
-If the user does not have an active session with the CAS server, they will
-be forced to enter their credentials before returning to your site. If the
-user does have an active session, they will be seamlessly authenticated
-locally on your Drupal site and shown the page they requested.
+authenticate via CAS when they visit all or some of the pages on your site.
 
 ## Gateway Login
 
-With this feature enabled, anonymous users that view some or all pages on
+With this feature enabled, anonymous users that visit some or all pages on
 your site will automatically be logged in IF they already have an active
 CAS session with the CAS server.
 
@@ -115,7 +107,8 @@ originally requested on your website.
 This feature differs from Forced Login in that it will not force the user
 to login if they do not already have an active CAS server session.
 
-*This feature is not currently compatible with any form of page caching.*
+*This feature is not currently compatible with any form of page caching
+and is not recommended.*
 
 ## SSL Verification Setting
 This module makes an HTTP request to your CAS server during the authentication
@@ -133,6 +126,24 @@ provide the path to that cert.
 Further discussion of this topic is beyond the scope of this documentation,
 but web hosts and system administrators should have a deep understanding
 of this topic to help further.
+
+## Integration with the "Redirect 402 to User Login" (r4032login) module
+It is often useful to have access denied pages automatically attempt to
+authenticate users via CAS. This provides a seamless login experience for
+your visitors when they try and access a page that is restricted.
+
+For example, imagine you have a Webform submission that emails site
+administrators a link to review submissions as they are received.
+When a logged out admin visits the link, they would normally be met with
+the 403 Access Denied page, but a better experience may be to instead
+automatically log them in via CAS.
+
+To enable this behavior, enable the r4032login module and configure it as such:
+
+1. Check the "Redirect user to the page they tried to access after login" checkbox
+1. Set the "Path to user login form" to "/cas"
+1. Set the "Destination parameter override" to "returnto"
+
 
 ## Proxy
 Initializing a CAS client as a proxy allows the client to make web service calls 
@@ -167,7 +178,7 @@ what each event does and the common use cases for subscribing to them.
 
 ## Forcing authentication yourself
 The CAS module will always attempt to authenticate a user when they visit the
-/caslogin (or /cas) path, or if they visit a Forced Login or Gateway path that's
+/cas (or /caslogin) path, or if they visit a Forced Login or Gateway path that's
 configured in the module's settings.
 
 If there are other times you'd like to force a user to authenticate, use the
@@ -177,3 +188,11 @@ object that will redirect users to the CAS server for authentication.
 Inject this service class into one of your own services (like a kernel event
 subscriber) and call the `buildRedirectResponse` method to create the response
 object.
+
+## Constructing a link that returns user to a specific page after login
+It is often useful to provide a login link on your site that, when clicked,
+will authenticate users via CAS and then return them to a specific page.
+
+You can use the special "returnto" parameter to accomplish this:
+
+https://yoursite.com/cas?returnto=/node/1

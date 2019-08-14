@@ -2,11 +2,13 @@
 
 namespace Drupal\Tests\cas\Unit\Controller;
 
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\UnitTestCase;
 use Drupal\cas\Exception\CasValidateException;
 use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\CasPropertyBag;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\cas\Controller\ServiceController;
 
 /**
  * ServiceController unit tests.
@@ -75,6 +77,8 @@ class ServiceControllerTest extends UnitTestCase {
 
   protected $requestObject;
 
+  protected $messenger;
+
   /**
    * {@inheritdoc}
    */
@@ -101,14 +105,15 @@ class ServiceControllerTest extends UnitTestCase {
         'server.hostname' => 'example-server.com',
         'server.port' => 443,
         'server.path' => '/cas',
+        'error_handling.login_failure_page' => '/user/login',
       ),
     ));
-    $this->requestStack = $this->getMock('\Symfony\Component\HttpFoundation\RequestStack');
-    $this->urlGenerator = $this->getMock('\Drupal\Core\Routing\UrlGeneratorInterface');
+    $this->requestStack = $this->createMock('\Symfony\Component\HttpFoundation\RequestStack');
+    $this->urlGenerator = $this->createMock('\Drupal\Core\Routing\UrlGeneratorInterface');
 
     $this->requestObject = new Request();
-    $request_bag = $this->getMock('\Symfony\Component\HttpFoundation\ParameterBag');
-    $query_bag = $this->getMock('\Symfony\Component\HttpFoundation\ParameterBag');
+    $request_bag = $this->createMock('\Symfony\Component\HttpFoundation\ParameterBag');
+    $query_bag = $this->createMock('\Symfony\Component\HttpFoundation\ParameterBag');
     $this->requestObject->query = $query_bag;
     $this->requestObject->request = $request_bag;
 
@@ -125,6 +130,8 @@ class ServiceControllerTest extends UnitTestCase {
 
     $this->requestBag = $request_bag;
     $this->queryBag = $query_bag;
+
+    $this->messenger = $this->createMock('\Drupal\Core\Messenger\MessengerInterface');
   }
 
   /**
@@ -150,7 +157,7 @@ class ServiceControllerTest extends UnitTestCase {
       ->method('handleSlo')
       ->with($this->equalTo('<foobar/>'));
 
-    $serviceController = new TestServiceController(
+    $serviceController = new ServiceController(
       $this->casHelper,
       $this->casProxyHelper,
       $this->casValidator,
@@ -158,8 +165,11 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casLogout,
       $this->requestStack,
       $this->urlGenerator,
-      $this->configFactory
+      $this->configFactory,
+      $this->messenger
     );
+    $serviceController->setStringTranslation($this->getStringTranslationStub());
+
     $response = $serviceController->handle();
     $this->assertEquals(200, $response->getStatusCode());
     $this->assertEquals('', $response->getContent());
@@ -188,7 +198,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->assertDestinationSetFromReturnTo();
     }
 
-    $serviceController = new TestServiceController(
+    $serviceController = new ServiceController(
       $this->casHelper,
       $this->casProxyHelper,
       $this->casValidator,
@@ -196,8 +206,10 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casLogout,
       $this->requestStack,
       $this->urlGenerator,
-      $this->configFactory
+      $this->configFactory,
+      $this->messenger
     );
+    $serviceController->setStringTranslation($this->getStringTranslationStub());
 
     $this->assertRedirectedToFrontPageOnHandle($serviceController);
   }
@@ -234,7 +246,7 @@ class ServiceControllerTest extends UnitTestCase {
       ->method('login')
       ->with($this->equalTo($validation_data), $this->equalTo('ST-foobar'));
 
-    $serviceController = new TestServiceController(
+    $serviceController = new ServiceController(
       $this->casHelper,
       $this->casProxyHelper,
       $this->casValidator,
@@ -242,8 +254,10 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casLogout,
       $this->requestStack,
       $this->urlGenerator,
-      $this->configFactory
+      $this->configFactory,
+      $this->messenger
     );
+    $serviceController->setStringTranslation($this->getStringTranslationStub());
 
     $this->assertRedirectedToFrontPageOnHandle($serviceController);
   }
@@ -295,7 +309,7 @@ class ServiceControllerTest extends UnitTestCase {
       ),
     ));
 
-    $serviceController = new TestServiceController(
+    $serviceController = new ServiceController(
       $this->casHelper,
       $this->casProxyHelper,
       $this->casValidator,
@@ -303,8 +317,10 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casLogout,
       $this->requestStack,
       $this->urlGenerator,
-      $configFactory
+      $configFactory,
+      $this->messenger
     );
+    $serviceController->setStringTranslation($this->getStringTranslationStub());
 
     $this->assertRedirectedToFrontPageOnHandle($serviceController);
   }
@@ -328,10 +344,6 @@ class ServiceControllerTest extends UnitTestCase {
       ->method('getCurrentRequest')
       ->will($this->returnValue($this->requestObject));
 
-    if ($returnto) {
-      $this->assertDestinationSetFromReturnTo();
-    }
-
     // Validation should throw an exception.
     $this->casValidator->expects($this->once())
       ->method('validateTicket')
@@ -341,7 +353,7 @@ class ServiceControllerTest extends UnitTestCase {
     $this->casUserManager->expects($this->never())
       ->method('login');
 
-    $serviceController = new TestServiceController(
+    $serviceController = new ServiceController(
       $this->casHelper,
       $this->casProxyHelper,
       $this->casValidator,
@@ -349,10 +361,12 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casLogout,
       $this->requestStack,
       $this->urlGenerator,
-      $this->configFactory
+      $this->configFactory,
+      $this->messenger
     );
+    $serviceController->setStringTranslation($this->getStringTranslationStub());
 
-    $this->assertRedirectedToFrontPageOnHandle($serviceController);
+    $this->assertRedirectedToSpecialPageOnLoginFailure($serviceController);
   }
 
   /**
@@ -374,10 +388,6 @@ class ServiceControllerTest extends UnitTestCase {
       ->method('getCurrentRequest')
       ->will($this->returnValue($this->requestObject));
 
-    if ($returnto) {
-      $this->assertDestinationSetFromReturnTo();
-    }
-
     $this->assertSuccessfulValidation($returnto);
 
     // Login should throw an exception.
@@ -385,7 +395,7 @@ class ServiceControllerTest extends UnitTestCase {
       ->method('login')
       ->will($this->throwException(new CasLoginException()));
 
-    $serviceController = new TestServiceController(
+    $serviceController = new ServiceController(
       $this->casHelper,
       $this->casProxyHelper,
       $this->casValidator,
@@ -393,10 +403,35 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casLogout,
       $this->requestStack,
       $this->urlGenerator,
-      $this->configFactory
+      $this->configFactory,
+      $this->messenger
     );
+    $serviceController->setStringTranslation($this->getStringTranslationStub());
 
-    $this->assertRedirectedToFrontPageOnHandle($serviceController);
+    $this->assertRedirectedToSpecialPageOnLoginFailure($serviceController);
+  }
+
+  /**
+   * Asserts that user is redirected to a special page on login failure.
+   */
+  private function assertRedirectedToSpecialPageOnLoginFailure($serviceController) {
+    // Service controller calls Url:: methods directly, since there's no
+    // existing service class to use instead of that. This makes unit testing
+    // hard. We need to place mock services that Url:: uses in the container.
+    $path_validator = $this->getMock('Drupal\Core\Path\PathValidatorInterface');
+    $unrouted_url_assember = $this->getMock('Drupal\Core\Utility\UnroutedUrlAssemblerInterface');
+    $unrouted_url_assember
+      ->expects($this->atLeastOnce())
+      ->method('assemble')
+      ->will($this->returnValue('/user/login'));
+    $container_builder = new ContainerBuilder();
+    $container_builder->set('path.validator', $path_validator);
+    $container_builder->set('unrouted_url_assembler', $unrouted_url_assember);
+
+    \Drupal::setContainer($container_builder);
+
+    $response = $serviceController->handle();
+    $this->assertTrue($response->isRedirect('/user/login'));
   }
 
   /**
