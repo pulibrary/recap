@@ -26,7 +26,7 @@ class CasPropertyBag {
    *
    * @var array
    */
-  protected $attributes;
+  protected $attributes = [];
 
   /**
    * Contructor.
@@ -59,16 +59,6 @@ class CasPropertyBag {
   }
 
   /**
-   * Attributes property setter.
-   *
-   * @param array $cas_attributes
-   *   An associative array containing attribute names as keys.
-   */
-  public function setAttributes(array $cas_attributes) {
-    $this->attributes = $cas_attributes;
-  }
-
-  /**
    * Username property getter.
    *
    * @return string
@@ -89,6 +79,16 @@ class CasPropertyBag {
   }
 
   /**
+   * Attributes property setter.
+   *
+   * @param array $cas_attributes
+   *   An associative array containing attribute names as keys.
+   */
+  public function setAttributes(array $cas_attributes) {
+    $this->attributes = $cas_attributes;
+  }
+
+  /**
    * Cas attributes getter.
    *
    * @return array
@@ -96,6 +96,42 @@ class CasPropertyBag {
    */
   public function getAttributes() {
     return $this->attributes;
+  }
+
+  /**
+   * Adds a single attribute.
+   *
+   * @param string $name
+   *   The attribute name.
+   * @param mixed $value
+   *   The attribute value.
+   */
+  public function setAttribute($name, $value) {
+    $this->attributes[$name] = $value;
+  }
+
+  /**
+   * Returns a single attribute if exists.
+   *
+   * @param string $name
+   *   The name of the attribute.
+   *
+   * @return mixed|null
+   */
+  public function getAttribute($name) {
+    return $this->hasAttribute($name) ? $this->attributes[$name] : NULL;
+  }
+
+  /**
+   * Checks whether an attribute exists.
+   *
+   * @param string $name
+   *   The name of the attribute.
+   *
+   * @return bool
+   */
+  public function hasAttribute($name) {
+    return isset($this->attributes[$name]);
   }
 
 }

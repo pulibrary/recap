@@ -35,7 +35,7 @@ class Authmap extends DestinationBase implements ContainerFactoryPluginInterface
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param MigrationInterface $migration
+   * @param \Drupal\migrate\Plugin\MigrationInterface $migration
    *   The migration.
    * @param \Drupal\externalauth\AuthmapInterface $authmap
    *   The Authmap handling class.
@@ -62,11 +62,11 @@ class Authmap extends DestinationBase implements ContainerFactoryPluginInterface
    * {@inheritdoc}
    */
   public function getIds() {
-    return array(
-      'uid' => array(
+    return [
+      'uid' => [
         'type' => 'integer',
-      ),
-    );
+      ],
+    ];
   }
 
   /**
@@ -83,14 +83,14 @@ class Authmap extends DestinationBase implements ContainerFactoryPluginInterface
   /**
    * {@inheritdoc}
    */
-  public function import(Row $row, array $old_destination_id_values = array()) {
+  public function import(Row $row, array $old_destination_id_values = []) {
     /** @var \Drupal\user\UserInterface $account */
     $account = User::load($row->getDestinationProperty('uid'));
     $provider = $row->getDestinationProperty('provider');
     $authname = $row->getDestinationProperty('authname');
     $this->authmap->save($account, $provider, $authname);
 
-    return array($account->id());
+    return [$account->id()];
   }
 
 }

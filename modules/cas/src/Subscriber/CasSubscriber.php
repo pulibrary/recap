@@ -164,15 +164,21 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
     // The service controller may have indicated that this current request
     // should not be automatically sent to CAS for authentication checking.
     // This is to prevent infinite redirect loops.
-    $session = $this->requestStack->getCurrentRequest()->getSession();
+    $current_request = $this->requestStack->getCurrentRequest();
+    $session = $current_request->getSession();
     if ($session && $session->has('cas_temp_disable_auto_auth')) {
       $session->remove('cas_temp_disable_auto_auth');
       $this->casHelper->log(LogLevel::DEBUG, "Temp disable flag set, skipping CAS subscriber.");
       return;
     }
 
-    $return_to = $this->requestStack->getCurrentRequest()->getUri();
-    $redirect_data = new CasRedirectData(['returnto' => $return_to]);
+    // Add the current path to the service URL as the 'destination' param,
+    // so that when the ServiceController eventually processess the login,
+    // it knows to return the user back here.
+    $current_uri = $current_request->getUri();
+    $current_scheme_and_host = $current_request->getSchemeAndHttpHost();
+    $current_path = str_replace($current_scheme_and_host, '', $current_uri);
+    $redirect_data = new CasRedirectData(['destination' => $current_path]);
 
     // Nothing to do if the user is already logged in.
     if ($this->currentUser->isAuthenticated()) {
@@ -202,6 +208,10 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
     $response = $this->casRedirector->buildRedirectResponse($redirect_data);
     if ($response) {
       $event->setResponse($response);
+      // If there's a 'destination' parameter set on the current request,
+      // remove it, otherwise Drupal's RedirectResponseSubscriber will send
+      // users to that location instead of to our CAS server.
+      $current_request->query->remove('destination');
     }
   }
 

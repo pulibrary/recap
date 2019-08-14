@@ -28,6 +28,7 @@ class CasSubscriberTest extends CasBrowserTestBase {
    * Test that the CasSubscriber properly forces CAS authentication as expected.
    */
   public function testForcedLoginPaths() {
+    global $base_path;
 
     $admin = $this->drupalCreateUser(['administer account settings']);
     $this->drupalLogin($admin);
@@ -70,16 +71,19 @@ class CasSubscriberTest extends CasBrowserTestBase {
     // But for node/2 and the node/3 path alias, we should be redirected to
     // the CAS server to login with the proper service URL appended as a query
     // string parameter.
-    $url = $this->buildUrl('node/2', ['absolute' => TRUE]);
-    $session->visit($url);
+    $session->visit($this->buildUrl('node/2', ['absolute' => TRUE]));
     $this->assertEquals(302, $session->getStatusCode());
-    $expected_redirect_url = 'https://fakecasserver.localhost/auth/login?' . UrlHelper::buildQuery(['service' => $this->buildServiceUrlWithParams(['returnto' => $url])]);
+    $expected_redirect_url = 'https://fakecasserver.localhost/auth/login?' . UrlHelper::buildQuery(['service' => $this->buildServiceUrlWithParams(['destination' => $base_path . 'node/2'])]);
     $this->assertEquals($expected_redirect_url, $session->getResponseHeader('Location'));
 
-    $url = $this->buildUrl('my/path', ['absolute' => TRUE, 'query' => ['foo' => 'bar']]);
-    $session->visit($url);
+    // For the node/3 path alias, also test that query params, including the
+    // destination param, are preserved.
+    $session->visit($this->buildUrl('my/path', [
+      'absolute' => TRUE,
+      'query' => ['foo' => 'bar', 'destination' => '/some/other/path'],
+    ]));
     $this->assertEquals(302, $session->getStatusCode());
-    $expected_redirect_url = 'https://fakecasserver.localhost/auth/login?' . UrlHelper::buildQuery(['service' => $this->buildServiceUrlWithParams(['returnto' => $url])]);
+    $expected_redirect_url = 'https://fakecasserver.localhost/auth/login?' . UrlHelper::buildQuery(['service' => $this->buildServiceUrlWithParams(['destination' => $base_path . 'my/path?destination=%2Fsome%2Fother%2Fpath&foo=bar'])]);
     $this->assertEquals($expected_redirect_url, $session->getResponseHeader('Location'));
 
     // When we are already logged in, we should not be redirected to the CAS
@@ -94,6 +98,7 @@ class CasSubscriberTest extends CasBrowserTestBase {
    * Test that the gateway auth works as expected.
    */
   public function testGatewayPaths() {
+    global $base_path;
     $admin = $this->drupalCreateUser(['administer account settings']);
     $this->drupalLogin($admin);
 
@@ -121,11 +126,10 @@ class CasSubscriberTest extends CasBrowserTestBase {
 
     // Ensure that visiting the page triggers the redirect and the returnto
     // parameter is set bring users back to the page they were on.
-    $node_url = $this->buildUrl('node/1', ['absolute' => TRUE]);
     $session = $this->getSession();
-    $session->visit($node_url);
+    $session->visit($this->buildUrl('node/1', ['absolute' => TRUE]));
     $this->assertEquals(302, $session->getStatusCode());
-    $expected_redirect_url = 'https://fakecasserver.localhost/auth/login?' . UrlHelper::buildQuery(['gateway' => 'true', 'service' => $this->buildServiceUrlWithParams(['returnto' => $node_url])]);
+    $expected_redirect_url = 'https://fakecasserver.localhost/auth/login?' . UrlHelper::buildQuery(['gateway' => 'true', 'service' => $this->buildServiceUrlWithParams(['destination' => $base_path . 'node/1'])]);
     $this->assertEquals($expected_redirect_url, $session->getResponseHeader('Location'));
 
     // @TODO Test that visting page as a bot does NOT trigger a redirect.

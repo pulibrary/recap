@@ -2,6 +2,7 @@
 
 namespace Drupal\cas\Service;
 
+use Drupal\cas\Event\CasPostLoginEvent;
 use Drupal\cas\Event\CasPreLoginEvent;
 use Drupal\cas\Event\CasPreRegisterEvent;
 use Drupal\cas\Event\CasPreUserLoadEvent;
@@ -136,7 +137,7 @@ class CasUserManager {
       $user = $this->externalAuth->register($authname, $this->provider, $property_values);
     }
     catch (ExternalAuthRegisterException $e) {
-      throw new CasLoginException($e->getMessage());
+      throw new CasLoginException($e->getMessage(), CasLoginException::USERNAME_ALREADY_EXISTS);
     }
     return $user;
   }
@@ -191,12 +192,17 @@ class CasUserManager {
           $account = $this->register($cas_pre_register_event->getDrupalUsername(), $cas_pre_register_event->getPropertyValues());
         }
         else {
-          throw new CasLoginException("Cannot register user, an event listener denied access.");
+          throw new CasLoginException("Cannot register user, an event listener denied access.", CasLoginException::SUBSCRIBER_DENIED_REG);
         }
       }
       else {
-        throw new CasLoginException("Cannot login, local Drupal user account does not exist.");
+        throw new CasLoginException("Cannot login, local Drupal user account does not exist.", CasLoginException::NO_LOCAL_ACCOUNT);
       }
+    }
+
+    // Check if the retrieved user is blocked before moving forward.
+    if (!$account->isActive()) {
+      throw new CasLoginException(sprintf('The username %s has not been activated or is blocked.', $account->getAccountName()), CasLoginException::ACCOUNT_BLOCKED);
     }
 
     // Dispatch an event that allows modules to prevent this user from logging
@@ -209,12 +215,17 @@ class CasUserManager {
     $account->save();
 
     if (!$pre_login_event->getAllowLogin()) {
-      throw new CasLoginException("Cannot login, an event listener denied access.");
+      throw new CasLoginException("Cannot login, an event listener denied access.", CasLoginException::SUBSCRIBER_DENIED_LOGIN);
     }
 
     $this->externalAuth->userLoginFinalize($account, $property_bag->getUsername(), $this->provider);
     $this->storeLoginSessionData($this->session->getId(), $ticket);
     $this->session->set('is_cas_user', TRUE);
+    $this->session->set('cas_username', $original_username);
+
+    $postLoginEvent = new CasPostLoginEvent($account, $property_bag);
+    $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_POST_LOGIN.');
+    $this->eventDispatcher->dispatch(CasHelper::EVENT_POST_LOGIN, $postLoginEvent);
   }
 
   /**
@@ -315,18 +326,18 @@ class CasUserManager {
     elseif ($email_assignment_strategy === self::EMAIL_ASSIGNMENT_ATTRIBUTE) {
       $email_attribute = $this->settings->get('cas.settings')->get('user_accounts.email_attribute');
       if (empty($email_attribute) || !array_key_exists($email_attribute, $cas_property_bag->getAttributes())) {
-        throw new CasLoginException('Specified CAS email attribute does not exist.');
+        throw new CasLoginException('Specified CAS email attribute does not exist.', CasLoginException::ATTRIBUTE_PARSING_ERROR);
       }
 
       $val = $cas_property_bag->getAttributes()[$email_attribute];
       if (empty($val)) {
-        throw new CasLoginException('Empty data found for CAS email attribute.');
+        throw new CasLoginException('Empty data found for CAS email attribute.', CasLoginException::ATTRIBUTE_PARSING_ERROR);
       }
 
       // The attribute value may actually be an array of values, but we need it
       // to only contain 1 value.
       if (is_array($val) && count($val) !== 1) {
-        throw new CasLoginException('Specified CAS email attribute was formatted in an unexpected way.');
+        throw new CasLoginException('Specified CAS email attribute was formatted in an unexpected way.', CasLoginException::ATTRIBUTE_PARSING_ERROR);
       }
 
       if (is_array($val)) {

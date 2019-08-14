@@ -69,7 +69,19 @@ class CasUserManagerTest extends UnitTestCase {
    */
   protected $userManager;
 
+  /**
+   * The mocked Cas Helper service.
+   *
+   * @var \Drupal\cas\Service\CasHelper
+   */
   protected $casHelper;
+
+  /**
+   * The mocked user account.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected $account;
 
   /**
    * {@inheritdoc}
@@ -98,6 +110,9 @@ class CasUserManagerTest extends UnitTestCase {
     $this->casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
       ->disableOriginalConstructor()
       ->getMock();
+    $this->account = $this->getMockBuilder('Drupal\user\UserInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
   }
 
   /**
@@ -108,9 +123,6 @@ class CasUserManagerTest extends UnitTestCase {
    * @covers ::register
    */
   public function testUserRegister() {
-    $account = $this->getMockBuilder('Drupal\user\UserInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
 
     $config_factory = $this->getConfigFactoryStub(array(
       'cas.settings' => array(
@@ -120,7 +132,7 @@ class CasUserManagerTest extends UnitTestCase {
 
     $this->externalAuth
       ->method('register')
-      ->willReturn($account);
+      ->willReturn($this->account);
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
       ->setMethods(['randomPassword'])
@@ -153,7 +165,7 @@ class CasUserManagerTest extends UnitTestCase {
     ));
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(array('storeLoginSessionData'))
+      ->setMethods(array('storeLoginSessionData', 'register'))
       ->setConstructorArgs(array(
         $this->externalAuth,
         $this->authmap,
@@ -197,7 +209,7 @@ class CasUserManagerTest extends UnitTestCase {
     ));
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(array('storeLoginSessionData'))
+      ->setMethods(array('storeLoginSessionData', 'register'))
       ->setConstructorArgs(array(
         $this->externalAuth,
         $this->authmap,
@@ -268,9 +280,9 @@ class CasUserManagerTest extends UnitTestCase {
       ->method('load')
       ->willReturn(FALSE);
 
-    $account = $this->getMockBuilder('Drupal\user\UserInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->account
+      ->method('isactive')
+      ->willReturn(TRUE);
 
     // The email address assigned to the user differs depending on the settings.
     // If CAS is configured to use "standard" assignment, it should combine the
@@ -288,7 +300,7 @@ class CasUserManagerTest extends UnitTestCase {
       ->expects($this->once())
       ->method('register')
       ->with('test', 'cas', ['mail' => $expected_assigned_email, 'pass' => NULL])
-      ->willReturn($account);
+      ->willReturn($this->account);
 
     $this->externalAuth
       ->expects($this->once())
@@ -332,13 +344,13 @@ class CasUserManagerTest extends UnitTestCase {
       ))
       ->getMock();
 
-    $account = $this->getMockBuilder('Drupal\user\UserInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->account
+      ->method('isactive')
+      ->willReturn(TRUE);
 
     $this->externalAuth
       ->method('load')
-      ->willReturn($account);
+      ->willReturn($this->account);
 
     $this->eventDispatcher
       ->method('dispatch')
@@ -388,14 +400,14 @@ class CasUserManagerTest extends UnitTestCase {
         }
       });
 
-    $account = $this->getMockBuilder('Drupal\user\UserInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->account
+      ->method('isactive')
+      ->willReturn(TRUE);
 
     $this->externalAuth
       ->method('load')
       ->with('foobar')
-      ->willReturn($account);
+      ->willReturn($this->account);
 
     $this->externalAuth
       ->expects($this->once())
@@ -423,13 +435,13 @@ class CasUserManagerTest extends UnitTestCase {
       ))
       ->getMock();
 
-    $account = $this->getMockBuilder('Drupal\user\UserInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->account
+      ->method('isActive')
+      ->willReturn(TRUE);
 
     $this->externalAuth
       ->method('load')
-      ->willReturn($account);
+      ->willReturn($this->account);
 
     $cas_user_manager
       ->expects($this->once())
@@ -439,12 +451,65 @@ class CasUserManagerTest extends UnitTestCase {
       ->expects($this->once())
       ->method('userLoginFinalize');
 
+    $attributes = ['attr1' => 'foo', 'attr2' => 'bar'];
     $this->session
-      ->expects($this->once())
       ->method('set')
-      ->with('is_cas_user', TRUE);
+      ->withConsecutive(
+        ['is_cas_user', TRUE],
+        ['cas_username', 'test']
+      );
 
-    $cas_user_manager->login(new CasPropertyBag('test'), 'ticket');
+    $propertyBag = new CasPropertyBag('test');
+    $propertyBag->setAttributes($attributes);
+
+    $cas_user_manager->login($propertyBag, 'ticket');
+  }
+
+  /**
+   * Blockers users cannot log in.
+   *
+   * @covers ::login
+   */
+  public function testBlockedAccountIsNotLoggedIn() {
+    $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
+      ->setMethods(array('storeLoginSessionData'))
+      ->setConstructorArgs(array(
+        $this->externalAuth,
+        $this->authmap,
+        $this->getConfigFactoryStub(),
+        $this->session,
+        $this->connection,
+        $this->eventDispatcher,
+        $this->casHelper,
+      ))
+      ->getMock();
+
+    $this->account
+      ->method('isactive')
+      ->willReturn(FALSE);
+    $this->account
+      ->method('getaccountname')
+      ->willReturn('user');
+
+    $this->externalAuth
+      ->method('load')
+      ->willReturn($this->account);
+
+    $this->externalAuth
+      ->expects($this->never())
+      ->method('userLoginFinalize');
+
+    $this->setExpectedException('Drupal\cas\Exception\CasLoginException', 'The username user has not been activated or is blocked.');
+
+    $this->session
+      ->method('set')
+      ->withConsecutive(
+          ['is_cas_user', TRUE],
+          ['cas_username', 'test']
+      );
+
+    $propertyBag = new CasPropertyBag('test');
+    $cas_user_manager->login($propertyBag, 'ticket');
   }
 
 }

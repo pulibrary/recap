@@ -82,6 +82,25 @@ class CasHelper {
   const EVENT_PRE_REDIRECT = 'cas.pre_redirect';
 
   /**
+   * Event type identifier for pre validation events.
+   *
+   * @var string
+   */
+  const EVENT_PRE_VALIDATE = 'cas.pre_validate';
+
+  /**
+   * Event type identifier for events fired after service validation.
+   *
+   * @var string
+   */
+  const EVENT_POST_VALIDATE = 'cas.post_validate';
+
+  /**
+   * Event type identifier for events fired after login has completed.
+   */
+  const EVENT_POST_LOGIN = 'cas.post_login';
+
+  /**
    * Stores settings object.
    *
    * @var \Drupal\Core\Config\Config
@@ -115,11 +134,15 @@ class CasHelper {
    *   The base URL.
    */
   public function getServerBaseUrl() {
-    $url = 'https://' . $this->settings->get('server.hostname');
+    $protocol = $this->settings->get('server.protocol');
+    $url = $protocol . '://' . $this->settings->get('server.hostname');
+
+    // Only append port if it's non standard.
     $port = $this->settings->get('server.port');
-    if (!empty($port) && $port != 443) {
+    if (($protocol == 'http' && $port != 80) || ($protocol == 'https' && $port != 443)) {
       $url .= ':' . $this->settings->get('server.port');
     }
+
     $url .= $this->settings->get('server.path');
     $url = rtrim($url, '/') . '/';
 

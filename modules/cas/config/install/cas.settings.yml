@@ -1,5 +1,6 @@
 server:
   version: '2.0'
+  protocol: 'https'
   hostname: ''
   port: 443
   path: '/'
@@ -33,10 +34,19 @@ user_accounts:
   email_hostname: ''
   email_attribute: ''
   auto_assigned_roles: {}
-  restrict_password_management: false
-  restrict_email_management: false
+  restrict_password_management: true
+  restrict_email_management: true
+error_handling:
+  login_failure_page: '/user/login'
+  message_validation_failure: 'There was a problem validating your login, please contact a site administrator.'
+  message_no_local_account: 'You do not have an account on this website. Please contact a site administrator.'
+  message_subscriber_denied_reg: 'You do not have access to log in to this website. Please contact a site administrator if you believe you should have access.'
+  message_account_blocked: 'Your account is blocked or has not been activated. Please contact a site administrator.'
+  message_subscriber_denied_login: 'You do not have access to log in to this website. Please contact a site administrator if you believe you should have access.'
+  message_username_already_exists: 'An account on this website with your username already exists. Please contact a site administrator.'
 advanced:
   debug_log: false
   connection_timeout: 10
 login_link_enabled: false
 login_link_label: 'CAS Login'
+login_success_message: ''

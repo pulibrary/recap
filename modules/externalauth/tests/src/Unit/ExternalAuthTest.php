@@ -81,7 +81,7 @@ class ExternalAuthTest extends UnitTestCase {
     // mocking getUid() method.
     $authmap = $this->getMockBuilder('\Drupal\externalauth\Authmap')
       ->disableOriginalConstructor()
-      ->setMethods(array('getUid'))
+      ->setMethods(['getUid'])
       ->getMock();
 
     $authmap->expects($this->once())
@@ -119,13 +119,13 @@ class ExternalAuthTest extends UnitTestCase {
     // Set up a mock for ExternalAuth class,
     // mocking load() & userLoginFinalize() methods.
     $externalauth = $this->getMockBuilder('Drupal\externalauth\ExternalAuth')
-      ->setMethods(array('load', 'userLoginFinalize'))
-      ->setConstructorArgs(array(
+      ->setMethods(['load', 'userLoginFinalize'])
+      ->setConstructorArgs([
         $this->entityManager,
         $this->authmap,
         $this->logger,
         $this->eventDispatcher,
-      ))
+      ])
       ->getMock();
 
     // Mock load method.
@@ -168,7 +168,7 @@ class ExternalAuthTest extends UnitTestCase {
       ->will($this->returnValue($account));
     $entity_storage->expects($this->any())
       ->method('loadByProperties')
-      ->will($this->returnValue(array()));
+      ->will($this->returnValue([]));
     $this->entityManager->expects($this->any())
       ->method('getStorage')
       ->will($this->returnValue($entity_storage));
@@ -177,7 +177,7 @@ class ExternalAuthTest extends UnitTestCase {
     // mocking getUid() method.
     $authmap = $this->getMockBuilder('\Drupal\externalauth\Authmap')
       ->disableOriginalConstructor()
-      ->setMethods(array('save'))
+      ->setMethods(['save'])
       ->getMock();
 
     $authmap->expects($this->once())
@@ -281,13 +281,13 @@ class ExternalAuthTest extends UnitTestCase {
     // Set up a mock for ExternalAuth class,
     // mocking login(), register() & userLoginFinalize() methods.
     $externalauth = $this->getMockBuilder('Drupal\externalauth\ExternalAuth')
-      ->setMethods(array('login', 'register', 'userLoginFinalize'))
-      ->setConstructorArgs(array(
+      ->setMethods(['login', 'register', 'userLoginFinalize'])
+      ->setConstructorArgs([
         $this->entityManager,
         $this->authmap,
         $this->logger,
         $this->eventDispatcher,
-      ))
+      ])
       ->getMock();
 
     // Mock ExternalAuth methods.
@@ -318,7 +318,7 @@ class ExternalAuthTest extends UnitTestCase {
     // mocking get() & save() methods.
     $authmap = $this->getMockBuilder('\Drupal\externalauth\Authmap')
       ->disableOriginalConstructor()
-      ->setMethods(array('save', 'get'))
+      ->setMethods(['save', 'get'])
       ->getMock();
 
     $authmap->expects($this->once())

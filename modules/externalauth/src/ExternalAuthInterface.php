@@ -57,7 +57,7 @@ interface ExternalAuthInterface {
    * @return \Drupal\user\UserInterface
    *   The registered Drupal user.
    */
-  public function register($authname, $provider, $account_data = array(), $authmap_data = NULL);
+  public function register($authname, $provider, array $account_data = [], $authmap_data = NULL);
 
   /**
    * Login and optionally register a Drupal user based on an external authname.
@@ -75,7 +75,7 @@ interface ExternalAuthInterface {
    * @return \Drupal\user\UserInterface
    *   The logged in, and optionally registered, Drupal user.
    */
-  public function loginRegister($authname, $provider, $account_data = array(), $authmap_data = NULL);
+  public function loginRegister($authname, $provider, array $account_data = [], $authmap_data = NULL);
 
   /**
    * Finalize logging in the external user.
