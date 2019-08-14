@@ -9,7 +9,7 @@ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
  *
  * @MigrateSource(
  *   id = "authmap",
- *   source_provider = "user"
+ *   source_module = "user"
  * )
  */
 class Authmap extends DrupalSqlBase {
@@ -25,22 +25,22 @@ class Authmap extends DrupalSqlBase {
    * {@inheritdoc}
    */
   public function fields() {
-    return array(
+    return [
       'uid' => $this->t('User’s users.uid.'),
       'authname' => $this->t('Unique authentication name.'),
       'module' => $this->t('Module which is controlling the authentication.'),
-    );
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getIds() {
-    return array(
-      'uid' => array(
+    return [
+      'uid' => [
         'type' => 'integer',
-      ),
-    );
+      ],
+    ];
   }
 
 }

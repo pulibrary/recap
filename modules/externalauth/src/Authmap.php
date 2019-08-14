@@ -15,14 +15,14 @@ class Authmap implements AuthmapInterface {
   /**
    * The connection object used for this data.
    *
-   * @var \Drupal\Core\Database\Connection $connection
+   * @var \Drupal\Core\Database\Connection
    */
   protected $connection;
 
   /**
    * {@inheritdoc}
    *
-   * @param Connection $connection
+   * @param \Drupal\Core\Database\Connection $connection
    *   The connection object used for this data.
    */
   public function __construct(Connection $connection) {
@@ -42,14 +42,14 @@ class Authmap implements AuthmapInterface {
     // same provider) to this account already exists, the currently stored
     // authname is overwritten.
     $this->connection->merge('authmap')
-      ->keys(array(
+      ->keys([
         'uid' => $account->id(),
         'provider' => $provider,
-      ))
-      ->fields(array(
+      ])
+      ->fields([
         'authname' => $authname,
         'data' => $data,
-      ))
+      ])
       ->execute();
   }
 
@@ -58,7 +58,7 @@ class Authmap implements AuthmapInterface {
    */
   public function get($uid, $provider) {
     $authname = $this->connection->select('authmap', 'am')
-      ->fields('am', array('authname'))
+      ->fields('am', ['authname'])
       ->condition('uid', $uid)
       ->condition('provider', $provider)
       ->range(0, 1)
@@ -75,7 +75,7 @@ class Authmap implements AuthmapInterface {
    */
   public function getAuthData($uid, $provider) {
     $data = $this->connection->select('authmap', 'am')
-      ->fields('am', array('authname', 'data'))
+      ->fields('am', ['authname', 'data'])
       ->condition('uid', $uid)
       ->condition('provider', $provider)
       ->range(0, 1)
@@ -89,7 +89,7 @@ class Authmap implements AuthmapInterface {
    */
   public function getAll($uid) {
     $query = $this->connection->select('authmap', 'am')
-      ->fields('am', array('provider', 'authname'))
+      ->fields('am', ['provider', 'authname'])
       ->condition('uid', $uid)
       ->orderBy('provider', 'ASC')
       ->execute();
@@ -107,7 +107,7 @@ class Authmap implements AuthmapInterface {
    */
   public function getUid($authname, $provider) {
     $authname = $this->connection->select('authmap', 'am')
-      ->fields('am', array('uid'))
+      ->fields('am', ['uid'])
       ->condition('authname', $authname)
       ->condition('provider', $provider)
       ->range(0, 1)

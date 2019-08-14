@@ -14,7 +14,7 @@ use Drupal\user\Entity\User;
  */
 class AuthmapTest extends KernelTestBase {
 
-  public static $modules = array('system', 'user', 'field', 'externalauth');
+  public static $modules = ['system', 'user', 'field', 'externalauth'];
 
   /**
    * The Authmap service.
@@ -38,18 +38,18 @@ class AuthmapTest extends KernelTestBase {
    */
   public function testAuthmap() {
     // Create a new user.
-    $values = array(
+    $values = [
       'uid' => 2,
       'name' => $this->randomMachineName(),
-    );
+    ];
     $account = User::create($values);
     $account->save();
 
     // Set up fake external IDs for this user.
-    $external_ids = array(
-      'provider1' => array('authname' => $this->randomMachineName(), 'data' => $this->randomMachineName()),
-      'provider2' => array('authname' => $this->randomMachineName(), 'data' => $this->randomMachineName()),
-    );
+    $external_ids = [
+      'provider1' => ['authname' => $this->randomMachineName(), 'data' => $this->randomMachineName()],
+      'provider2' => ['authname' => $this->randomMachineName(), 'data' => $this->randomMachineName()],
+    ];
 
     // Test save() method.
     foreach ($external_ids as $provider => $auth_data) {
@@ -72,10 +72,10 @@ class AuthmapTest extends KernelTestBase {
 
     // Test getAll() method.
     $all_authnames = $this->authmap->getAll($account->id());
-    $expected_authnames = array(
+    $expected_authnames = [
       'provider1' => $external_ids['provider1']['authname'],
       'provider2' => $external_ids['provider2']['authname'],
-    );
+    ];
     $this->assertEqual($all_authnames, $expected_authnames, 'All authnames for user can be retrieved.');
 
     // Test getUid() method.

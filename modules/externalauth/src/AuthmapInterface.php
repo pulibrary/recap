@@ -74,7 +74,7 @@ interface AuthmapInterface {
    * @param string $provider
    *   The name of the service providing external authentication.
    *
-   * @return int|bool $uid
+   * @return int|bool
    *   The Drupal user ID or FALSE.
    */
   public function getUid($authname, $provider);
