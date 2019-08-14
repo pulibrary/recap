@@ -16,7 +16,7 @@ vendor
 sites/*/settings*.php
 sites/*/services*.yml
 .ssh/*
-drush/*
+drush/recap.aliases.drushrc.php
 
 # Ignore paths that contain user-generated content.
 sites/*/files
