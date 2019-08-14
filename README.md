@@ -1,99 +1,115 @@
 # ReCAP
-ReCAP Drupal 8 Site
 
-## Drupal 8 Requirements
+## Local development with Lando
 
-- Drush 8
-- PHP 5.5.9 or higher
-- MySQL 5.5.3/MariaDB 5.5.20/Percona Server 5.5.8 or higher with PDO and an InnoDB-compatible primary storage engine, PostgreSQL 8.3 or higher with PDO, SQLite 3.4.2 or higher
+1. `git clone git@github.com:pulibrary/recap.git`
+1. `cp sites/default/default.settings.php sites/default/settings.php`
+1. In your local `sites/default/settings.php` file include the following lando-style db config values:
 
-## Local Development
-
-- Set up an alias in your local drush alias file
-```
-/* D8 Sites */
-$aliases['recap-local'] = array(
-  'root' => '/path_to_drupal_root/recap',
-  'uri' => 'http://local-host-name.princeton.edu',
-  'path-aliases' => array(
-    '%dump-dir' => '/path_to_drupal_database_dump_dir/',
-    '%dump' => '/path_to_drupal_database_dump/recap_sql_sync_dump.sql',
-    '%sites' => '/path_to_drupal_root/sites/',
-    '%files' => 'sites/default/files',
-  ),
-  'command-specific' => array (
-    'sql-sync' => array (
-      'simulate' => '0',
-      'structure-tables' => array(
-        'custom' => array('cache', 'cache_filter', 'cache_menu', 'cache_page', 'history', 'watchdog'),
-      ),
-    ),
-    'rsync' => array (
-      'simulate' => '0',
-      'mode' => 'rlptDz',
-    ),
-  ),
-);
-```
-- Use Drush 8 instance to invoke command via alais
-```
-/path_to_drush_8/drush @recap-local status
-```
-
-## Syncing with Remote Environments
-
-### Setup an Alias for the Remote Site in your local drush alias file
-```
-$aliases['recap-dev']  = array(
-  'uri' => 'http://host-to-sync.princeton.edu',
-  'root' => '/path_to_drupal_root/',
-  'remote-host' => 'remote-host.princeton.edu',
-  'remote-user' => 'my-remote-user',
-  'ssh-options' => '-o PasswordAuthentication=no -i /path_to_my_ssh_alias',
-  'path-aliases' => array(
-    '%dump-dir' => '/path_to_remote_db_dump_directory/',
-    '%dump' => '/path_to_remote_db_dump_directory/recap_sql_sync_dump.sql',
-    '%sites' => '/path_to_drupal_root/sites/',
-    '%files' => 'sites/default/files',
-    ## You must have an executable drush 8 environment on the remote server
-    ## available at a path your remote user can executable
-    ## See instructions for install
-    '%drush-script' => '/path_to_drupal_root/vendor/bin/drush',
-  ),
-   'databases' =>
+    ```
+    $databases = array (
+      'default' =>
       array (
         'default' =>
         array (
-          'default' =>
-          array (
-            'driver' => 'mysql',
-            'username' => 'db_user',
-            'password' => 'db_passwd,
-            'port' => '',
-            'host' => 'localhost',
-            'database' => 'db_name',
+          'database' => 'drupal8',
+          'username' => 'drupal8',
+          'password' => 'drupal8',
+          'host' => 'database',
+          'port' => '3306',
+          'driver' => 'mysql',
+          'prefix' => '',
+        ),
+      ),
+    );
+    ```
+1. Add the following useful local development configuration to the end of `sites/default/settings.php`
+    ```
+    /* Overrides for the local environment */
+    $conf['securepages_enable'] = 0;
+    /* This should be set in your php.ini file */
+    ini_set('memory_limit', '1G');
+    /* Turn off all caching */
+    $conf['css_gzip_compression'] = FALSE;
+    $conf['js_gzip_compression'] = FALSE;
+    $conf['cache'] = 0;
+    $conf['block_cache'] = 0;
+    $conf['preprocess_css'] = 0;
+    $conf['preprocess_js'] = 0;
+    /* end cache settings */
+    /* Turn on theme debugging. Injects the path to every Template utilized in the HTML source. */
+    $conf['theme_debug'] = TRUE;
+
+    /* Makes sure jquery is loaded on every page */
+    /* set to false in production */
+    $conf['javascript_always_use_jquery'] = TRUE;
+
+    $settings['trusted_host_patterns'] = [
+      '^recap.lndo.site$',
+    ];
+    ```
+1. `mkdir .ssh` # excluded from version control
+1. `cp $HOME/.ssh/id_rsa .ssh/.`
+1. `cp $HOME/.ssh/id_rsa.pub .ssh/.` // key should be registered in princeton_ansible deploy role
+1. `lando start`
+1. `cp drush/recap-example.aliases.drushrc.php drush/recap.aliases.drushrc.php`
+1. Adjust the config values in the  `drush/recap.aliases.drushrc.php` file to match the current remote drupal environment
+    ```
+    $aliases['prod'] = array (
+      'uri' => 'https://recap.princeton.edu',
+      'root' => '', // Add root
+      'remote-user' => 'deploy', // Add user
+      'remote-host' => 'app-server-name', // Add app server host name
+      'ssh-options' => '-o PasswordAuthentication=no -i .ssh/id_rsa',
+      'path-aliases' => array(
+        '%dump-dir' => '/tmp',
+      ),
+      'source-command-specific' => array (
+        'sql-sync' => array (
+          'no-cache' => TRUE,
+          'structure-tables-key' => 'common',
+        ),
+      ),
+      'command-specific' => array (
+        'sql-sync' => array (
+          'sanitize' => TRUE,
+          'no-ordered-dump' => TRUE,
+          'structure-tables' => array(
+            // You can add more tables which contain data to be ignored by the database dump
+            'common' => array('cache', 'cache_*', 'history', 'sessions', 'watchdog', 'cas_data_login', 'captcha_sessions'),
           ),
-       ),
-     ),
-  'command-specific' => array (
-    'sql-sync' => array (
-      'simulate' => '0',
-    ),
-    'rsync' => array (
-      'simulate' => '0',
-    ),
-  ),
-);
-```
+        ),
+      ),
+    );
+    ```
+1. Uncomment the alias block for the local lando site
+    ```
+    $aliases['local'] = array(
+      'root' => '/app', // Path to project on local machine
+      'uri'  => 'http://recap.lndo.site',
+      'path-aliases' => array(
+        '%dump-dir' => '/tmp',
+        '%files' => 'sites/default/files',
+      ),
+    );
+    ```
+1. `lando drush @recap.prod sql-dump --structure-tables-list='watchdog,sessions,cas_data_login,history,captcha_sessions,cache,cache_*' --result-file=/tmp/dump.sql; scp pulsys@libraryphp:/tmp/dump.sql .` // Change @libraryphp based on your ssh alias
+1. `lando db-import dump.sql`
+1. `lando drush rsync @recap.prod:%files @recap.local:%files`
+1. Copy the hash following `config_` in `sites/default/files`. Add value to `$settings['hash_salt']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
+    ```
+    $settings['hash_salt'] = 'abc123';
+    ```
+1. Copy the same has from above and add the value to the `$config_directories` array in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
+    ```
+    $config_directories = array(
+      CONFIG_SYNC_DIRECTORY => 'sites/default/files/config_abc123',
+    );
+    ```
+1. `lando drush @recap.local uli your-username`
 
-### For database content
-```
-/path_to_local_drush_8_executable/drush @recap-dev sql-sync @recap-dev @recap-local
-```
+### NPM and Gulp
 
-### For Files
-```
-/path_to_local_drush_8_executable/drush rsync @recap-dev:%files/ @recap-local:%files
-```
-
-
+1. `cd themes/custom/recap`
+1. `lando npm install`
+1. `lando gulp deploy` (or any other gulp task)

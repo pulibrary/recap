@@ -1,0 +1,20 @@
+name: recap
+recipe: drupal8
+config:
+  php: '7.2'
+  webroot: .
+services:
+  appserver:
+    build:
+      - composer install
+  node:
+    type: 'node:6.15'
+    globals:
+      gulp-cli: latest
+tooling:
+  npm:
+    service: node
+  node:
+    service: node
+  gulp:
+    service: node
