@@ -159,7 +159,7 @@
         var element = getSelectedFile(editor) || evt.data.element;
 
         if (!element.isReadOnly()) {
-          if (element.is('a') && element.getAttribute('data-entity-uuid')) {
+          if (element.is('a') && element.getAttribute('data-entity-type') === 'file') {
             editor.getSelection().selectElement(element);
             editor.getCommand('drupalfile').exec();
           }
@@ -217,7 +217,6 @@
    *
    * @return {?HTMLElement}
    *   The selected file element, or null.
-   *
    */
   function getSelectedFile(editor) {
     var selection = editor.getSelection();
