@@ -113,3 +113,10 @@
 1. `cd themes/custom/recap`
 1. `lando npm install`
 1. `lando gulp deploy` (or any other gulp task)
+
+## Deploy to server
+
+1. We have capistrano set up to deploy our servers
+
+    1. `cap staging deploy` will deploy the master branch to staging
+    1. `BRANCH=other cap staging deploy` will deploy the other branch to staging
