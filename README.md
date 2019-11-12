@@ -93,7 +93,7 @@
       ),
     );
     ```
-1. `lando drush @recap.prod sql-dump --structure-tables-list='watchdog,sessions,cas_data_login,history,captcha_sessions,cache,cache_*' --result-file=/tmp/dump.sql; scp pulsys@libraryphp:/tmp/dump.sql .` // Change @libraryphp based on your ssh alias
+1. `lando drush @recap.prod sql-dump --structure-tables-list='watchdog,sessions,cas_data_login,history,captcha_sessions,cache,cache_*' --result-file=/tmp/dump.sql; scp pulsys@recap-www-prod1:/tmp/dump.sql .`
 1. `lando db-import dump.sql`
 1. `lando drush rsync @recap.prod:%files @recap.local:%files`
 1. Copy the hash following `config_` in `sites/default/files`. Add value to `$settings['hash_salt']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
@@ -106,7 +106,13 @@
       CONFIG_SYNC_DIRECTORY => 'sites/default/files/config_abc123',
     );
     ```
-1. `lando drush @recap.local uli your-username`
+1. Create a `drush/drushrc.php` file with the following
+```
+<?php
+
+$options['uri'] = 'http://recap.lndo.site';
+```
+1. `lando drush  uli your-username`
 
 ### NPM and Gulp
 
