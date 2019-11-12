@@ -1,0 +1,12 @@
+global-styling:
+  css:
+    theme:
+      https://use.typekit.net/zgp4rmb.css: {}
+      css/pinwheel.css: {}
+global-scripts:
+  js:
+    scripts/pinwheel.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/jquery.once

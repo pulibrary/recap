@@ -1,0 +1,45 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  --dark-blue: rgb(36, 88, 141);
+  --burgundy: rgb(170, 216, 44);
+  --light-blue: rgb(184, 216, 235);
+  --orange: rgb(255, 108, 14);
+  --bright-red: rgb(207, 51, 57);
+}
+
+body {
+  font-family: poynter-gothic-text, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 300;
+  overflow-x: hidden;
+}
+
+h1 {
+  color: var(--dark-blue);
+}
+
+a,
+a:visited {
+  color: var(--dark-blue);
+}
+
+a:hover,
+a:focus {
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.layout-container {
+  max-width: 1600px;
+  margin: 0 auto;
+}

@@ -1,0 +1,13 @@
+#block-pinwheel-twitterblock {
+  float: right;
+  padding: 0 2rem;
+  width: 100%;
+
+  @media all and (min-width: 768px) and (max-width: 1424px) {
+    width: 60%;
+  }
+
+  @media all and (min-width: 1425px) {
+    width: 50%;
+  }
+}

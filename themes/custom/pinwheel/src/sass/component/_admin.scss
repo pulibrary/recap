@@ -1,0 +1,11 @@
+#block-pinwheel-local-tasks > ul {
+  display: flex;
+  list-style-type: none;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+#block-pinwheel-local-tasks > ul a {
+  padding: 1rem;
+  background: var(--light-blue);
+  margin: 0.25rem;
+}
