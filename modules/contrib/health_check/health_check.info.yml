@@ -1,0 +1,11 @@
+name: Health check for load balancers
+description: 'Simple end point for load balancers to check Drupal site health'
+package: 'Performance and scalability'
+core: 8.x
+type: module
+core_version_requirement: ^8 || ^9
+
+# Information added by Drupal.org packaging script on 2019-10-29
+version: '8.x-1.2'
+project: 'health_check'
+datestamp: 1572358390

@@ -1,0 +1,10 @@
+health_check.content:
+  path: '/health'
+  defaults:
+    _controller: '\Drupal\health_check\Controller\HealthController::content'
+    _disable_route_normalizer: 'TRUE'
+  requirements:
+    _access: 'TRUE'
+  options:
+    _maintenance_access: TRUE
+    no_cache: TRUE
