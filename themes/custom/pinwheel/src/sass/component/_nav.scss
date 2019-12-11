@@ -1,0 +1,156 @@
+nav > ul {
+  display: flex;
+  list-style-type: none;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+
+  li {
+    list-style-type: none;
+  }
+
+  .responsive-tab,
+  .responsive-menu {
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .menu-item {
+    display: none;
+  }
+
+  .menu-item.expanded {
+    display: block;
+    flex-basis: 100%;
+
+    ul a {
+      font-weight: 400;
+      text-transform: initial;
+    }
+  }
+
+  a,
+  a:visited,
+  .responsive-menu {
+    padding: 1rem;
+    display: block;
+    position: relative;
+    text-transform: uppercase;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 1px;
+
+    &:hover,
+    &:focus {
+      background: var(--light-blue);
+      color: var(--dark-blue);
+    }
+
+    &.is-active {
+      background: var(--dark-blue);
+      color: white;
+    }
+  }
+
+  .menu-item--active-trail > a,
+  .responsive-menu {
+    background: var(--dark-blue);
+    color: white;
+  }
+
+  ul.expanded {
+    display: block;
+  }
+}
+
+@media screen and (min-width: 600px) {
+  nav > ul .responsive-menu {
+    margin-left: auto;
+    margin-right: 1rem;
+    min-height: 125px;
+    width: auto;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .responsive-tab {
+    display: none;
+  }
+
+  nav > ul {
+    .menu-item {
+      display: block;
+    }
+
+    > li > a,
+    .responsive-menu {
+      min-height: 125px;
+      min-width: 185px;
+    }
+
+    > li {
+      flex: 1;
+      margin: 0 1rem;
+      position: relative;
+
+      &:hover ul,
+      &:focus ul {
+        top: 125px;
+        z-index: 10001;
+        min-width: 200px;
+        max-width: 350px;
+        background: white;
+        box-shadow: 0px 0px 1px var(--dark-blue);
+
+        li:hover,
+        li:focus {
+          background: var(--light-blue);
+        }
+
+        a {
+          opacity: 1;
+          padding: 0.75rem 1rem;
+        }
+      }
+
+      &:focus-within ul {
+        top: 125px;
+        z-index: 10001;
+        min-width: 200px;
+        max-width: 350px;
+        background: white;
+        box-shadow: 0px 0px 1px var(--dark-blue);
+
+        li:hover,
+        li:focus {
+          background: var(--light-blue);
+        }
+
+        a {
+          opacity: 1;
+          padding: 0.75rem 1rem;
+        }
+      }
+    }
+
+    > li > a {
+      padding-top: 4rem;
+    }
+
+    // submenu
+    ul {
+      position: absolute;
+      top: -1000%;
+      width: 100%;
+      z-index: -1;
+      margin-left: 0;
+      padding: 0;
+
+      a {
+        text-transform: initial;
+        font-weight: 400;
+        height: initial;
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+header > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+header nav {
+  flex: 1;
+}
+
+#block-pinwheel-branding {
+  flex-basis: 100%;
+  padding: 2rem;
+
+  @media all and (min-width: 600px) {
+    flex-basis: 275px;
+  }
+
+  @media all and (min-width: 1425px) {
+    flex-basis: 350px;
+  }
+}
