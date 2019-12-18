@@ -5,7 +5,7 @@ description: 'Test theme which uses update_test_basetheme as the base theme.'
 core: 8.x
 base theme: update_test_basetheme
 
-# Information added by Drupal.org packaging script on 2019-11-06
-version: '8.7.9'
+# Information added by Drupal.org packaging script on 2019-12-18
+version: '8.7.11'
 project: 'drupal'
-datestamp: 1573063507
+datestamp: 1576696282
