@@ -115,8 +115,8 @@ namespace :drupal do
   desc "Set the site offline"
   task :site_offline do
       on release_roles :app do
-          execute "drush -r #{release_path} sset system.maintenance_mode 1"
-          execute "drush -r #{release_path} cr"
+          execute "drush -r #{release_path} sset system.maintenance_mode 1; true"
+          execute "drush -r #{release_path} cr; true"
           info "set site to offline"
       end
   end
@@ -227,6 +227,7 @@ namespace :drupal do
     task :upload_and_import do
       on release_roles :drupal_primary do
         upload! ENV["SQL_DIR"] + ENV["SQL_FILE"], '/tmp/'+ENV["SQL_FILE"]
+        execute "/home/deploy/sql/set_permission.sh"
         execute "drush -r #{release_path} sql-cli < /tmp/"+ENV["SQL_FILE"]
       end
     end
