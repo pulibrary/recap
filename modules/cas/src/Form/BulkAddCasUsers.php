@@ -136,7 +136,7 @@ class BulkAddCasUsers extends FormBase {
     }
 
     try {
-      $cas_user_manager->register($cas_username, $user_properties);
+      $cas_user_manager->register($cas_username, $user_properties, $cas_username);
     }
     catch (CasLoginException $e) {
       \Drupal::logger('cas')->error('CasLoginException when registering user with name %name: %e', ['%name' => $cas_username, '%e' => $e->getMessage()]);

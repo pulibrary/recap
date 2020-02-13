@@ -6,7 +6,7 @@ services:
       - { name: 'event_subscriber' }
   cas.helper:
     class: Drupal\cas\Service\CasHelper
-    arguments: ['@config.factory', '@logger.factory']
+    arguments: ['@config.factory', '@logger.factory', '@token']
   cas.redirector:
     class: Drupal\cas\Service\CasRedirector
     arguments: ['@cas.helper', '@event_dispatcher', '@url_generator.non_bubbling']
@@ -15,7 +15,7 @@ services:
     arguments: ['@http_client', '@cas.helper', '@config.factory', '@url_generator.non_bubbling', '@event_dispatcher']
   cas.user_manager:
     class: Drupal\cas\Service\CasUserManager
-    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@config.factory', '@session', '@database', '@event_dispatcher', '@cas.helper']
+    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@config.factory', '@session', '@database', '@event_dispatcher', '@cas.helper', '@cas.proxy_helper']
   cas.logout:
     class: Drupal\cas\Service\CasLogout
     arguments: ['@cas.helper', '@database', '@config.factory']
@@ -27,10 +27,6 @@ services:
     arguments: ['@config.factory']
     tags:
       - { name: route_enhancer }
-  cas.external_auth_subscriber:
-    class: Drupal\cas\Subscriber\ExternalAuthSubscriber
-    tags:
-      - { name: 'event_subscriber' }
   cas.page_cache_response_policy.deny_cas:
     class: Drupal\cas\PageCache\DenyCas
     arguments: ['@config.factory', '@plugin.manager.condition']
@@ -42,3 +38,12 @@ services:
     arguments: ['@config.factory']
     tags:
       - { name: 'event_subscriber' }
+  cas.route_subscriber:
+    class: Drupal\cas\Subscriber\CasRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  cas.cas_user_access_checker:
+    class: Drupal\cas\Access\CasUserAccessCheck
+    arguments: ['@config.factory', '@cas.user_manager']
+    tags:
+      - { name: access_check, applies_to: _cas_user_access }

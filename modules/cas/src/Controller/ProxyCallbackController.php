@@ -86,7 +86,7 @@ class ProxyCallbackController implements ContainerInjectionInterface {
       $this->casHelper->log(
         LogLevel::DEBUG,
         "Storing pgtId %pgt_id with pgtIou %pgt_iou",
-        array('%pgt_id' => $pgt_id, '%pgt_iou' => $pgt_iou)
+        ['%pgt_id' => $pgt_id, '%pgt_iou' => $pgt_iou]
       );
       // PGT stored properly, tell CAS Server to proceed.
       return Response::create('OK', 200);
@@ -106,8 +106,8 @@ class ProxyCallbackController implements ContainerInjectionInterface {
   protected function storePgtMapping($pgt_iou, $pgt_id) {
     $this->connection->insert('cas_pgt_storage')
       ->fields(
-        array('pgt_iou', 'pgt', 'timestamp'),
-        array($pgt_iou, $pgt_id, time())
+        ['pgt_iou', 'pgt', 'timestamp'],
+        [$pgt_iou, $pgt_id, time()]
       )
       ->execute();
   }

@@ -2,11 +2,11 @@
 
 As described in the official CAS protocol documentation:
 
-"The Central Authentication Service (CAS) is a single-sign-on / 
-single-sign-on protocol for the web. It permits a user to access 
-multiple applications while providing their credentials (such as userid 
+"The Central Authentication Service (CAS) is a single-sign-on /
+single-sign-on protocol for the web. It permits a user to access
+multiple applications while providing their credentials (such as userid
 and password) only once to a central CAS Server application."
- 
+
 Using a single-sign on service like CAS is a beneficial because it provides:
 
 * Convenience. Your users don't need to remember credentials for multiple
@@ -21,21 +21,21 @@ that the protocol describes works well.
 
 # Requirements
 
-This module requires the following modules: 
+This module requires the following modules:
 
-* External Authentication (https://drupal.org/porject/externalauth)
+* External Authentication (https://drupal.org/project/externalauth)
 
 # Recommended Modules
 
-* CAS Attributes (http://drupal.org/project/cas_attributes) allows user 
-  attributes and roles to be set based on attributes provided by the cas 
+* CAS Attributes (http://drupal.org/project/cas_attributes) allows user
+  attributes and roles to be set based on attributes provided by the cas
   server.
 
 # Installation
 
 Download and install the module as you would with any other Drupal module:
 
-* Download this module and move the folder it the DRUPAL_ROOT/modules 
+* Download this module and move the folder it the DRUPAL_ROOT/modules
   directory. Using composer to download modules is the best practice.
 * Enable the module in your Drupal admin interface.
 * The configuration page for this module is in /admin/config/people/cas,
@@ -140,25 +140,26 @@ automatically log them in via CAS.
 
 To enable this behavior, enable the r4032login module and configure it as such:
 
-1. Check the "Redirect user to the page they tried to access after login" checkbox
+1. Check the "Redirect user to the page they tried to access after login"
+   checkbox
 1. Set the "Path to user login form" to "/cas"
 1. Set the "Destination parameter override" to "returnto"
 
 
 ## Proxy
-Initializing a CAS client as a proxy allows the client to make web service calls 
-to other sites or web pages that are protected by cas authentication.  It 
-is often used in portal applications allowing the portal product to get 
-personalized or secure content from other products participating in single 
-sign on. 
+Initializing a CAS client as a proxy allows the client to make web service calls
+to other sites or web pages that are protected by cas authentication.  It
+is often used in portal applications allowing the portal product to get
+personalized or secure content from other products participating in single
+sign on.
 
-Configuring this module to "Initialize this client as a proxy" allows 
-other modules on this site to make authenticated requests to other CAS 
-enabled products. 
+Configuring this module to "Initialize this client as a proxy" allows
+other modules on this site to make authenticated requests to other CAS
+enabled products.
 
-Configuring this module to "Allow this client to be proxied" lets the 
-specified sites use this site as a resource for portal channels or other 
-web services. 
+Configuring this module to "Allow this client to be proxied" lets the
+specified sites use this site as a resource for portal channels or other
+web services.
 
 # Troubleshooting
 The fastest way to determine why the module is not behaving as expected it to

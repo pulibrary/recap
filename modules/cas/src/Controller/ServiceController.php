@@ -2,19 +2,22 @@
 
 namespace Drupal\cas\Controller;
 
+use Drupal\cas\Event\CasPreUserLoadEvent;
+use Drupal\cas\Event\CasPreUserLoadRedirectEvent;
 use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\Exception\CasSloException;
 use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Exception\CasValidateException;
-use Drupal\cas\Service\CasProxyHelper;
 use Drupal\cas\Service\CasUserManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Url;
+use Drupal\externalauth\ExternalAuthInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\cas\Service\CasValidator;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -36,13 +39,6 @@ class ServiceController implements ContainerInjectionInterface {
    * @var \Drupal\cas\Service\CasHelper
    */
   protected $casHelper;
-
-  /**
-   * CAS proxy helper.
-   *
-   * @var \Drupal\cas\Service\CasProxyHelper
-   */
-  protected $casProxyHelper;
 
   /**
    * Used to validate CAS service tickets.
@@ -94,12 +90,24 @@ class ServiceController implements ContainerInjectionInterface {
   protected $messenger;
 
   /**
+   * The event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
+   * The external auth service.
+   *
+   * @var \Drupal\externalauth\ExternalAuthInterface
+   */
+  protected $externalAuth;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CAS Helper service.
-   * @param \Drupal\cas\Service\CasProxyHelper $cas_proxy_helper
-   *   The CAS Proxy helper.
    * @param \Drupal\cas\Service\CasValidator $cas_validator
    *   The CAS Validator service.
    * @param \Drupal\cas\Service\CasUserManager $cas_user_manager
@@ -114,10 +122,13 @@ class ServiceController implements ContainerInjectionInterface {
    *   The config factory.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   The event dispatcher service.
+   * @param \Drupal\externalauth\ExternalAuthInterface $external_auth
+   *   The external auth service.
    */
-  public function __construct(CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper, CasValidator $cas_validator, CasUserManager $cas_user_manager, CasLogout $cas_logout, RequestStack $request_stack, UrlGeneratorInterface $url_generator, ConfigFactoryInterface $config_factory, MessengerInterface $messenger) {
+  public function __construct(CasHelper $cas_helper, CasValidator $cas_validator, CasUserManager $cas_user_manager, CasLogout $cas_logout, RequestStack $request_stack, UrlGeneratorInterface $url_generator, ConfigFactoryInterface $config_factory, MessengerInterface $messenger, EventDispatcherInterface $event_dispatcher, ExternalAuthInterface $external_auth) {
     $this->casHelper = $cas_helper;
-    $this->casProxyHelper = $cas_proxy_helper;
     $this->casValidator = $cas_validator;
     $this->casUserManager = $cas_user_manager;
     $this->casLogout = $cas_logout;
@@ -125,13 +136,26 @@ class ServiceController implements ContainerInjectionInterface {
     $this->urlGenerator = $url_generator;
     $this->settings = $config_factory->get('cas.settings');
     $this->messenger = $messenger;
+    $this->eventDispatcher = $event_dispatcher;
+    $this->externalAuth = $external_auth;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('cas.helper'), $container->get('cas.proxy_helper'), $container->get('cas.validator'), $container->get('cas.user_manager'), $container->get('cas.logout'), $container->get('request_stack'), $container->get('url_generator'), $container->get('config.factory'), $container->get('messenger'));
+    return new static(
+      $container->get('cas.helper'),
+      $container->get('cas.validator'),
+      $container->get('cas.user_manager'),
+      $container->get('cas.logout'),
+      $container->get('request_stack'),
+      $container->get('url_generator'),
+      $container->get('config.factory'),
+      $container->get('messenger'),
+      $container->get('event_dispatcher'),
+      $container->get('externalauth.externalauth')
+    );
   }
 
   /**
@@ -180,7 +204,7 @@ class ServiceController implements ContainerInjectionInterface {
      */
     if (!$request->query->has('ticket')) {
       $this->casHelper->log(LogLevel::DEBUG, "No CAS ticket found in request to service controller; backing out.");
-      $this->handleReturnToParameter($request);
+      $this->casHelper->handleReturnToParameter($request);
       return RedirectResponse::create($this->urlGenerator->generate('<front>'));
     }
 
@@ -206,7 +230,7 @@ class ServiceController implements ContainerInjectionInterface {
         'Error when validating ticket: %error',
         ['%error' => $e->getMessage()]
       );
-      $message_validation_failure = $this->settings->get('error_handling.message_validation_failure');
+      $message_validation_failure = $this->casHelper->getMessage('error_handling.message_validation_failure');
       if (!empty($message_validation_failure)) {
         $this->messenger->addError($message_validation_failure);
       }
@@ -214,22 +238,58 @@ class ServiceController implements ContainerInjectionInterface {
       return $this->createRedirectResponse($request, TRUE);
     }
 
+    $this->casHelper->log(LogLevel::DEBUG, 'Starting login process for CAS user %username', ['%username' => $cas_validation_info->getUsername()]);
+
+    // Dispatch an event that allows modules to alter any of the CAS data before
+    // it's used to lookup a Drupal user account via the authmap table.
+    $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_USER_LOAD.');
+    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_USER_LOAD, new CasPreUserLoadEvent($cas_validation_info));
+
+    if ($cas_validation_info->getUsername() !== $cas_validation_info->getOriginalUsername()) {
+      $this->casHelper->log(
+        LogLevel::DEBUG,
+        'Username was changed from %original to %new from a subscriber.',
+        ['%original' => $cas_validation_info->getOriginalUsername(), '%new' => $cas_validation_info->getUsername()]
+      );
+    }
+
+    // At this point, the ticket is validated and third-party modules got the
+    // chance to alter the username and also perform other 'pre user load'
+    // tasks. Before authenticating the user locally, let's allow third-party
+    // code to inject user interaction into the flow.
+    // @see \Drupal\cas\Event\CasPreUserLoadRedirectEvent
+    $cas_pre_user_load_redirect_event = new CasPreUserLoadRedirectEvent($ticket, $cas_validation_info, $service_params);
+    $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_USER_LOAD_REDIRECT.');
+    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_USER_LOAD_REDIRECT, $cas_pre_user_load_redirect_event);
+
+    // A subscriber might have set an HTTP redirect response allowing potential
+    // user interaction to be injected into the flow.
+    $redirect_response = $cas_pre_user_load_redirect_event->getRedirectResponse();
+    if ($redirect_response) {
+      $this->casHelper->log(LogLevel::DEBUG, 'Redirecting to @url as requested by one of EVENT_PRE_USER_LOAD event subscribers.', ['@url' => $redirect_response->getTargetUrl()]);
+      return $redirect_response;
+    }
+
     // Now that the ticket has been validated, we can use the information from
     // validation request to authenticate the user locally on the Drupal site.
     try {
       $this->casUserManager->login($cas_validation_info, $ticket);
-      if ($this->settings->get('proxy.initialize') && $cas_validation_info->getPgt()) {
-        $this->casHelper->log(LogLevel::DEBUG, "Storing PGT information for this session.");
-        $this->casProxyHelper->storePgtSession($cas_validation_info->getPgt());
-      }
 
-      $login_success_message = $this->settings->get('login_success_message');
+      $login_success_message = $this->casHelper->getMessage('login_success_message');
       if (!empty($login_success_message)) {
         $this->messenger->addStatus($login_success_message);
       }
     }
     catch (CasLoginException $e) {
-      $this->casHelper->log(LogLevel::ERROR, $e->getMessage());
+      // Use an appropiate log level depending on exception type.
+      if (empty($e->getCode()) || $e->getCode() === CasLoginException::ATTRIBUTE_PARSING_ERROR) {
+        $error_level = LogLevel::ERROR;
+      }
+      else {
+        $error_level = LogLevel::INFO;
+      }
+
+      $this->casHelper->log($error_level, $e->getMessage());
       $login_error_message = $this->getLoginErrorMessage($e);
       if ($login_error_message) {
         $this->messenger->addError($login_error_message, 'error');
@@ -253,46 +313,21 @@ class ServiceController implements ContainerInjectionInterface {
    *   The redirect response.
    */
   private function createRedirectResponse(Request $request, $login_failed = FALSE) {
-    // If login failed, we may have a special page to send them to.
+    // If login failed, we may have a failure page to send them to.
     if ($login_failed && $this->settings->get('error_handling.login_failure_page')) {
+      // Remove 'destination' parameter, otherwise Drupal's
+      // RedirectResponseSubscriber will send users to that location instead of
+      // the failure page.
+      $request->query->remove('destination');
+
       return RedirectResponse::create(Url::fromUserInput($this->settings->get('error_handling.login_failure_page'))->toString());
     }
     // Otherwise, send them to the homepage, or to the previous page they were
     // on when login was initiated (which will be represented by the 'returnto'
     // parameter).
     else {
-      $this->handleReturnToParameter($request);
+      $this->casHelper->handleReturnToParameter($request);
       return RedirectResponse::create($this->urlGenerator->generate('<front>'));
-    }
-  }
-
-  /**
-   * Converts a "returnto" query param to a "destination" query param.
-   *
-   * The original service URL for CAS server may contain a "returnto" query
-   * parameter that was placed there to redirect a user to specific page after
-   * logging in with CAS.
-   *
-   * Drupal has a built in mechanism for doing this, by instead using a
-   * "destination" parameter in the URL. Anytime there's a RedirectResponse
-   * returned, RedirectResponseSubscriber looks for the destination param and
-   * will redirect a user there instead.
-   *
-   * We cannot use this built in method when constructing the service URL,
-   * because when we redirect to the CAS server for login, Drupal would see
-   * our destination parameter in the URL and redirect there instead of CAS.
-   *
-   * However, when we redirect the user after a login success / failure,
-   * we can then convert it back to a "destination" parameter and let Drupal
-   * do it's thing when redirecting.
-   *
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The Symfony request object.
-   */
-  private function handleReturnToParameter(Request $request) {
-    if ($request->query->has('returnto')) {
-      $this->casHelper->log(LogLevel::DEBUG, "Converting query parameter 'returnto' to 'destination'.");
-      $request->query->set('destination', $request->query->get('returnto'));
     }
   }
 
@@ -335,7 +370,10 @@ class ServiceController implements ContainerInjectionInterface {
     }
 
     if (!empty($msgKey)) {
-      return $this->settings->get('error_handling.' . $msgKey);
+      $message = $this->casHelper->getMessage('error_handling.' . $msgKey);
+      if ($message) {
+        return $message;
+      }
     }
 
     return $this->t('There was a problem logging in. Please contact a site administrator.');

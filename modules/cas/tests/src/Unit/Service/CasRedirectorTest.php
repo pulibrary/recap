@@ -63,7 +63,7 @@ class CasRedirectorTest extends UnitTestCase {
       ->method('getServerBaseUrl')
       ->willReturn('https://example-server.com/cas/');
 
-    $this->urlGenerator = $this->getMock('\Drupal\Core\Routing\UrlGeneratorInterface');
+    $this->urlGenerator = $this->createMock('\Drupal\Core\Routing\UrlGeneratorInterface');
     $this->urlGenerator->method('generate')
       ->willReturnCallback([$this, 'getServiceUrl']);
 

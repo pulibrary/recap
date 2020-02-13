@@ -5,7 +5,6 @@ namespace Drupal\cas\Service;
 use Drupal\cas\Event\CasPostLoginEvent;
 use Drupal\cas\Event\CasPreLoginEvent;
 use Drupal\cas\Event\CasPreRegisterEvent;
-use Drupal\cas\Event\CasPreUserLoadEvent;
 use Drupal\externalauth\AuthmapInterface;
 use Drupal\externalauth\Exception\ExternalAuthRegisterException;
 use Drupal\cas\Exception\CasLoginException;
@@ -81,12 +80,24 @@ class CasUserManager {
   protected $casHelper;
 
   /**
+   * CAS proxy helper.
+   *
+   * @var \Drupal\cas\Service\CasProxyHelper
+   */
+  protected $casProxyHelper;
+
+  /**
    * Used to dispatch CAS login events.
    *
    * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
    */
   protected $eventDispatcher;
 
+  /**
+   * The name of the external auth provider we use.
+   *
+   * @var string
+   */
   protected $provider = 'cas';
 
   /**
@@ -106,8 +117,10 @@ class CasUserManager {
    *   The event dispatcher.
    * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CAS helper.
+   * @param \Drupal\cas\Service\CasProxyHelper $cas_proxy_helper
+   *   The CAS Proxy helper.
    */
-  public function __construct(ExternalAuthInterface $external_auth, AuthmapInterface $authmap, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher, CasHelper $cas_helper) {
+  public function __construct(ExternalAuthInterface $external_auth, AuthmapInterface $authmap, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher, CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper = NULL) {
     $this->externalAuth = $external_auth;
     $this->authmap = $authmap;
     $this->settings = $settings;
@@ -115,6 +128,11 @@ class CasUserManager {
     $this->connection = $database_connection;
     $this->eventDispatcher = $event_dispatcher;
     $this->casHelper = $cas_helper;
+    if (!$cas_proxy_helper) {
+      @trigger_error('Calling CasUserManager::__construct() without the $cas_proxy_helper argument is deprecated in cas:8.x-1.6 and the $cas_proxy_helper argument will be required in cas:8.x-1.10.', E_USER_DEPRECATED);
+      $cas_proxy_helper = \Drupal::service('cas.proxy_helper');
+    }
+    $this->casProxyHelper = $cas_proxy_helper;
   }
 
   /**
@@ -124,16 +142,25 @@ class CasUserManager {
    *   The CAS username.
    * @param array $property_values
    *   Property values to assign to the user on registration.
-   *
-   * @throws CasLoginException
-   *   When the user account could not be registered.
+   * @param string $local_username
+   *   The local Drupal username to be created.
    *
    * @return \Drupal\user\UserInterface
    *   The user entity of the newly registered user.
+   *
+   * @throws \Drupal\cas\Exception\CasLoginException
+   *   When the user account could not be registered.
    */
-  public function register($authname, array $property_values = []) {
+  public function register($authname, array $property_values = [], $local_username = NULL) {
+    if (!$local_username) {
+      @trigger_error('Calling CasUserManager::register() without the $local_username argument is deprecated in cas:8.x-1.6 and the $local_username argument will be required in cas:8.x-2.0.', E_USER_DEPRECATED);
+      $local_username = $authname;
+    }
+
+    $property_values['name'] = $local_username;
+    $property_values['pass'] = $this->randomPassword();
+
     try {
-      $property_values['pass'] = $this->randomPassword();
       $user = $this->externalAuth->register($authname, $this->provider, $property_values);
     }
     catch (ExternalAuthRegisterException $e) {
@@ -150,27 +177,10 @@ class CasUserManager {
    * @param string $ticket
    *   The service ticket.
    *
-   * @throws CasLoginException
+   * @throws \Drupal\cas\Exception\CasLoginException
    *   Thrown if there was a problem logging in the user.
    */
   public function login(CasPropertyBag $property_bag, $ticket) {
-    $original_username = $property_bag->getUsername();
-
-    $this->casHelper->log(LogLevel::DEBUG, 'Starting login process for CAS user %username', ['%username' => $original_username]);
-
-    // Dispatch an event that allows modules to alter any of the CAS data
-    // before it's used to lookup a Drupal user account via the authmap table.
-    $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_USER_LOAD.');
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_USER_LOAD, new CasPreUserLoadEvent($property_bag));
-
-    if ($property_bag->getUsername() !== $original_username) {
-      $this->casHelper->log(
-        LogLevel::DEBUG,
-        'Username was changed from %original to %new from a subscriber.',
-        ['%original' => $original_username, '%new' => $property_bag->getUsername()]
-      );
-    }
-
     $account = $this->externalAuth->load($property_bag->getUsername(), $this->provider);
     if ($account === FALSE) {
       // Check if we should create the user or not.
@@ -189,7 +199,7 @@ class CasUserManager {
         $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_REGISTER.');
         $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_REGISTER, $cas_pre_register_event);
         if ($cas_pre_register_event->getAllowAutomaticRegistration()) {
-          $account = $this->register($cas_pre_register_event->getDrupalUsername(), $cas_pre_register_event->getPropertyValues());
+          $account = $this->register($property_bag->getUsername(), $cas_pre_register_event->getPropertyValues(), $cas_pre_register_event->getDrupalUsername());
         }
         else {
           throw new CasLoginException("Cannot register user, an event listener denied access.", CasLoginException::SUBSCRIBER_DENIED_REG);
@@ -212,6 +222,9 @@ class CasUserManager {
     $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_LOGIN, $pre_login_event);
 
     // Save user entity since event listeners may have altered it.
+    // @todo Don't take it for granted. Find if the account was really altered.
+    // @todo Should this be swapped with the following if(...) block? Why
+    //   altering the account if the login has been denied?
     $account->save();
 
     if (!$pre_login_event->getAllowLogin()) {
@@ -221,11 +234,16 @@ class CasUserManager {
     $this->externalAuth->userLoginFinalize($account, $property_bag->getUsername(), $this->provider);
     $this->storeLoginSessionData($this->session->getId(), $ticket);
     $this->session->set('is_cas_user', TRUE);
-    $this->session->set('cas_username', $original_username);
+    $this->session->set('cas_username', $property_bag->getOriginalUsername());
 
     $postLoginEvent = new CasPostLoginEvent($account, $property_bag);
     $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_POST_LOGIN.');
     $this->eventDispatcher->dispatch(CasHelper::EVENT_POST_LOGIN, $postLoginEvent);
+
+    if ($this->settings->get('proxy.initialize') && $property_bag->getPgt()) {
+      $this->casHelper->log(LogLevel::DEBUG, "Storing PGT information for this session.");
+      $this->casProxyHelper->storePgtSession($property_bag->getPgt());
+    }
   }
 
   /**
@@ -240,8 +258,8 @@ class CasUserManager {
     if ($this->settings->get('cas.settings')->get('logout.enable_single_logout') === TRUE) {
       $this->connection->insert('cas_login_data')
         ->fields(
-          array('sid', 'plainsid', 'ticket', 'created'),
-          array(Crypt::hashBase64($session_id), $session_id, $ticket, time())
+          ['sid', 'plainsid', 'ticket', 'created'],
+          [Crypt::hashBase64($session_id), $session_id, $ticket, time()]
         )
         ->execute();
     }

@@ -98,7 +98,7 @@ function cas_form_user_register_form_alter(&$form, FormStateInterface $form_stat
  * Implements hook_form_FORM_ID_alter().
  */
 function cas_form_user_pass_alter(&$form, FormStateInterface $form_state) {
-  if (\Drupal::config('cas.settings')->get('user_accounts.restrict_password_management')) {
+  if (\Drupal::currentUser()->isAnonymous() && \Drupal::config('cas.settings')->get('user_accounts.restrict_password_management')) {
     $form['#validate'][] = '_cas_validate_user_pass_form';
   }
 }
@@ -107,22 +107,15 @@ function cas_form_user_pass_alter(&$form, FormStateInterface $form_state) {
  * Custom form validator for the password reset form.
  */
 function _cas_validate_user_pass_form(array &$form, FormStateInterface $form_state) {
-  if (\Drupal::config('cas.settings')->get('user_accounts.restrict_password_management')) {
-    $name = trim($form_state->getValue('name'));
-    // Verify that there is a valid user account with the provided name.
-    $user_storage = \Drupal::service('entity.manager')->getStorage('user');
-    $users = $user_storage->loadByProperties(['mail' => $name]);
-    if (empty($users)) {
-      $users = $user_storage->loadByProperties(['name' => $name]);
-    }
-    $account = reset($users);
-    if ($account && $account->id()) {
-      // Now check if this user account is associated with CAS and set an error
-      // if so.
-      $cas_user_manager = \Drupal::service('cas.user_manager');
-      if ($cas_user_manager->getCasUsernameForAccount($account->id())) {
-        $form_state->setErrorByName('name', t("The requested account is associated with CAS and its password cannot be managed from this website."));
-      }
+  // If the previous validation succeeded, the 'account' value is not NULL.
+  // @see \Drupal\user\Form\UserPasswordForm::validateForm()
+  $account = $form_state->getValue('account');
+  if ($account) {
+    /** @var \Drupal\cas\Service\CasUserManager $cas_user_manager */
+    $cas_user_manager = \Drupal::service('cas.user_manager');
+    // Check if this user account is associated with CAS and set an error if so.
+    if ($cas_user_manager->getCasUsernameForAccount($account->id())) {
+      $form_state->setErrorByName('name', \Drupal::service('cas.helper')->getMessage('error_handling.message_restrict_password_management'));
     }
   }
 }
@@ -147,11 +140,11 @@ function _cas_add_cas_username_to_user_form(array &$form) {
     '#access' => \Drupal::currentUser()->hasPermission('administer users'),
     '#maxlength' => 128,
     '#weight' => 0,
-    '#states' => array(
-      'visible' => array(
+    '#states' => [
+      'visible' => [
         ':input[name="cas_enabled"]' => ['checked' => TRUE],
-      ),
-    ),
+      ],
+    ],
   ];
 
   // We cannot apply form validation method directly to buttons on entity forms
@@ -230,11 +223,11 @@ function cas_form_user_login_form_alter(&$form, FormStateInterface $form_state) 
   // Add a link to login via CAS on the user login form.
   $enabled = $config->get('login_link_enabled');
   if ($enabled) {
-    $url = new Url('cas.login', array(), array(
-      'attributes' => array(
-        'class' => array('cas-login-link'),
-      ),
-    ));
+    $url = new Url('cas.login', [], [
+      'attributes' => [
+        'class' => ['cas-login-link'],
+      ],
+    ]);
 
     $form['cas_login_link'] = [
       '#type' => 'link',
@@ -261,8 +254,7 @@ function _cas_user_login_validate(&$form, FormStateInterface $form_state) {
   if ($config->get('user_accounts.prevent_normal_login') && !empty($uid)) {
     $cas_user_manager = \Drupal::service('cas.user_manager');
     if ($cas_user_manager->getCasUsernameForAccount($uid)) {
-      $login_url = new Url('cas.login');
-      $form_state->setErrorByName('name', t('This account must log in using <a href="@cas">CAS</a>.', ['@cas' => $login_url->toString()]));
+      $form_state->setErrorByName('name', \Drupal::service('cas.helper')->getMessage('error_handling.message_prevent_normal_login'));
     }
   }
 }
@@ -303,7 +295,7 @@ function cas_help($route_name, RouteMatchInterface $route_match) {
         /** @var \Drupal\filter\FilterPluginManager $filter_manager */
         $filter_manager = \Drupal::service('plugin.manager.filter');
         $settings = \Drupal::configFactory()->get('markdown.settings')->getRawData();
-        $config = array('settings' => $settings);
+        $config = ['settings' => $settings];
         $filter = $filter_manager->createInstance('markdown', $config);
         return $filter->process($text, 'en');
       }

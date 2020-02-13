@@ -116,7 +116,7 @@ class CasRouteEnhancerTest extends UnitTestCase {
       ['/user/logout', TRUE, FALSE],
       ['/user/logout', FALSE, TRUE],
       ['/user/logout', TRUE, TRUE],
-      ['/foobar', TRUE, TRUE]
+      ['/foobar', TRUE, TRUE],
     ];
     return $params;
   }

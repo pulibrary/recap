@@ -24,6 +24,7 @@ class CasPropertyBagTest extends UnitTestCase {
     $name = $this->randomMachineName(8);
     $bag = new CasPropertyBag($name);
     $this->assertEquals($name, $this->readAttribute($bag, 'username'));
+    $this->assertEquals($name, $this->readAttribute($bag, 'originalUsername'));
   }
 
   /**
@@ -32,10 +33,12 @@ class CasPropertyBagTest extends UnitTestCase {
    * @covers ::setUsername
    */
   public function testSetUsername() {
-    $bag = new CasPropertyBag($this->randomMachineName(8));
+    $name = $this->randomMachineName(8);
+    $bag = new CasPropertyBag($name);
     $new_name = $this->randomMachineName(8);
     $bag->setUsername($new_name);
     $this->assertEquals($new_name, $this->readAttribute($bag, 'username'));
+    $this->assertEquals($name, $this->readAttribute($bag, 'originalUsername'));
   }
 
   /**
@@ -57,10 +60,10 @@ class CasPropertyBagTest extends UnitTestCase {
    */
   public function testSetAttributes() {
     $bag = new CasPropertyBag($this->randomMachineName(8));
-    $attributes = array(
-      'foo' => array('bar'),
-      'baz' => array('quux, foobar'),
-    );
+    $attributes = [
+      'foo' => ['bar'],
+      'baz' => ['quux, foobar'],
+    ];
     $bag->setAttributes($attributes);
     $this->assertEquals($attributes, $this->readAttribute($bag, 'attributes'));
   }
@@ -71,13 +74,15 @@ class CasPropertyBagTest extends UnitTestCase {
    * @covers ::getUsername
    */
   public function testGetUsername() {
-    $bag = new CasPropertyBag($this->randomMachineName(8));
+    $name = $this->randomMachineName(8);
+    $bag = new CasPropertyBag($name);
     $reflection = new \ReflectionClass($bag);
     $property = $reflection->getProperty('username');
     $property->setAccessible(TRUE);
     $new_name = $this->randomMachineName(8);
     $property->setValue($bag, $new_name);
     $this->assertEquals($new_name, $bag->getUsername());
+    $this->assertEquals($name, $bag->getOriginalUsername());
   }
 
   /**
@@ -105,10 +110,10 @@ class CasPropertyBagTest extends UnitTestCase {
     $reflection = new \ReflectionClass($bag);
     $property = $reflection->getProperty('attributes');
     $property->setAccessible(TRUE);
-    $attributes = array(
-      'foo' => array('bar'),
-      'baz' => array('quux', 'foobar'),
-    );
+    $attributes = [
+      'foo' => ['bar'],
+      'baz' => ['quux', 'foobar'],
+    ];
     $property->setValue($bag, $attributes);
     $this->assertEquals($attributes, $bag->getAttributes());
   }

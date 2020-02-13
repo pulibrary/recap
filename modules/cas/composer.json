@@ -32,6 +32,12 @@
   },
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
+  "require": {
+    "drupal/externalauth": "^1.2"
+  },
+  "require-dev": {
+    "drupal/cas_mock_server": "dev-0.x"
+  },
   "extra": {
     "drush": {
       "services": {
@@ -40,4 +46,3 @@
     }
   }
 }
-

@@ -12,10 +12,11 @@ class CasCommands extends DrushCommands {
   /**
    * Sets CAS username for an existing Drupal user.
    *
-   * @param $drupalUsername
+   * @param string $drupalUsername
    *   The drupal user name of the user to modify.
-   * @param $casUsername
+   * @param string $casUsername
    *   The CAS username to assign to the user.
+   *
    * @usage cas:set-cas-username foo bar
    *   Assigns the CAS username of "bar" to the Drupal user with name "foo"
    *
@@ -30,8 +31,10 @@ class CasCommands extends DrushCommands {
         '!casUsername' => $casUsername,
         '!drupalUsername' => $drupalUsername,
       ]));
-    } else {
+    }
+    else {
       $this->logger->error(dt('Unable to load user: !user', ['!user' => $drupalUsername]));
     }
   }
+
 }

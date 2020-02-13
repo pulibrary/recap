@@ -139,7 +139,7 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
   public static function getSubscribedEvents() {
     // Priority is just before the Dynamic Page Cache subscriber, but after
     // important services like route matcher and maintenance mode subscribers.
-    $events[KernelEvents::REQUEST][] = array('handle', 29);
+    $events[KernelEvents::REQUEST][] = ['handle', 29];
     $events[KernelEvents::EXCEPTION][] = ['onException', 0];
     return $events;
   }
@@ -291,7 +291,7 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
   private function isCrawlerRequest() {
     $current_request = $this->requestStack->getCurrentRequest();
     if ($current_request->server->get('HTTP_USER_AGENT')) {
-      $crawlers = array(
+      $crawlers = [
         'Google',
         'msnbot',
         'Rambler',
@@ -313,11 +313,11 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
         'eStyle',
         'Scrubby',
         'gsa-crawler',
-      );
+      ];
       // Return on the first find.
       foreach ($crawlers as $c) {
         if (stripos($current_request->server->get('HTTP_USER_AGENT'), $c) !== FALSE) {
-          $this->casHelper->log(LogLevel::DEBUG, 'CasSubscriber ignoring request from suspected crawler "%crawler"', array('%crawler' => $c));
+          $this->casHelper->log(LogLevel::DEBUG, 'CasSubscriber ignoring request from suspected crawler "%crawler"', ['%crawler' => $c]);
           return TRUE;
         }
       }
@@ -333,14 +333,14 @@ class CasSubscriber extends HttpExceptionSubscriberBase {
    *   TRUE if we should ignore this request, FALSE otherwise.
    */
   private function isIgnoreableRoute() {
-    $routes_to_ignore = array(
+    $routes_to_ignore = [
       'cas.service',
       'cas.proxyCallback',
       'cas.login',
       'cas.legacy_login',
       'cas.logout',
       'system.cron',
-    );
+    ];
 
     $current_route = $this->routeMatcher->getRouteName();
     if (in_array($current_route, $routes_to_ignore)) {

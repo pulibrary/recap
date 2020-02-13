@@ -113,6 +113,12 @@ cas.settings:
         message_username_already_exists:
           type: label
           label: 'Local account username already exists error message'
+        message_prevent_normal_login:
+          type: label
+          label: 'Prevent normal login error message'
+        message_restrict_password_management:
+          type: label
+          label: 'Restrict password management error message'
     logout:
       type: mapping
       label: 'Logout'

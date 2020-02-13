@@ -63,4 +63,5 @@ class CasPostValidateEvent extends Event {
   public function getResponseData() {
     return $this->responseData;
   }
+
 }

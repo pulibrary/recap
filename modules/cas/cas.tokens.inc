@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_token_info().
@@ -23,6 +24,10 @@ function cas_token_info() {
         'username' => [
           'name' => t('Username'),
           'description' => t('On most sites this is the same as the Drupal username.'),
+        ],
+        'login-url' => [
+          'name' => t('Login URL'),
+          'description' => t('The CAS login URL.'),
         ],
       ],
     ],
@@ -49,6 +54,10 @@ function cas_tokens($type, $tokens, array $data, array $options, BubbleableMetad
               $replacements[$original] = $session->get('cas_username');
             }
           }
+          break;
+
+        case 'login-url':
+          $replacements[$original] = Url::fromRoute('cas.login')->toString();
           break;
       }
     }

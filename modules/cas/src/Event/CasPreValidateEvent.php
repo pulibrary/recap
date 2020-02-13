@@ -42,7 +42,7 @@ class CasPreValidateEvent extends Event {
    * @param array $parameters
    *   Query parameters to add to the validation URL.
    */
-  public function __construct($validation_path, $parameters) {
+  public function __construct($validation_path, array $parameters) {
     $this->validationPath = $validation_path;
     $this->parameters = $parameters;
   }

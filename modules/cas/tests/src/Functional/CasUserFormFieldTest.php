@@ -7,7 +7,7 @@ namespace Drupal\Tests\cas\Functional;
  *
  * @group cas
  */
-class CasAccountAndRegistrationFormTest extends CasBrowserTestBase {
+class CasUserFormFieldTest extends CasBrowserTestBase {
 
   /**
    * {@inheritdoc}

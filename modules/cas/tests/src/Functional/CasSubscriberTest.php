@@ -35,10 +35,10 @@ class CasSubscriberTest extends CasBrowserTestBase {
 
     // Create some dummy nodes so we have some content paths to work with
     // when triggering forced auth paths.
-    $this->drupalCreateContentType(array('type' => 'page', 'name' => 'Basic page'));
-    $node1 = $this->drupalCreateNode();
-    $node2 = $this->drupalCreateNode();
-    $node3 = $this->drupalCreateNode([
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
+    $this->drupalCreateNode();
+    $this->drupalCreateNode();
+    $this->drupalCreateNode([
       'path' => [
         ['alias' => '/my/path'],
       ],
@@ -104,8 +104,8 @@ class CasSubscriberTest extends CasBrowserTestBase {
 
     // Create some dummy nodes so we have some content paths to work with
     // when triggering forced auth paths.
-    $this->drupalCreateContentType(array('type' => 'page', 'name' => 'Basic page'));
-    $node1 = $this->drupalCreateNode();
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
+    $this->drupalCreateNode();
 
     // Configure CAS with gateway auth enabled for our node.
     $edit = [

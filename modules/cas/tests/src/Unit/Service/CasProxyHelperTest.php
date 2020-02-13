@@ -50,7 +50,7 @@ class CasProxyHelperTest extends UnitTestCase {
       ->setMethods(NULL)
       ->getMock();
     $this->session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
-      ->setConstructorArgs(array($storage))
+      ->setConstructorArgs([$storage])
       ->setMethods(NULL)
       ->getMock();
     $this->session->start();
@@ -82,21 +82,21 @@ class CasProxyHelperTest extends UnitTestCase {
 
     if ($already_proxied) {
       // Set up the fake session data.
-      $session_cas_proxy_helper[$target_service][] = array(
+      $session_cas_proxy_helper[$target_service][] = [
         'Name' => 'SESSION',
         'Value' => $cookie_value,
         'Domain' => $cookie_domain,
-      );
+      ];
       $this->session->set('cas_proxy_helper', $session_cas_proxy_helper);
 
       $httpClient = new Client();
-      $configFactory = $this->getConfigFactoryStub(array(
-        'cas.settings' => array(
+      $configFactory = $this->getConfigFactoryStub([
+        'cas.settings' => [
           'server.hostname' => 'example-server.com',
           'server.port' => 443,
           'server.path' => '/cas',
-        ),
-      ));
+        ],
+      ]);
       $casProxyHelper = new CasProxyHelper($httpClient, $this->casHelper, $this->session, $configFactory, $this->database);
 
       $jar = $casProxyHelper->proxyAuthenticate($target_service);
@@ -120,14 +120,14 @@ class CasProxyHelperTest extends UnitTestCase {
       $handler = HandlerStack::create($mock);
       $httpClient = new Client(['handler' => $handler]);
 
-      $configFactory = $this->getConfigFactoryStub(array(
-        'cas.settings' => array(
+      $configFactory = $this->getConfigFactoryStub([
+        'cas.settings' => [
           'server.hostname' => 'example-server.com',
           'server.port' => 443,
           'server.path' => '/cas',
           'proxy.initialize' => TRUE,
-        ),
-      ));
+        ],
+      ]);
       $casProxyHelper = new CasProxyHelper($httpClient, $this->casHelper, $this->session, $configFactory, $this->database);
 
       // The casHelper expects to be called for a few things.
@@ -159,10 +159,10 @@ class CasProxyHelperTest extends UnitTestCase {
      * First, proxying a new service that was not previously proxied. Second,
      * a second request for a service that has already been proxied.
      */
-    return array(
-      array('https://example.com', 'example.com', FALSE),
-      array('https://example.com', 'example.com', TRUE),
-    );
+    return [
+      ['https://example.com', 'example.com', FALSE],
+      ['https://example.com', 'example.com', TRUE],
+    ];
   }
 
   /**
@@ -201,14 +201,14 @@ class CasProxyHelperTest extends UnitTestCase {
       ->method('getServerBaseUrl')
       ->will($this->returnValue('https://example-server.com/cas/'));
 
-    $configFactory = $this->getConfigFactoryStub(array(
-      'cas.settings' => array(
+    $configFactory = $this->getConfigFactoryStub([
+      'cas.settings' => [
         'server.hostname' => 'example-server.com',
         'server.port' => 443,
         'server.path' => '/cas',
         'proxy.initialize' => $is_proxy,
-      ),
-    ));
+      ],
+    ]);
 
     if ($client_exception == 'server') {
       $code = 404;
@@ -275,7 +275,7 @@ class CasProxyHelperTest extends UnitTestCase {
         </cas:proxySuccess>
       </cas:serviceResponse>";
 
-    $params[] = array(
+    $params[] = [
       TRUE,
       TRUE,
       $target_service,
@@ -283,7 +283,7 @@ class CasProxyHelperTest extends UnitTestCase {
       'client',
       $exception_type,
       '',
-    );
+    ];
 
     // Exception case 4: http client exception from CAS Server.
     $proxy_ticket = $this->randomMachineName(24);
@@ -293,7 +293,7 @@ class CasProxyHelperTest extends UnitTestCase {
         </cas:proxySuccess>
       </cas:serviceResponse>";
 
-    $params[] = array(
+    $params[] = [
       TRUE,
       TRUE,
       $target_service,
@@ -301,11 +301,11 @@ class CasProxyHelperTest extends UnitTestCase {
       'server',
       $exception_type,
       '',
-    );
+    ];
 
     // Exception case 5: non-XML response from CAS server.
     $response = "<> </> </ <..";
-    $params[] = array(
+    $params[] = [
       TRUE,
       TRUE,
       $target_service,
@@ -313,7 +313,7 @@ class CasProxyHelperTest extends UnitTestCase {
       FALSE,
       $exception_type,
       'CAS Server returned non-XML response.',
-    );
+    ];
 
     // Exception case 6: CAS Server rejected ticket.
     $response = "<cas:serviceResponse xmlns:cas='http://example.com/cas'>
@@ -321,7 +321,7 @@ class CasProxyHelperTest extends UnitTestCase {
            'pgt' and 'targetService' parameters are both required
          </cas:proxyFailure>
        </cas:serviceResponse>";
-    $params[] = array(
+    $params[] = [
       TRUE,
       TRUE,
       $target_service,
@@ -329,14 +329,14 @@ class CasProxyHelperTest extends UnitTestCase {
       FALSE,
       $exception_type,
       'CAS Server rejected proxy request.',
-    );
+    ];
 
     // Exception case 7: Neither proxyFailure nor proxySuccess specified.
     $response = "<cas:serviceResponse xmlns:cas='http://example.com/cas'>
          <cas:proxy code=\"INVALID_REQUEST\">
          </cas:proxy>
        </cas:serviceResponse>";
-    $params[] = array(
+    $params[] = [
       TRUE,
       TRUE,
       $target_service,
@@ -344,14 +344,14 @@ class CasProxyHelperTest extends UnitTestCase {
       FALSE,
       $exception_type,
       'CAS Server returned malformed response.',
-    );
+    ];
 
     // Exception case 8: Malformed ticket.
     $response = "<cas:serviceResponse xmlns:cas='http://example.com/cas'>
         <cas:proxySuccess>
         </cas:proxySuccess>
        </cas:serviceResponse>";
-    $params[] = array(
+    $params[] = [
       TRUE,
       TRUE,
       $target_service,
@@ -359,7 +359,7 @@ class CasProxyHelperTest extends UnitTestCase {
       FALSE,
       $exception_type,
       'CAS Server provided invalid or malformed ticket.',
-    );
+    ];
 
     return $params;
   }

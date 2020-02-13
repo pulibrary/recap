@@ -11,6 +11,11 @@ use Drupal\cas\CasPropertyBag;
  */
 class CasEventsTest extends CasBrowserTestBase {
 
+  /**
+   * The modules to enable.
+   *
+   * @var array
+   */
   public static $modules = ['cas', 'cas_test'];
 
   /**
@@ -31,7 +36,15 @@ class CasEventsTest extends CasBrowserTestBase {
     \Drupal::service('cas.user_manager')->login($cas_property_bag, 'fake_ticket_string');
 
     $this->assertFalse(user_load_by_name('foo'), 'User with name "foo" exists, but should not.');
-    $this->assertNotFalse(user_load_by_name('testing_foo'), 'User with name "testing_foo" was not found.');
+    /** @var \Drupal\user\UserInterface $account */
+    $account = user_load_by_name('testing_foo');
+    $this->assertNotFalse($account, 'User with name "testing_foo" was not found.');
+
+    /** @var \Drupal\externalauth\AuthmapInterface $authmap */
+    $authmap = \Drupal::service('externalauth.authmap');
+
+    // Check that the external name has been registered correctly.
+    $this->assertSame('foo', $authmap->get($account->id(), 'cas'));
   }
 
 }

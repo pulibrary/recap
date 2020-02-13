@@ -15,6 +15,13 @@ class CasPropertyBag {
   protected $username;
 
   /**
+   * The original username as it has been received from the CAS server.
+   *
+   * @var string
+   */
+  protected $originalUsername;
+
+  /**
    * The proxy granting ticket, if supplied.
    *
    * @var string
@@ -36,6 +43,7 @@ class CasPropertyBag {
    */
   public function __construct($user) {
     $this->username = $user;
+    $this->originalUsername = $user;
   }
 
   /**
@@ -66,6 +74,16 @@ class CasPropertyBag {
    */
   public function getUsername() {
     return $this->username;
+  }
+
+  /**
+   * Returns the original username property.
+   *
+   * @return string
+   *   The original username.
+   */
+  public function getOriginalUsername() {
+    return $this->originalUsername;
   }
 
   /**
@@ -117,6 +135,7 @@ class CasPropertyBag {
    *   The name of the attribute.
    *
    * @return mixed|null
+   *   The attribute value, or NULL if it does not exist.
    */
   public function getAttribute($name) {
     return $this->hasAttribute($name) ? $this->attributes[$name] : NULL;
@@ -129,6 +148,7 @@ class CasPropertyBag {
    *   The name of the attribute.
    *
    * @return bool
+   *   TRUE if the attribute exists, FALSE otherwise.
    */
   public function hasAttribute($name) {
     return isset($this->attributes[$name]);

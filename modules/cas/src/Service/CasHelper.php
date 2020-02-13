@@ -2,9 +2,13 @@
 
 namespace Drupal\cas\Service;
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Utility\Token;
 use Psr\Log\LogLevel;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class CasHelper.
@@ -61,6 +65,13 @@ class CasHelper {
   const EVENT_PRE_USER_LOAD = 'cas.pre_user_load';
 
   /**
+   * Event type identifier for the CasPreUserLoadRedirectEvent event.
+   *
+   * @var string
+   */
+  const EVENT_PRE_USER_LOAD_REDIRECT = 'cas.pre_user_load.redirect';
+
+  /**
    * Event type identifier for the CasPreRegisterEvent.
    *
    * @var string
@@ -115,16 +126,26 @@ class CasHelper {
   protected $loggerChannel;
 
   /**
+   * The token service.
+   *
+   * @var \Drupal\Core\Utility\Token
+   */
+  protected $token;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger channel factory.
+   * @param \Drupal\Core\Utility\Token $token
+   *   The token service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, Token $token) {
     $this->settings = $config_factory->get('cas.settings');
     $this->loggerChannel = $logger_factory->get('cas');
+    $this->token = $token;
   }
 
   /**
@@ -169,6 +190,92 @@ class CasHelper {
       return;
     }
     $this->loggerChannel->log($level, $message, $context);
+  }
+
+  /**
+   * Converts a "returnto" query param to a "destination" query param.
+   *
+   * The original service URL for CAS server may contain a "returnto" query
+   * parameter that was placed there to redirect a user to specific page after
+   * logging in with CAS.
+   *
+   * Drupal has a built in mechanism for doing this, by instead using a
+   * "destination" parameter in the URL. Anytime there's a RedirectResponse
+   * returned, RedirectResponseSubscriber looks for the destination param and
+   * will redirect a user there instead.
+   *
+   * We cannot use this built in method when constructing the service URL,
+   * because when we redirect to the CAS server for login, Drupal would see
+   * our destination parameter in the URL and redirect there instead of CAS.
+   *
+   * However, when we redirect the user after a login success/failure, we can
+   * then convert it back to a "destination" parameter and let Drupal do it's
+   * thing when redirecting.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The Symfony request object.
+   */
+  public function handleReturnToParameter(Request $request) {
+    if ($request->query->has('returnto')) {
+      $this->log(LogLevel::DEBUG, "Converting query parameter 'returnto' to 'destination'.");
+      $request->query->set('destination', $request->query->get('returnto'));
+    }
+  }
+
+  /**
+   * Returns a translated configurable message given the message config key.
+   *
+   * @param string $key
+   *   The message config key.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface|string
+   *   The customized message or an empty string.
+   *
+   * @throws \InvalidArgumentException
+   *   If the passed key don't match a config entry.
+   */
+  public function getMessage($key) {
+    assert($key && is_string($key));
+    $message = $this->settings->get($key);
+    if ($message === NULL || !is_string($message)) {
+      throw new \InvalidArgumentException("Invalid key '$key'");
+    }
+
+    // Empty string.
+    if (!$message) {
+      return '';
+    }
+
+    return new FormattableMarkup(Xss::filter($this->token->replace($message)), []);
+  }
+
+  /**
+   * Gets config data for guzzle communications with the CAS server.
+   *
+   * @return array
+   *   The guzzle connection options.
+   */
+  public function getCasServerConnectionOptions() {
+    $options = [];
+    $verify = $this->settings->get('server.verify');
+    switch ($verify) {
+      case CasHelper::CA_CUSTOM:
+        $cert = $this->settings->get('server.cert');
+        $options['verify'] = $cert;
+        break;
+
+      case CasHelper::CA_NONE:
+        $options['verify'] = FALSE;
+        break;
+
+      case CasHelper::CA_DEFAULT:
+      default:
+        $options['verify'] = TRUE;
+    }
+
+    $options['timeout'] = $this->settings->get('advanced.connection_timeout');
+
+    return $options;
   }
 
 }

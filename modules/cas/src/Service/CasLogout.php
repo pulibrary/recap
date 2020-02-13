@@ -55,7 +55,7 @@ class CasLogout {
    * @param string $data
    *   The raw data posted to us from the CAS server.
    *
-   * @throws CasSloException
+   * @throws \Drupal\cas\Exception\CasSloException
    *   If the logout data could not be parsed.
    */
   public function handleSlo($data) {
@@ -118,7 +118,7 @@ class CasLogout {
    * @return string
    *   The service ticket to log out.
    *
-   * @throws CasSloException
+   * @throws \Drupal\cas\Exception\CasSloException
    *   If the logout data could not be parsed.
    */
   private function getServiceTicketFromData($data) {
@@ -152,7 +152,7 @@ class CasLogout {
    */
   private function lookupSessionIdByServiceTicket($ticket) {
     $result = $this->connection->select('cas_login_data', 'c')
-      ->fields('c', array('plainsid'))
+      ->fields('c', ['plainsid'])
       ->condition('ticket', $ticket)
       ->execute()
       ->fetch();

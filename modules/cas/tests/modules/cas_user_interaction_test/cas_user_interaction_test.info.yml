@@ -1,10 +1,8 @@
-name: 'CAS test'
+name: 'CAS User Interaction Test'
 type: module
-description: 'Used by the automated tests for the CAS module.'
+description: 'Support for testing insertion of user interaction into the flow.'
 core: 8.x
 package: Testing
-dependencies:
-  - cas:cas
 
 # Information added by Drupal.org packaging script on 2020-01-05
 version: '8.x-1.6'

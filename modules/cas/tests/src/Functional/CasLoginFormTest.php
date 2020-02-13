@@ -74,7 +74,21 @@ class CasLoginFormTest extends BrowserTestBase {
       'pass' => 'password',
     ], 'Log in');
     $this->assertSession()->addressEquals('/user/login');
-    $this->assertSession()->pageTextContains('This account must log in using');
+    $this->assertSession()->pageTextContains('This account must log in using CAS.');
+    $this->assertSession()->linkExists('CAS');
+
+    // Test a customized error message.
+    $this->config('cas.settings')
+      ->set('error_handling.message_prevent_normal_login', 'Just use the <a href="[cas:login-url]">CAS Login</a>')
+      ->save();
+
+    $this->drupalPostForm('/user/login', [
+      'name' => 'cas_user',
+      'pass' => 'password',
+    ], 'Log in');
+    $this->assertSession()->addressEquals('/user/login');
+    $this->assertSession()->pageTextContains('Just use the CAS Login');
+    $this->assertSession()->linkExists('CAS Login');
 
     // Now turn off the setting and try again.
     $this->drupalLogin($this->drupalCreateUser(['administer account settings']));

@@ -111,7 +111,7 @@ class LogoutController implements ContainerInjectionInterface {
       $destination = $this->settings->get('logout.logout_destination');
       if ($destination == '<front>') {
         // If we have '<front>', resolve the path.
-        $return_url = $this->urlGenerator->generate($destination, array(), UrlGeneratorInterface::ABSOLUTE_URL);
+        $return_url = $this->urlGenerator->generate($destination, [], UrlGeneratorInterface::ABSOLUTE_URL);
       }
       elseif (UrlHelper::isExternal($destination)) {
         // If we have an absolute URL, use that.
