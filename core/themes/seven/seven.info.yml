@@ -71,7 +71,7 @@ regions:
 regions_hidden:
   - sidebar_first
 
-# Information added by Drupal.org packaging script on 2019-12-18
-version: '8.7.11'
+# Information added by Drupal.org packaging script on 2020-03-18
+version: '8.7.12'
 project: 'drupal'
-datestamp: 1576696282
+datestamp: 1584552285
