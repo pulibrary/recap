@@ -1,17 +1,39 @@
+#block-pinwheel-main-menu {
+  position: initial;
+}
+
+nav .responsive-menu {
+  width: 100%;
+  cursor: pointer;
+  background: var(--dark-blue);
+  border: 0;
+  color: white;
+  padding: 1rem;
+  display: block;
+  position: relative;
+  text-transform: uppercase;
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: 1px;
+
+  &:hover,
+  &:focus {
+    background: var(--light-blue);
+    color: var(--dark-blue);
+  }
+
+  &.is-active {
+    background: var(--dark-blue);
+    color: white;
+  }
+}
+
 nav > ul {
-  display: flex;
   list-style-type: none;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
 
   li {
     list-style-type: none;
-  }
-
-  .responsive-tab,
-  .responsive-menu {
-    width: 100%;
-    cursor: pointer;
   }
 
   .menu-item {
@@ -21,6 +43,7 @@ nav > ul {
   .menu-item.expanded {
     display: block;
     flex-basis: 100%;
+    position: relative;
 
     ul a {
       font-weight: 400;
@@ -29,8 +52,7 @@ nav > ul {
   }
 
   a,
-  a:visited,
-  .responsive-menu {
+  a:visited {
     padding: 1rem;
     display: block;
     position: relative;
@@ -39,6 +61,10 @@ nav > ul {
     font-weight: 600;
     text-decoration: none;
     letter-spacing: 1px;
+
+    @media screen and (max-width: 1435px) {
+      padding-right: 55px;
+    }
 
     &:hover,
     &:focus {
@@ -52,8 +78,7 @@ nav > ul {
     }
   }
 
-  .menu-item--active-trail > a,
-  .responsive-menu {
+  .menu-item--active-trail > a {
     background: var(--dark-blue);
     color: white;
   }
@@ -63,27 +88,79 @@ nav > ul {
   }
 }
 
+.submenu-toggle {
+  cursor: pointer;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 1rem;
+  position: absolute;
+  right: 0;
+  top: 0;
+  text-decoration: none;
+  text-transform: uppercase;
+  z-index: 9;
+
+  @media screen and (min-width: 1450px) {
+    display: none;
+  }
+}
+
+.menu-item--active-trail .submenu-toggle {
+  color: white;
+}
+
+@media screen and (max-width: 599px) {
+  nav {
+    width: 100%;
+  }
+
+  nav > ul {
+    left: 0;
+  }
+}
+
 @media screen and (min-width: 600px) {
-  nav > ul .responsive-menu {
+  nav .responsive-menu {
     margin-left: auto;
     margin-right: 1rem;
     min-height: 125px;
     width: auto;
   }
+
+  nav > ul {
+    left: initial;
+  }
 }
 
-@media screen and (min-width: 768px) {
-  .responsive-tab {
+@media screen and (max-width: 1449px) {
+  nav > ul {
+    position: absolute;
+    right: 0;
+    background: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 9;
+  }
+}
+
+@media screen and (min-width: 1450px) {
+  header nav {
+    flex: 1;
+  }
+
+  nav .responsive-menu {
     display: none;
   }
 
   nav > ul {
+    display: flex;
+    justify-content: space-evenly;
+
     .menu-item {
       display: block;
     }
 
-    > li > a,
-    .responsive-menu {
+    > li > a {
       min-height: 125px;
       min-width: 185px;
     }

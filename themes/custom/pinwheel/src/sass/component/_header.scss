@@ -1,11 +1,11 @@
+header {
+  position: relative;
+}
+
 header > div {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-}
-
-header nav {
-  flex: 1;
 }
 
 #block-pinwheel-branding {
