@@ -12,6 +12,11 @@ use Drupal\user\RoleInterface;
  */
 class CommentAnonymousTest extends CommentTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
+
   protected function setUp() {
     parent::setUp();
 
@@ -45,8 +50,8 @@ class CommentAnonymousTest extends CommentTestBase {
     $this->drupalPostForm($this->node->toUrl(), $edit, t('Preview'));
     // Cannot use assertRaw here since both title and body are in the form.
     $preview = (string) $this->cssSelect('.preview')[0]->getHtml();
-    $this->assertTrue(strpos($preview, $title) !== FALSE, 'Anonymous user can preview comment title.');
-    $this->assertTrue(strpos($preview, $body) !== FALSE, 'Anonymous user can preview comment body.');
+    $this->assertStringContainsString($title, $preview, 'Anonymous user can preview comment title.');
+    $this->assertStringContainsString($body, $preview, 'Anonymous user can preview comment body.');
 
     // Preview comments (without `skip comment approval` permission).
     user_role_revoke_permissions(RoleInterface::ANONYMOUS_ID, ['skip comment approval']);
@@ -58,8 +63,8 @@ class CommentAnonymousTest extends CommentTestBase {
     $this->drupalPostForm($this->node->toUrl(), $edit, t('Preview'));
     // Cannot use assertRaw here since both title and body are in the form.
     $preview = (string) $this->cssSelect('.preview')[0]->getHtml();
-    $this->assertTrue(strpos($preview, $title) !== FALSE, 'Anonymous user can preview comment title.');
-    $this->assertTrue(strpos($preview, $body) !== FALSE, 'Anonymous user can preview comment body.');
+    $this->assertStringContainsString($title, $preview, 'Anonymous user can preview comment title.');
+    $this->assertStringContainsString($body, $preview, 'Anonymous user can preview comment body.');
     user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['skip comment approval']);
 
     // Post anonymous comment without contact info.

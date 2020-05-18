@@ -63,7 +63,7 @@ class FieldOrLanguageJoinTest extends RelationshipJoinTestBase {
       'adjusted' => TRUE,
     ];
     $join = $this->manager->createInstance($this->pluginId, $configuration);
-    $this->assertTrue($join instanceof FieldOrLanguageJoin);
+    $this->assertInstanceOf(FieldOrLanguageJoin::class, $join);
     $this->assertNull($join->extra);
     $this->assertTrue($join->adjusted);
 
@@ -137,7 +137,7 @@ class FieldOrLanguageJoinTest extends RelationshipJoinTestBase {
     // condition.
     $configuration = [
       'table' => 'node__field_tags',
-      'left_table' => 'node',
+      'left_table' => 'views_test_data',
       'left_field' => 'nid',
       'field' => 'entity_id',
       'extra' => [
@@ -148,7 +148,7 @@ class FieldOrLanguageJoinTest extends RelationshipJoinTestBase {
       ],
     ];
     $join_info = $this->buildJoin($view, $configuration, 'node__field_tags');
-    $this->assertContains('AND (node__field_tags.langcode = .langcode)', $join_info['condition']);
+    $this->assertContains('AND (node__field_tags.langcode = views_test_data.langcode)', $join_info['condition']);
 
     array_unshift($configuration['extra'], [
       'field' => 'deleted',
@@ -156,7 +156,7 @@ class FieldOrLanguageJoinTest extends RelationshipJoinTestBase {
       'numeric' => TRUE,
     ]);
     $join_info = $this->buildJoin($view, $configuration, 'node__field_tags');
-    $this->assertContains('AND (node__field_tags.langcode = .langcode)', $join_info['condition']);
+    $this->assertContains('AND (node__field_tags.langcode = views_test_data.langcode)', $join_info['condition']);
 
     // Replace the language condition with a bundle condition.
     $configuration['extra'][1] = [
@@ -173,7 +173,7 @@ class FieldOrLanguageJoinTest extends RelationshipJoinTestBase {
       'field' => 'langcode',
     ];
     $join_info = $this->buildJoin($view, $configuration, 'node__field_tags');
-    $this->assertContains('AND (node__field_tags.bundle = :views_join_condition_1 OR node__field_tags.langcode = .langcode)', $join_info['condition']);
+    $this->assertContains('AND (node__field_tags.bundle = :views_join_condition_1 OR node__field_tags.langcode = views_test_data.langcode)', $join_info['condition']);
   }
 
   /**
@@ -196,7 +196,7 @@ class FieldOrLanguageJoinTest extends RelationshipJoinTestBase {
     $query = \Drupal::database()->select('node');
 
     $join = $this->manager->createInstance('field_or_language_join', $configuration);
-    $this->assertInstanceOf(FieldOrLanguageJoin::class, $join, 'The correct join class got loaded.');
+    $this->assertInstanceOf(FieldOrLanguageJoin::class, $join);
 
     $table = ['alias' => $table_alias];
     $join->buildJoin($query, $table, $view->query);

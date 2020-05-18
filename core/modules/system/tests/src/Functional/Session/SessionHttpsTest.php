@@ -41,6 +41,11 @@ class SessionHttpsTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -232,7 +237,7 @@ class SessionHttpsTest extends BrowserTestBase {
     $this->assertSame(303, $response->getStatusCode());
     $location = $response->getHeader('location')[0];
 
-    $this->assertIdentical(strpos($location, $base_url), 0, 'Location header contains expected base URL');
+    $this->assertStringStartsWith($base_url, $location, 'Location header contains expected base URL');
     return substr($location, strlen($base_url));
   }
 
@@ -252,7 +257,7 @@ class SessionHttpsTest extends BrowserTestBase {
     $args = [
       ':sid' => Crypt::hashBase64($sid),
     ];
-    return $this->assertTrue(db_query('SELECT timestamp FROM {sessions} WHERE sid = :sid', $args)->fetchField(), $assertion_text);
+    return $this->assertNotEmpty(\Drupal::database()->query('SELECT timestamp FROM {sessions} WHERE sid = :sid', $args)->fetchField(), $assertion_text);
   }
 
   /**

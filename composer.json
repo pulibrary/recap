@@ -6,10 +6,9 @@
     "require": {
         "composer/installers": "^1.0.24",
         "wikimedia/composer-merge-plugin": "^1.4",
-        "drupal/health_check": "^1.2"
-    },
-    "replace": {
-        "drupal/core": "^8.7"
+        "drupal/health_check": "^1.2",
+        "drupal/google_analytics": "^3.0",
+        "drupal/core": "^8.9"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

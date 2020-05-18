@@ -54,7 +54,22 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['node', 'block', 'menu_ui', 'user', 'taxonomy', 'toolbar', 'language', 'test_page_test', 'locale'];
+  public static $modules = [
+    'node',
+    'block',
+    'menu_ui',
+    'user',
+    'taxonomy',
+    'toolbar',
+    'language',
+    'test_page_test',
+    'locale',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   protected function setUp() {
     parent::setUp();
@@ -201,7 +216,7 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
 
     // Assert that the old admin menu subtree hash and the new admin menu
     // subtree hash are the same.
-    $this->assertTrue($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
+    $this->assertNotEmpty($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
     $this->assertEqual($admin_user_2_hash, $new_subtree_hash, 'The user-specific subtree menu hash has not been updated.');
   }
 
@@ -237,7 +252,7 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
 
     // Assert that the old adminUser subtree hash and the new adminUser
     // subtree hash are the same.
-    $this->assertTrue($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
+    $this->assertNotEmpty($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
     $this->assertEqual($admin_user_2_hash, $new_subtree_hash, 'The user-specific subtree menu hash has not been updated.');
   }
 
@@ -278,7 +293,7 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
     // Get a baseline hash for the admin menu subtrees before translating one
     // of the menu link items.
     $original_subtree_hash = $this->getSubtreesHash();
-    $this->assertTrue($original_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
+    $this->assertNotEmpty($original_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
     $this->drupalLogout();
 
     // Translate the string 'Search and metadata' in the xx language. This
@@ -318,7 +333,7 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
 
     // Assert that the old admin menu subtrees hash and the new admin menu
     // subtrees hash are different.
-    $this->assertTrue($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
+    $this->assertNotEmpty($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
     $this->assertNotEqual($original_subtree_hash, $new_subtree_hash, 'The user-specific subtree menu hash has been updated.');
   }
 
@@ -357,7 +372,7 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
 
     // Assert that the old admin menu subtree hash and the new admin menu
     // subtree hash are different.
-    $this->assertTrue($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
+    $this->assertNotEmpty($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
     $this->assertNotEqual($this->hash, $new_subtree_hash, 'The user-specific subtree menu hash has been updated.');
   }
 
@@ -368,7 +383,7 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
     // Back to site link should exist in the markup.
     $this->drupalGet('test-page');
     $back_link = $this->cssSelect('.home-toolbar-tab');
-    $this->assertTrue($back_link);
+    $this->assertNotEmpty($back_link);
   }
 
   /**
@@ -420,7 +435,7 @@ class ToolbarAdminMenuTest extends BrowserTestBase {
 
     // Assert that the old admin menu subtree hash and the new admin menu
     // subtree hash are different.
-    $this->assertTrue($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
+    $this->assertNotEmpty($new_subtree_hash, 'A valid hash value for the admin menu subtrees was created.');
     $this->assertNotEqual($this->hash, $new_subtree_hash, 'The user-specific subtree menu hash has been updated.');
 
     // Save the new subtree hash as the original.

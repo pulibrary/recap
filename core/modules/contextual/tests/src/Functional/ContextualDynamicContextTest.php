@@ -18,6 +18,11 @@ use Drupal\Tests\BrowserTestBase;
 class ContextualDynamicContextTest extends BrowserTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
    * A user with permission to access contextual links and edit content.
    *
    * @var \Drupal\user\UserInterface
@@ -43,7 +48,14 @@ class ContextualDynamicContextTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['contextual', 'node', 'views', 'views_ui', 'language', 'menu_test'];
+  public static $modules = [
+    'contextual',
+    'node',
+    'views',
+    'views_ui',
+    'language',
+    'menu_test',
+  ];
 
   protected function setUp() {
     parent::setUp();

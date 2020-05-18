@@ -27,6 +27,11 @@ class DisplayAttachmentTest extends ViewTestBase {
    */
   public static $modules = ['node', 'views'];
 
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
+
   protected function setUp($import_test_views = TRUE) {
     parent::setUp($import_test_views);
 
@@ -63,8 +68,8 @@ class DisplayAttachmentTest extends ViewTestBase {
     $view = Views::getView('test_attached_disabled');
     $view->setDisplay('page_1');
     $attached_displays = $view->display_handler->getAttachedDisplays();
-    $this->assertTrue(in_array('attachment_1', $attached_displays), 'The attachment_1 display is attached to the page display.');
-    $this->assertTrue(in_array('attachment_2', $attached_displays), 'The attachment_2 display is attached to the page display.');
+    $this->assertContains('attachment_1', $attached_displays, 'The attachment_1 display is attached to the page display.');
+    $this->assertContains('attachment_2', $attached_displays, 'The attachment_2 display is attached to the page display.');
 
     // Check that the attachments are output on the page display.
     $this->drupalGet('test-attached-disabled');

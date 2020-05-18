@@ -13,6 +13,11 @@ use Drupal\comment\Entity\Comment;
 class CommentRestExportTest extends CommentTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Views used by this test.
    *
    * @var array
@@ -22,7 +27,13 @@ class CommentRestExportTest extends CommentTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['node', 'comment', 'comment_test_views', 'rest', 'hal'];
+  public static $modules = [
+    'node',
+    'comment',
+    'comment_test_views',
+    'rest',
+    'hal',
+  ];
 
   protected function setUp($import_test_views = TRUE) {
     parent::setUp($import_test_views);

@@ -761,9 +761,9 @@
  *
  * A typical service definition in a *.services.yml file looks like this:
  * @code
- * path.alias_manager:
- *   class: Drupal\Core\Path\AliasManager
- *   arguments: ['@path.crud', '@path.alias_whitelist', '@language_manager']
+ * path_alias.manager:
+ *   class: Drupal\path_alias\AliasManager
+ *   arguments: ['@path_alias.repository', '@path_alias.whitelist', '@language_manager']
  * @endcode
  * Some services use other services as factories; a typical service definition
  * is:
@@ -1118,6 +1118,17 @@
  *   - Namespace: \Drupal\Tests\yourmodule\FunctionalJavascript (or a
  *     subdirectory)
  *   - Directory location: yourmodule/tests/src/FunctionalJavascript (or a
+ *     subdirectory)
+ * - Build tests:
+ *   - Purpose: Test building processes and their outcomes, such as whether a
+ *     live update process actually works, or whether a Composer project
+ *     template actually builds a working site. Provides a temporary build
+ *     workspace and a PHP-native HTTP server to send requests to the site
+ *     you've built.
+ *   - Base class: \Drupal\BuildTests\Framework\BuildTestBase
+ *   - Namespace: \Drupal\Tests\yourmodule\Build (or a
+ *     subdirectory)
+ *   - Directory location: yourmodule/tests/src/Build (or a
  *     subdirectory)
  *
  * Some notes about writing PHP test classes:
@@ -1595,10 +1606,10 @@
  *   files, by defining functions whose name starts with "hook_" (these
  *   files and their functions are never loaded by Drupal -- they exist solely
  *   for documentation). The function should have a documentation header, as
- *   well as a sample function body. For example, in the core file
- *   system.api.php, you can find hooks such as hook_batch_alter(). Also, if
- *   you are viewing this documentation on an API reference site, the Core
- *   hooks will be listed in this topic.
+ *   well as a sample function body. For example, in the core file form.api.php,
+ *   you can find hooks such as hook_batch_alter(). Also, if you are viewing
+ *   this documentation on an API reference site, the Core hooks will be listed
+ *   in this topic.
  * - Copy the function to your module's .module file.
  * - Change the name of the function, substituting your module's short name
  *   (name of the module's directory, and .info.yml file without the extension)
@@ -1914,7 +1925,7 @@ function hook_cron() {
   // Long-running operation example, leveraging a queue:
   // Queue news feeds for updates once their refresh interval has elapsed.
   $queue = \Drupal::queue('aggregator_feeds');
-  $ids = \Drupal::entityManager()->getStorage('aggregator_feed')->getFeedIdsToRefresh();
+  $ids = \Drupal::entityTypeManager()->getStorage('aggregator_feed')->getFeedIdsToRefresh();
   foreach (Feed::loadMultiple($ids) as $feed) {
     if ($queue->createItem($feed)) {
       // Add timestamp to avoid queueing item more than once.
@@ -2594,5 +2605,29 @@ function hook_validation_constraint_alter(array &$definitions) {
  * within contributed and custom code. Reserved attributes include:
  * - uid: The user ID for an authenticated user. The value of this attribute
  *   cannot be modified.
+ *
+ * @section sec_custom_session_bags Custom session bags
+ * Modules can register custom session bags in order to provide type safe
+ * interfaces on module specific session data. A session bag must implement
+ * \Symfony\Component\HttpFoundation\Session\SessionBagInterface. Custom session
+ * bags are registered using a service entry tagged with the session_bag service
+ * tag. Custom session bags can be accessed through the session retrieved from
+ * the request object.
+ *
+ * Example service definition:
+ * @code
+ * session_test.session_bag:
+ *   class: Drupal\session_test\Session\TestSessionBag
+ *   tags:
+ *     - { name: session_bag }
+ * @endcode
+ *
+ * Example of accessing a custom session bag:
+ * @code
+ * $bag = $request->getSession()->getBag(TestSessionBag::BAG_NAME);
+ * $bag->setFlag();
+ * @endcode
+ * Session data must be deleted from custom session bags as soon as it is no
+ * longer needed (see @ref sec_intro above).
  * @}
  */

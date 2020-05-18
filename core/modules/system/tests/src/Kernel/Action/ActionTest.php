@@ -54,11 +54,11 @@ class ActionTest extends KernelTestBase {
 
     // Create an instance of the 'save entity' action.
     $action = $this->actionManager->createInstance('action_test_save_entity');
-    $this->assertTrue($action instanceof ActionInterface, 'The action implements the correct interface.');
+    $this->assertInstanceOf(ActionInterface::class, $action);
 
     // Create a new unsaved user.
     $name = $this->randomMachineName();
-    $user_storage = $this->container->get('entity.manager')->getStorage('user');
+    $user_storage = $this->container->get('entity_type.manager')->getStorage('user');
     $account = $user_storage->create(['name' => $name, 'bundle' => 'user']);
     $loaded_accounts = $user_storage->loadMultiple();
     $this->assertEqual(count($loaded_accounts), 0);

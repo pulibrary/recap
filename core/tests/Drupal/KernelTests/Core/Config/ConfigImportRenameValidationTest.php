@@ -29,7 +29,14 @@ class ConfigImportRenameValidationTest extends KernelTestBase {
    *
    * @var array
    */
-  public static $modules = ['system', 'user', 'node', 'field', 'text', 'config_test'];
+  public static $modules = [
+    'system',
+    'user',
+    'node',
+    'field',
+    'text',
+    'config_test',
+  ];
 
   /**
    * {@inheritdoc}
@@ -55,7 +62,8 @@ class ConfigImportRenameValidationTest extends KernelTestBase {
       $this->container->get('module_handler'),
       $this->container->get('module_installer'),
       $this->container->get('theme_handler'),
-      $this->container->get('string_translation')
+      $this->container->get('string_translation'),
+      $this->container->get('extension.list.module')
     );
   }
 

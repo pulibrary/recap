@@ -54,7 +54,7 @@ class CommentPreviewTest extends CommentTestBase {
 
     \Drupal::state()->set('user_hooks_test_user_format_name_alter_safe', TRUE);
     $this->drupalPostForm('node/' . $this->node->id(), $edit, t('Preview'));
-    $this->assertTrue($this->webUser->getDisplayName() instanceof MarkupInterface, 'Username is marked safe');
+    $this->assertInstanceOf(MarkupInterface::class, $this->webUser->getDisplayName());
     $this->assertNoEscaped('<em>' . $this->webUser->id() . '</em>');
     $this->assertRaw('<em>' . $this->webUser->id() . '</em>');
 
@@ -185,7 +185,7 @@ class CommentPreviewTest extends CommentTestBase {
     $this->drupalPostForm('comment/' . $comment->id() . '/edit', $displayed, t('Save'));
 
     // Check that the saved comment is still correct.
-    $comment_storage = \Drupal::entityManager()->getStorage('comment');
+    $comment_storage = \Drupal::entityTypeManager()->getStorage('comment');
     $comment_storage->resetCache([$comment->id()]);
     /** @var \Drupal\comment\CommentInterface $comment_loaded */
     $comment_loaded = Comment::load($comment->id());

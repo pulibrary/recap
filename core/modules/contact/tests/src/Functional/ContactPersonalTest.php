@@ -28,6 +28,11 @@ class ContactPersonalTest extends BrowserTestBase {
   public static $modules = ['contact', 'dblog'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * A user with some administrative permissions.
    *
    * @var \Drupal\user\UserInterface
@@ -86,9 +91,9 @@ class ContactPersonalTest extends BrowserTestBase {
     ];
     $subject = PlainTextOutput::renderFromHtml(t('[@site-name] @subject', $variables));
     $this->assertEqual($mail['subject'], $subject, 'Subject is in sent message.');
-    $this->assertTrue(strpos($mail['body'], 'Hello ' . $variables['@recipient-name']) !== FALSE, 'Recipient name is in sent message.');
-    $this->assertTrue(strpos($mail['body'], $this->webUser->getDisplayName()) !== FALSE, 'Sender name is in sent message.');
-    $this->assertTrue(strpos($mail['body'], $message['message[0][value]']) !== FALSE, 'Message body is in sent message.');
+    $this->assertStringContainsString('Hello ' . $variables['@recipient-name'], $mail['body'], 'Recipient name is in sent message.');
+    $this->assertStringContainsString($this->webUser->getDisplayName(), $mail['body'], 'Sender name is in sent message.');
+    $this->assertStringContainsString($message['message[0][value]'], $mail['body'], 'Message body is in sent message.');
 
     // Check there was no problems raised during sending.
     $this->drupalLogout();
@@ -210,10 +215,10 @@ class ContactPersonalTest extends BrowserTestBase {
     // form.
     $this->drupalGet('user/' . $this->webUser->id() . '/edit');
     $this->assertNoFieldChecked('edit-contact--2');
-    $this->assertFalse(\Drupal::service('user.data')->get('contact', $this->webUser->id(), 'enabled'), 'Personal contact form disabled');
+    $this->assertNull(\Drupal::service('user.data')->get('contact', $this->webUser->id(), 'enabled'), 'Personal contact form disabled');
     $this->drupalPostForm(NULL, ['contact' => TRUE], t('Save'));
     $this->assertFieldChecked('edit-contact--2');
-    $this->assertTrue(\Drupal::service('user.data')->get('contact', $this->webUser->id(), 'enabled'), 'Personal contact form enabled');
+    $this->assertNotEmpty(\Drupal::service('user.data')->get('contact', $this->webUser->id(), 'enabled'), 'Personal contact form enabled');
 
     // Test with disabled global default contact form in combination with a user
     // that has the contact form enabled.

@@ -2,7 +2,6 @@
 
 namespace Drupal\Core\Database\Driver\mysql;
 
-use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\SchemaException;
 use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\Core\Database\SchemaObjectDoesNotExistException;
@@ -75,7 +74,7 @@ class Schema extends DatabaseSchema {
   protected function buildTableNameCondition($table_name, $operator = '=', $add_prefix = TRUE) {
     $table_info = $this->getPrefixInfo($table_name, $add_prefix);
 
-    $condition = new Condition('AND');
+    $condition = $this->connection->condition('AND');
     $condition->condition('table_schema', $table_info['database']);
     $condition->condition('table_name', $table_info['table'], $operator);
     return $condition;
@@ -490,7 +489,7 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function fieldSetDefault($table, $field, $default) {
-    @trigger_error('fieldSetDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
+    @trigger_error('fieldSetDefault() is deprecated in drupal:8.7.0 and will be removed before drupal:9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
     if (!$this->fieldExists($table, $field)) {
       throw new SchemaObjectDoesNotExistException(t("Cannot set default value of field @table.@field: field doesn't exist.", ['@table' => $table, '@field' => $field]));
     }
@@ -502,7 +501,7 @@ class Schema extends DatabaseSchema {
    * {@inheritdoc}
    */
   public function fieldSetNoDefault($table, $field) {
-    @trigger_error('fieldSetNoDefault() is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
+    @trigger_error('fieldSetNoDefault() is deprecated in drupal:8.7.0 and will be removed before drupal:9.0.0. Instead, call ::changeField() passing a full field specification. See https://www.drupal.org/node/2999035', E_USER_DEPRECATED);
     if (!$this->fieldExists($table, $field)) {
       throw new SchemaObjectDoesNotExistException(t("Cannot remove default value of field @table.@field: field doesn't exist.", ['@table' => $table, '@field' => $field]));
     }

@@ -26,6 +26,11 @@ class ResourceTest extends BrowserTestBase {
   public static $modules = ['hal', 'rest', 'entity_test', 'rest_test'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * The entity.
    *
    * @var \Drupal\Core\Entity\EntityInterface
@@ -152,7 +157,7 @@ class ResourceTest extends BrowserTestBase {
 
     foreach ($manager->getDefinitions() as $resource => $definition) {
       foreach ($definition['uri_paths'] as $key => $uri_path) {
-        $this->assertFalse(strpos($uri_path, '//'), 'The resource URI path does not have duplicate slashes.');
+        $this->assertStringNotContainsString('//', $uri_path, 'The resource URI path does not have duplicate slashes.');
       }
     }
   }

@@ -20,22 +20,27 @@ class ViewEditTest extends UITestBase {
   public static $testViews = ['test_view', 'test_display', 'test_groupwise_term_ui'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Tests the delete link on a views UI.
    */
   public function testDeleteLink() {
     $this->drupalGet('admin/structure/views/view/test_view');
     $this->assertLink(t('Delete view'), 0, 'Ensure that the view delete link appears');
 
-    $view = $this->container->get('entity.manager')->getStorage('view')->load('test_view');
-    $this->assertTrue($view instanceof View);
+    $view = $this->container->get('entity_type.manager')->getStorage('view')->load('test_view');
+    $this->assertInstanceOf(View::class, $view);
     $this->clickLink(t('Delete view'));
     $this->assertUrl('admin/structure/views/view/test_view/delete');
     $this->drupalPostForm(NULL, [], t('Delete'));
     $this->assertRaw(t('The view %name has been deleted.', ['%name' => $view->label()]));
 
     $this->assertUrl('admin/structure/views');
-    $view = $this->container->get('entity.manager')->getStorage('view')->load('test_view');
-    $this->assertFalse($view instanceof View);
+    $view = $this->container->get('entity_type.manager')->getStorage('view')->load('test_view');
+    $this->assertNotInstanceOf(View::class, $view);
   }
 
   /**
@@ -58,11 +63,11 @@ class ViewEditTest extends UITestBase {
 
     // Save the view, and test the new ID has been saved.
     $this->drupalPostForm(NULL, [], 'Save');
-    $view = \Drupal::entityManager()->getStorage('view')->load('test_view');
+    $view = \Drupal::entityTypeManager()->getStorage('view')->load('test_view');
     $displays = $view->get('display');
     $this->assertTrue(!empty($displays['test_1']), 'Display data found for new display ID key.');
     $this->assertIdentical($displays['test_1']['id'], 'test_1', 'New display ID matches the display ID key.');
-    $this->assertFalse(array_key_exists('attachment_1', $displays), 'Old display ID not found.');
+    $this->assertArrayNotHasKey('attachment_1', $displays);
 
     // Set to the same machine name and save the View.
     $edit = ['display_id' => 'test_1'];
@@ -72,7 +77,7 @@ class ViewEditTest extends UITestBase {
 
     // Test the form validation with invalid IDs.
     $machine_name_edit_url = 'admin/structure/views/nojs/display/test_view/test_1/display_id';
-    $error_text = t('Display name must be letters, numbers, or underscores only.');
+    $error_text = t('Display machine name must contain only lowercase letters, numbers, or underscores.');
 
     // Test that potential invalid display ID requests are detected
     try {

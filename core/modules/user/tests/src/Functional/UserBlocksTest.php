@@ -3,7 +3,6 @@
 namespace Drupal\Tests\user\Functional;
 
 use Drupal\Core\Url;
-use Drupal\Core\Database\Database;
 use Drupal\dynamic_page_cache\EventSubscriber\DynamicPageCacheSubscriber;
 use Drupal\Tests\BrowserTestBase;
 
@@ -20,6 +19,11 @@ class UserBlocksTest extends BrowserTestBase {
    * @var array
    */
   public static $modules = ['block', 'views'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
 
   /**
    * A user with the 'administer blocks' permission.
@@ -93,7 +97,7 @@ class UserBlocksTest extends BrowserTestBase {
     $this->drupalPostForm(NULL, $edit, t('Log in'));
     $this->assertNoText(t('User login'), 'Logged in.');
     $this->assertPattern('!<title.*?' . t('Compose tips') . '.*?</title>!', 'Still on the same page after login for allowed page');
-    $this->assertTrue(strpos($this->getUrl(), '/filter/tips?foo=bar') !== FALSE, 'Correct query arguments are displayed after login');
+    $this->assertStringContainsString('/filter/tips?foo=bar', $this->getUrl(), 'Correct query arguments are displayed after login');
 
     // Repeat with different query arguments.
     $this->drupalLogout();
@@ -102,7 +106,7 @@ class UserBlocksTest extends BrowserTestBase {
     $this->drupalPostForm(NULL, $edit, t('Log in'));
     $this->assertNoText(t('User login'), 'Logged in.');
     $this->assertPattern('!<title.*?' . t('Compose tips') . '.*?</title>!', 'Still on the same page after login for allowed page');
-    $this->assertTrue(strpos($this->getUrl(), '/filter/tips?foo=baz') !== FALSE, 'Correct query arguments are displayed after login');
+    $this->assertStringContainsString('/filter/tips?foo=baz', $this->getUrl(), 'Correct query arguments are displayed after login');
 
     // Check that the user login block is not vulnerable to information
     // disclosure to third party sites.
@@ -121,16 +125,6 @@ class UserBlocksTest extends BrowserTestBase {
     $this->assertText(t('Unrecognized username or password. Forgot your password?'));
     $this->drupalGet('filter/tips');
     $this->assertNoText(t('Unrecognized username or password. Forgot your password?'));
-  }
-
-  /**
-   * Updates the access column for a user.
-   */
-  private function updateAccess($uid, $access = REQUEST_TIME) {
-    Database::getConnection()->update('users_field_data')
-      ->condition('uid', $uid)
-      ->fields(['access' => $access])
-      ->execute();
   }
 
 }

@@ -19,6 +19,11 @@ class HtaccessTest extends BrowserTestBase {
   public static $modules = ['node', 'path'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Get an array of file paths for access testing.
    *
    * @return int[]
@@ -86,6 +91,10 @@ class HtaccessTest extends BrowserTestBase {
     $file_paths["$path/composer.json"] = 403;
     $file_paths["$path/composer.lock"] = 403;
 
+    // Ensure web server configuration files cannot be accessed.
+    $file_paths["$path/.htaccess"] = 403;
+    $file_paths["$path/web.config"] = 403;
+
     return $file_paths;
   }
 
@@ -132,7 +141,7 @@ class HtaccessTest extends BrowserTestBase {
    *   The expected response code. For example: 200, 403 or 404.
    */
   protected function assertFileAccess($path, $response_code) {
-    $this->assertTrue(file_exists(\Drupal::root() . '/' . $path), "The file $path exists.");
+    $this->assertFileExists(\Drupal::root() . '/' . $path);
     $this->drupalGet($path);
     $this->assertResponse($response_code, "Response code to $path is $response_code.");
   }

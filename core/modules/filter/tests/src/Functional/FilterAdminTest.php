@@ -20,7 +20,18 @@ class FilterAdminTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'filter', 'node', 'filter_test_plugin', 'dblog'];
+  public static $modules = [
+    'block',
+    'filter',
+    'node',
+    'filter_test_plugin',
+    'dblog',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
 
   /**
    * An user with administration permissions.
@@ -294,7 +305,7 @@ class FilterAdminTest extends BrowserTestBase {
     $this->assertNotEmpty($view_link, 'The message area contains a link to a node');
 
     $node = $this->drupalGetNodeByTitle($edit['title[0][value]']);
-    $this->assertTrue($node, 'Node found in database.');
+    $this->assertNotEmpty($node, 'Node found in database.');
 
     $this->drupalGet('node/' . $node->id());
     $this->assertRaw($body . $extra_text, 'Filter removed invalid tag.');

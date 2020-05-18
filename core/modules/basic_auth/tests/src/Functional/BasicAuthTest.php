@@ -23,7 +23,17 @@ class BasicAuthTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['basic_auth', 'router_test', 'locale', 'basic_auth_test'];
+  public static $modules = [
+    'basic_auth',
+    'router_test',
+    'locale',
+    'basic_auth_test',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * Test http basic authentication.
@@ -41,8 +51,9 @@ class BasicAuthTest extends BrowserTestBase {
     $this->assertText($account->getAccountName(), 'Account name is displayed.');
     $this->assertResponse('200', 'HTTP response is OK');
     $this->mink->resetSessions();
-    $this->assertFalse($this->drupalGetHeader('X-Drupal-Cache'));
-    $this->assertIdentical(strpos($this->drupalGetHeader('Cache-Control'), 'public'), FALSE, 'Cache-Control is not set to public');
+    $this->assertNull($this->drupalGetHeader('X-Drupal-Cache'));
+    // Check that Cache-Control is not set to public.
+    $this->assertSession()->responseHeaderNotContains('Cache-Control', 'public');
 
     $this->basicAuthGet($url, $account->getAccountName(), $this->randomMachineName());
     $this->assertNoText($account->getAccountName(), 'Bad basic auth credentials do not authenticate the user.');
@@ -69,8 +80,9 @@ class BasicAuthTest extends BrowserTestBase {
     $this->drupalGet($url);
     $this->assertEqual($this->drupalGetHeader('X-Drupal-Cache'), 'MISS');
     $this->basicAuthGet($url, $account->getAccountName(), $account->pass_raw);
-    $this->assertFalse($this->drupalGetHeader('X-Drupal-Cache'));
-    $this->assertIdentical(strpos($this->drupalGetHeader('Cache-Control'), 'public'), FALSE, 'No page cache response when requesting a cached page with basic auth credentials.');
+    $this->assertNull($this->drupalGetHeader('X-Drupal-Cache'));
+    // Check that Cache-Control is not set to public.
+    $this->assertSession()->responseHeaderNotContains('Cache-Control', 'public');
   }
 
   /**

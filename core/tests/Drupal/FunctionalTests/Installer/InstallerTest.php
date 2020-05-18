@@ -10,6 +10,11 @@ namespace Drupal\FunctionalTests\Installer;
 class InstallerTest extends InstallerTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Ensures that the user page is available after installation.
    */
   public function testInstaller() {
@@ -27,6 +32,13 @@ class InstallerTest extends InstallerTestBase {
     // Ensure that the timezone is correct for sites under test after installing
     // interactively.
     $this->assertEqual($this->config('system.date')->get('timezone.default'), 'Australia/Sydney');
+
+    // Ensure the profile has a weight of 1000.
+    $module_extension_list = \Drupal::service('extension.list.module');
+    $extensions = $module_extension_list->getList();
+
+    $this->assertArrayHasKey('testing', $extensions);
+    $this->assertEquals(1000, $extensions['testing']->weight);
   }
 
   /**
@@ -62,6 +74,13 @@ class InstallerTest extends InstallerTestBase {
   protected function setUpSettings() {
     // Assert that the expected title is present.
     $this->assertEqual('Database configuration', $this->cssSelect('main h2')[0]->getText());
+
+    // Assert that we use the by core supported database drivers by default and
+    // not the ones from the driver_test module.
+    $elements = $this->xpath('//label[@for="edit-driver-mysql"]');
+    $this->assertEqual(current($elements)->getText(), 'MySQL, MariaDB, Percona Server, or equivalent');
+    $elements = $this->xpath('//label[@for="edit-driver-pgsql"]');
+    $this->assertEqual(current($elements)->getText(), 'PostgreSQL');
 
     parent::setUpSettings();
   }
