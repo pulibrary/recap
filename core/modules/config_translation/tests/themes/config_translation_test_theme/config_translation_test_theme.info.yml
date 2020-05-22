@@ -4,7 +4,7 @@ description: 'Theme for testing the configuration translation mapper system'
 # version: VERSION
 core: 8.x
 
-# Information added by Drupal.org packaging script on 2020-03-18
-version: '8.7.12'
+# Information added by Drupal.org packaging script on 2020-05-20
+version: '8.7.14'
 project: 'drupal'
-datestamp: 1584552285
+datestamp: 1589988700
