@@ -112,7 +112,7 @@
 
 $options['uri'] = 'http://recap.lndo.site';
 ```
-1. `lando drush  uli your-username`
+1. `lando drush uli --name=your-username`
 
 ### NPM and Gulp
 
