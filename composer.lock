@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4f7e29a1236df8090892d68b6a2e69ae",
+    "content-hash": "e11c39fbc676af5c4e0d34b31a9a13b8",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2406,17 +2406,17 @@
         },
         {
             "name": "drupal/twitter_block",
-            "version": "2.1.0",
+            "version": "3.0.0-alpha0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/twitter_block.git",
-                "reference": "8.x-2.1"
+                "reference": "8.x-3.0-alpha0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/twitter_block-8.x-2.1.zip",
-                "reference": "8.x-2.1",
-                "shasum": "374eff45b257ca112177b38ef040fd2d920c5d16"
+                "url": "https://ftp.drupal.org/files/projects/twitter_block-8.x-3.0-alpha0.zip",
+                "reference": "8.x-3.0-alpha0",
+                "shasum": "f959bec1332f2bd45e813eefa3b982df4eb129bb"
             },
             "require": {
                 "drupal/core": "*"
@@ -2424,14 +2424,14 @@
             "type": "drupal-module",
             "extra": {
                 "branch-alias": {
-                    "dev-2.x": "2.x-dev"
+                    "dev-3.x": "3.x-dev"
                 },
                 "drupal": {
-                    "version": "8.x-2.1",
-                    "datestamp": "1463644739",
+                    "version": "8.x-3.0-alpha0",
+                    "datestamp": "1489574283",
                     "security-coverage": {
-                        "status": "covered",
-                        "message": "Covered by Drupal's security advisory policy"
+                        "status": "not-covered",
+                        "message": "Alpha releases are not covered by Drupal security advisories."
                     }
                 }
             },
