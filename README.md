@@ -52,47 +52,8 @@
 1. `cp $HOME/.ssh/id_rsa .ssh/.`
 1. `cp $HOME/.ssh/id_rsa.pub .ssh/.` // key should be registered in princeton_ansible deploy role
 1. `lando start`
-1. `cp drush/recap-example.aliases.drushrc.php drush/recap.aliases.drushrc.php`
-1. Adjust the config values in the  `drush/recap.aliases.drushrc.php` file to match the current remote drupal environment
-    ```
-    $aliases['prod'] = array (
-      'uri' => 'https://recap.princeton.edu',
-      'root' => '', // Add root
-      'remote-user' => 'deploy', // Add user
-      'remote-host' => 'app-server-name', // Add app server host name
-      'ssh-options' => '-o PasswordAuthentication=no -i .ssh/id_rsa',
-      'path-aliases' => array(
-        '%dump-dir' => '/tmp',
-      ),
-      'source-command-specific' => array (
-        'sql-sync' => array (
-          'no-cache' => TRUE,
-          'structure-tables-key' => 'common',
-        ),
-      ),
-      'command-specific' => array (
-        'sql-sync' => array (
-          'sanitize' => TRUE,
-          'no-ordered-dump' => TRUE,
-          'structure-tables' => array(
-            // You can add more tables which contain data to be ignored by the database dump
-            'common' => array('cache', 'cache_*', 'history', 'sessions', 'watchdog', 'cas_data_login', 'captcha_sessions'),
-          ),
-        ),
-      ),
-    );
-    ```
-1. Uncomment the alias block for the local lando site
-    ```
-    $aliases['local'] = array(
-      'root' => '/app', // Path to project on local machine
-      'uri'  => 'http://recap.lndo.site',
-      'path-aliases' => array(
-        '%dump-dir' => '/tmp',
-        '%files' => 'sites/default/files',
-      ),
-    );
-    ```
+1. `cp drush/sites/example.site.yml drush/sites/recap.site.yml`
+1. Uncomment the alias blocks and adjust the config values in the  `drush/sites/recap.site.yml` file to match the current remote and local drupal environments.
 1. `lando drush @recap.prod sql-dump --structure-tables-list='watchdog,sessions,cas_data_login,history,captcha_sessions,cache,cache_*' --result-file=/tmp/dump.sql; scp pulsys@recap-www-prod1:/tmp/dump.sql .`
 1. `lando db-import dump.sql`
 1. `lando drush rsync @recap.prod:%files @recap.local:%files`
@@ -100,17 +61,20 @@
     ```
     $settings['hash_salt'] = 'abc123';
     ```
-1. Copy the same has from above and add the value to the `$config_directories` array in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
+1. Copy the same hash from above and add the value to `$settings['config_sync_directory']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
     ```
+    // This was pre 8.8.x
     $config_directories = array(
       CONFIG_SYNC_DIRECTORY => 'sites/default/files/config_abc123',
     );
-    ```
-1. Create a `drush/drushrc.php` file with the following
-```
-<?php
 
-$options['uri'] = 'http://recap.lndo.site';
+    // This is the changed key after 8.8.x
+    $settings['config_sync_directory'] = 'sites/default/files/config_abc123'
+    ```
+1. Create a `drush/drush.yml` file with the following
+```
+options:
+  uri: 'http://recap.lndo.site'
 ```
 1. `lando drush uli --name=your-username`
 

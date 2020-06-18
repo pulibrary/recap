@@ -1,0 +1,34 @@
+# local:
+#   paths:
+#     dump-dir: /tmp
+#     files: sites/default/files
+#   root: /app
+#   uri: 'http://recap.lndo.site'
+
+# prod:
+#   host: # add value
+#   options:
+#     command-specific:
+#       sql-sync:
+#         sanitize: true
+#         no-ordered-dump: true
+#         structure-tables:
+#           common:
+#             - cache
+#             - cache_filter
+#             - cache_menu
+#             - cache_page
+#             - history
+#             - sessions
+#             - watchdog
+#     source-command-specific:
+#       sql-sync:
+#         no-cache: true
+#         structure-tables-key: common
+#   paths:
+#     dump-dir: /tmp
+#   root: # add value
+#   uri: 'https://recap.princeton.edu'
+#   user: # add value
+#   ssh:
+#     options: '-o PasswordAuthentication=no -i .ssh/id_rsa'
