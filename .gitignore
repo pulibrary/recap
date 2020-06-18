@@ -9,8 +9,7 @@
 
 # Ignore core and vendor when managing dependencies with Composer.
 # core
-vendor
-!/core/assets/vendor
+/vendor/
 
 # Ignore configuration files that may contain sensitive information.
 sites/*/settings*.php
@@ -26,7 +25,7 @@ sites/*/files
 sites/*/private
 
 # Ignore SimpleTest multi-site environment.
-sites/simpletest
+simpletest
 
 # Ignore node modules
 node_modules
