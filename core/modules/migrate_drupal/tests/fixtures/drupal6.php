@@ -8353,7 +8353,7 @@ $connection->insert('files')
   'fid' => '1',
   'uid' => '1',
   'filename' => 'Image1.png',
-  'filepath' => 'core/modules/simpletest/files/image-1.png',
+  'filepath' => 'core/tests/fixtures/files/image-1.png',
   'filemime' => 'image/png',
   'filesize' => '39325',
   'status' => '1',
@@ -8363,7 +8363,7 @@ $connection->insert('files')
   'fid' => '2',
   'uid' => '1',
   'filename' => 'Image2.jpg',
-  'filepath' => 'core/modules/simpletest/files/image-2.jpg',
+  'filepath' => 'core/tests/fixtures/files/image-2.jpg',
   'filemime' => 'image/jpeg',
   'filesize' => '1831',
   'status' => '1',
@@ -8373,7 +8373,7 @@ $connection->insert('files')
   'fid' => '3',
   'uid' => '1',
   'filename' => 'Image-test.gif',
-  'filepath' => 'core/modules/simpletest/files/image-test.gif',
+  'filepath' => 'core/tests/fixtures/files/image-test.gif',
   'filemime' => 'image/jpeg',
   'filesize' => '183',
   'status' => '1',
@@ -8383,7 +8383,7 @@ $connection->insert('files')
   'fid' => '5',
   'uid' => '1',
   'filename' => 'html-1.txt',
-  'filepath' => 'core/modules/simpletest/files/html-1.txt',
+  'filepath' => 'core/tests/fixtures/files/html-1.txt',
   'filemime' => 'text/plain',
   'filesize' => '24',
   'status' => '1',
@@ -33179,8 +33179,8 @@ $connection->insert('menu_links')
   'menu_name' => 'navigation',
   'mlid' => '411',
   'plid' => '0',
-  'link_path' => 'core/modules/simpletest/files/imagecache',
-  'router_path' => 'core/modules/simpletest/files/imagecache',
+  'link_path' => 'core/tests/fixtures/files/imagecache',
+  'router_path' => 'core/tests/fixtures/files/imagecache',
   'link_title' => '',
   'options' => 'a:0:{}',
   'module' => 'system',
@@ -42853,7 +42853,7 @@ $connection->insert('menu_router')
   'file' => 'sites/all/modules/cck/includes/content.node_form.inc',
 ))
 ->values(array(
-  'path' => 'core/modules/simpletest/files/imagecache',
+  'path' => 'core/tests/fixtures/files/imagecache',
   'load_functions' => '',
   'to_arg_functions' => '',
   'access_callback' => '_imagecache_menu_access_public_files',
@@ -42863,7 +42863,7 @@ $connection->insert('menu_router')
   'fit' => '31',
   'number_parts' => '5',
   'tab_parent' => '',
-  'tab_root' => 'core/modules/simpletest/files/imagecache',
+  'tab_root' => 'core/tests/fixtures/files/imagecache',
   'title' => '',
   'title_callback' => 't',
   'title_arguments' => '',
@@ -44473,10 +44473,10 @@ $connection->insert('node')
   'vid' => '1',
   'type' => 'story',
   'language' => '',
-  'title' => 'Test title',
+  'title' => 'Test title rev 3',
   'uid' => '1',
   'status' => '1',
-  'created' => '1388271197',
+  'created' => '1390095702',
   'changed' => '1420861423',
   'comment' => '0',
   'promote' => '0',
@@ -44507,7 +44507,7 @@ $connection->insert('node')
   'vid' => '4',
   'type' => 'test_planet',
   'language' => '',
-  'title' => 'Test planet title 3',
+  'title' => 'Test page title rev 4',
   'uid' => '1',
   'status' => '1',
   'created' => '1388271527',
@@ -44524,7 +44524,7 @@ $connection->insert('node')
   'vid' => '6',
   'type' => 'test_planet',
   'language' => '',
-  'title' => '',
+  'title' => 'Node 4',
   'uid' => '1',
   'status' => '1',
   'created' => '1388271527',
@@ -44541,7 +44541,7 @@ $connection->insert('node')
   'vid' => '7',
   'type' => 'test_planet',
   'language' => '',
-  'title' => '',
+  'title' => 'Node 5',
   'uid' => '1',
   'status' => '1',
   'created' => '1388271527',
@@ -44558,7 +44558,7 @@ $connection->insert('node')
   'vid' => '8',
   'type' => 'test_planet',
   'language' => '',
-  'title' => '',
+  'title' => 'Node 6',
   'uid' => '1',
   'status' => '1',
   'created' => '1388271527',
@@ -44575,7 +44575,7 @@ $connection->insert('node')
   'vid' => '9',
   'type' => 'test_planet',
   'language' => '',
-  'title' => '',
+  'title' => 'Node 7',
   'uid' => '1',
   'status' => '1',
   'created' => '1388271527',
@@ -44592,7 +44592,7 @@ $connection->insert('node')
   'vid' => '10',
   'type' => 'test_planet',
   'language' => '',
-  'title' => '',
+  'title' => 'Node 8',
   'uid' => '1',
   'status' => '1',
   'created' => '1388271527',
@@ -45288,7 +45288,7 @@ $connection->insert('node_revisions')
   'body' => 'test',
   'teaser' => 'test',
   'log' => '',
-  'timestamp' => '1420861423',
+  'timestamp' => '1390095702',
   'format' => '1',
 ))
 ->values(array(
@@ -45317,10 +45317,10 @@ $connection->insert('node_revisions')
   'nid' => '1',
   'vid' => '5',
   'uid' => '1',
-  'title' => 'Test title rev 3',
-  'body' => 'body test rev 3',
-  'teaser' => 'teaser test rev 3',
-  'log' => 'modified rev 3',
+  'title' => 'Test title rev 2',
+  'body' => 'body test rev 2',
+  'teaser' => 'teaser test rev 2',
+  'log' => 'modified rev 2',
   'timestamp' => '1390095703',
   'format' => '1',
 ))
@@ -45526,11 +45526,11 @@ $connection->insert('node_revisions')
   'nid' => '1',
   'vid' => '2001',
   'uid' => '2',
-  'title' => 'Test title rev 2',
-  'body' => 'body test rev 2',
-  'teaser' => 'teaser test rev 2',
-  'log' => 'modified rev 2',
-  'timestamp' => '1390095702',
+  'title' => 'Test title rev 3',
+  'body' => 'body test rev 3',
+  'teaser' => 'teaser test rev 3',
+  'log' => 'modified rev 3',
+  'timestamp' => '1420861423',
   'format' => '1',
 ))
 ->values(array(
@@ -48593,7 +48593,7 @@ $connection->insert('users')
   'status' => '1',
   'timezone' => '3600',
   'language' => 'fr',
-  'picture' => 'core/modules/simpletest/files/image-test.jpg',
+  'picture' => 'core/tests/fixtures/files/image-test.jpg',
   'init' => 'doe@example.com',
   'data' => 'a:2:{s:7:"contact";i:1;s:13:"form_build_id";s:48:"form-qu_DMjE-Vfg01arT5J4VbuBCkOgx_LeySJx4qrPOSuA";}',
   'timezone_name' => 'Europe/Berlin',
@@ -48618,7 +48618,7 @@ $connection->insert('users')
   'status' => '1',
   'timezone' => '7200',
   'language' => 'ro',
-  'picture' => 'core/modules/simpletest/files/image-test.png',
+  'picture' => 'core/tests/fixtures/files/image-test.png',
   'init' => 'roe@example.com',
   'data' => 'a:2:{s:7:"contact";i:0;s:13:"form_build_id";s:48:"form-1TxjbL2_1dEHIxEu2Db6OvEsSN1x9ILH1VCgnvsO6LE";}',
   'timezone_name' => 'Europe/Helsinki',
@@ -49575,7 +49575,7 @@ $connection->insert('variable')
 ))
 ->values(array(
   'name' => 'file_directory_path',
-  'value' => 's:29:"core/modules/simpletest/files";',
+  'value' => 's:25:"core/tests/fixtures/files";',
 ))
 ->values(array(
   'name' => 'file_directory_temp',
@@ -49670,19 +49670,11 @@ $connection->insert('variable')
   'value' => 'i:0;',
 ))
 ->values(array(
-  'name' => 'i18n_newnode_current_employee',
-  'value' => 'i:0;',
-))
-->values(array(
-  'name' => 'i18n_node_employee',
-  'value' => 's:1:"1";',
-))
-->values(array(
-  'name' => 'i18n_required_node_employee',
-  'value' => 'i:0;',
-))
-->values(array(
   'name' => 'i18n_lock_node_sponsor',
+  'value' => 'i:0;',
+))
+->values(array(
+  'name' => 'i18n_newnode_current_employee',
   'value' => 'i:0;',
 ))
 ->values(array(
@@ -49690,8 +49682,16 @@ $connection->insert('variable')
   'value' => 'i:0;',
 ))
 ->values(array(
+  'name' => 'i18n_node_employee',
+  'value' => 's:1:"1";',
+))
+->values(array(
   'name' => 'i18n_node_sponsor',
   'value' => 'i:1;',
+))
+->values(array(
+  'name' => 'i18n_required_node_employee',
+  'value' => 'i:0;',
 ))
 ->values(array(
   'name' => 'i18n_required_node_sponsor',

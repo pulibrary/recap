@@ -15,7 +15,17 @@ class SearchDateIntervalTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['language', 'search_date_query_alter', 'node', 'search'];
+  protected static $modules = [
+    'language',
+    'search_date_query_alter',
+    'node',
+    'search',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   protected function setUp() {
     parent::setUp();
@@ -56,7 +66,6 @@ class SearchDateIntervalTest extends BrowserTestBase {
     // Update the index.
     $plugin = $this->container->get('plugin.manager.search')->createInstance('node_search');
     $plugin->updateIndex();
-    search_update_totals();
   }
 
   /**

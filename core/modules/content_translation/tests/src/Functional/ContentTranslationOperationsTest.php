@@ -21,6 +21,11 @@ class ContentTranslationOperationsTest extends NodeTestBase {
   protected $baseUser1;
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * A base user.
    *
    * @var \Drupal\user\Entity\User|false
@@ -32,7 +37,13 @@ class ContentTranslationOperationsTest extends NodeTestBase {
    *
    * @var array
    */
-  public static $modules = ['language', 'content_translation', 'node', 'views', 'block'];
+  public static $modules = [
+    'language',
+    'content_translation',
+    'node',
+    'views',
+    'block',
+  ];
 
   /**
    * {@inheritdoc}
@@ -85,7 +96,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
     );
     $this->drupalLogin($this->baseUser1);
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertResponse(403);
+    $this->assertSession()->statusCodeEquals(403);
 
     // Ensure that the translation overview is also not accessible when the user
     // has 'access content', but the node is not published.
@@ -98,7 +109,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
     );
     $node->setUnpublished()->save();
     $this->drupalGet($node->toUrl('drupal:content-translation-overview'));
-    $this->assertResponse(403);
+    $this->assertSession()->statusCodeEquals(403);
     $this->drupalLogout();
 
     // Ensure the 'Translate' local task does not show up anymore when disabling
@@ -126,7 +137,7 @@ class ContentTranslationOperationsTest extends NodeTestBase {
    * @see content_translation_translate_access()
    */
   public function testContentTranslationOverviewAccess() {
-    $access_control_handler = \Drupal::entityManager()->getAccessControlHandler('node');
+    $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('node');
     $user = $this->createUser(['create content translations', 'access content']);
     $this->drupalLogin($user);
 

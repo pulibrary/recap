@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Config\Entity\ConfigEntityUpdater;
+use Drupal\Core\Entity\Display\EntityDisplayInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Site\Settings;
@@ -342,4 +343,24 @@ function _taxonomy_post_update_make_taxonomy_term_revisionable__fix_default_lang
   $sandbox['data_fix']['default_langcode']['finished'] = $finished;
 
   return $finished;
+}
+
+/**
+ * Add status with settings to all form displays for taxonomy entities.
+ */
+function taxonomy_post_update_configure_status_field_widget(&$sandbox = NULL) {
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'entity_form_display', function (EntityDisplayInterface $entity_form_display) {
+    // Only update taxonomy term entity form displays with no existing options
+    // for the status field.
+    if ($entity_form_display->getTargetEntityTypeId() == 'taxonomy_term' && empty($entity_form_display->getComponent('status'))) {
+      $entity_form_display->setComponent('status', [
+        'type' => 'boolean_checkbox',
+        'settings' => [
+          'display_label' => TRUE,
+        ],
+      ]);
+      return TRUE;
+    }
+    return FALSE;
+  });
 }

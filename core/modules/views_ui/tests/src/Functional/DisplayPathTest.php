@@ -28,6 +28,11 @@ class DisplayPathTest extends UITestBase {
   public static $modules = ['menu_ui'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Views used by this test.
    *
    * @var array
@@ -146,11 +151,11 @@ class DisplayPathTest extends UITestBase {
     $this->drupalGet('admin/structure/views/view/test_view');
 
     $this->drupalPostForm('admin/structure/views/nojs/display/test_view/page_1/menu', ['menu[type]' => 'default tab', 'menu[title]' => 'Test tab title'], t('Apply'));
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertUrl('admin/structure/views/nojs/display/test_view/page_1/tab_options');
 
     $this->drupalPostForm(NULL, ['tab_options[type]' => 'tab', 'tab_options[title]' => $this->randomString()], t('Apply'));
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertUrl('admin/structure/views/view/test_view/edit/page_1');
 
     $this->drupalGet('admin/structure/views/view/test_view');
@@ -160,7 +165,7 @@ class DisplayPathTest extends UITestBase {
 
     // Ensure that you can select a parent in case the parent does not exist.
     $this->drupalGet('admin/structure/views/nojs/display/test_page_display_menu/page_5/menu');
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
     $menu_parent = $this->xpath('//select[@id="edit-menu-parent"]');
     $menu_options = (array) $menu_parent[0]->findAll('css', 'option');
     unset($menu_options['@attributes']);
@@ -212,7 +217,7 @@ class DisplayPathTest extends UITestBase {
     ];
     $this->drupalPostForm('admin/structure/menu/manage/admin/add', $edit, t('Save'));
 
-    $menu_items = \Drupal::entityManager()->getStorage('menu_link_content')->getQuery()
+    $menu_items = \Drupal::entityTypeManager()->getStorage('menu_link_content')->getQuery()
       ->sort('id', 'DESC')
       ->pager(1)
       ->execute();
@@ -251,7 +256,7 @@ class DisplayPathTest extends UITestBase {
 
     $this->drupalPostForm(NULL, [], t('Save'));
     // Assert that saving the view will not cause an exception.
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
   }
 
 }
