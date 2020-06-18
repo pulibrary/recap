@@ -23,9 +23,9 @@ class BatchBuilderTest extends UnitTestCase {
   public function testDefaultValues() {
     $batch = (new BatchBuilder())->toArray();
 
-    $this->assertInternalType('array', $batch);
+    $this->assertIsArray($batch);
     $this->assertArrayHasKey('operations', $batch);
-    $this->assertInternalType('array', $batch['operations']);
+    $this->assertIsArray($batch['operations']);
     $this->assertEmpty($batch['operations'], 'Operations array is empty.');
     $this->assertEquals(new TranslatableMarkup('Processing'), $batch['title']);
     $this->assertEquals(new TranslatableMarkup('Initializing.'), $batch['init_message']);
@@ -34,10 +34,10 @@ class BatchBuilderTest extends UnitTestCase {
     $this->assertNull($batch['finished']);
     $this->assertNull($batch['file']);
     $this->assertArrayHasKey('library', $batch);
-    $this->assertInternalType('array', $batch['library']);
+    $this->assertIsArray($batch['library']);
     $this->assertEmpty($batch['library']);
     $this->assertArrayHasKey('url_options', $batch);
-    $this->assertInternalType('array', $batch['url_options']);
+    $this->assertIsArray($batch['url_options']);
     $this->assertEmpty($batch['url_options']);
     $this->assertArrayHasKey('progressive', $batch);
     $this->assertTrue($batch['progressive']);
@@ -176,7 +176,8 @@ class BatchBuilderTest extends UnitTestCase {
    */
   public function testQueueExists() {
     $batch_builder = (new BatchBuilder());
-    $this->setExpectedException(\InvalidArgumentException::class, 'Class \ThisIsNotAClass does not exist.');
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Class \ThisIsNotAClass does not exist.');
     $batch_builder->setQueue('BatchName', '\ThisIsNotAClass');
   }
 
@@ -187,7 +188,8 @@ class BatchBuilderTest extends UnitTestCase {
    */
   public function testQueueImplements() {
     $batch_builder = (new BatchBuilder());
-    $this->setExpectedException(\InvalidArgumentException::class, 'Class Exception does not implement \Drupal\Core\Queue\QueueInterface.');
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Class Exception does not implement \Drupal\Core\Queue\QueueInterface.');
     $batch_builder->setQueue('BatchName', \Exception::class);
   }
 

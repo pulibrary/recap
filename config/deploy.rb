@@ -8,10 +8,10 @@ set :keep_releases, 5
 
 set :deploy_to, "/var/www/recap_cap"
 
-set :drush_recap_aliases, "/home/deploy/drushrc.php"
+set :drush_recap_aliases, "/home/deploy/drush.yml"
+set :drush_recap_site, "/home/deploy/prod.site.yml"
 set :drupal_settings, "/home/deploy/settings.php"
 set :drupal_site, "default"
-set :drupal_file_temporary_path, "/var/www/recap_cap/shared/tmp"
 set :drupal_file_public_path, "sites/default/files"
 set :drupal_file_private_path, "sites/default/files/private"
 set :cas_cert_location, "/etc/ssl/certs/ssl-cert-snakeoil.pem"
@@ -64,6 +64,7 @@ namespace :drupal do
     on roles(:app) do |host|
       execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && ln -sf #{fetch(:drupal_settings)} settings.php"
       execute "cd #{release_path}/drush && ln -sf #{fetch(:drush_recap_aliases)} drushrc.php"
+      execute "cd #{release_path}/drush/sites && ln -sf #{fetch(:drush_recap_site)} drushrc.php"
       info "linked settings into #{release_path}/sites/#{fetch(:drupal_site)} site"
     end
   end
@@ -89,18 +90,20 @@ namespace :drupal do
   desc "Install Assets"
   task :install_assets do
     on roles(:app) do |host|
-      execute "cd #{release_path}/themes/custom/recap && npm install"
-      execute "cd #{release_path}/themes/custom/recap && gulp deploy"
-      info "Installed Assets"
+      # execute "cd #{release_path}/themes/custom/recap && npm install"
+      # execute "cd #{release_path}/themes/custom/recap && gulp deploy"
+      # info "Installed Assets"
     end
   end
 
   desc "Clear the drupal cache"
   task :cache_clear do
       on release_roles :drupal_primary do
-          execute "sudo -u www-data /usr/local/bin/drush -r #{release_path} cache-rebuild all"
-          info "cleared the drupal cache"
+        within release_path do
+            execute "sudo -u www-data #{release_path}/vendor/bin/drush cache-rebuild"
+            info "cleared the drupal cache"
         end
+      end
   end
 
   desc "Update file permissions to follow best security practice: https://drupal.org/node/244924"
@@ -109,14 +112,17 @@ namespace :drupal do
           execute :find, "#{release_path}", '-type f -exec', :chmod, "640 {} ';'"
           execute :find, "#{release_path}", '-type d -exec', :chmod, "2750 {} ';'"
           execute :find, "#{shared_path}/tmp", '-type d -exec', :chmod, "2770 {} ';'"
+          execute "chmod a+x #{release_path}/vendor/drush/drush/drush"
       end
   end
 
   desc "Set the site offline"
   task :site_offline do
       on release_roles :app do
-          execute "drush -r #{release_path} sset system.maintenance_mode 1; true"
-          execute "drush -r #{release_path} cr; true"
+          within release_path do
+              execute "sudo -u www-data #{release_path}/vendor/bin/drush sset system.maintenance_mode 1; true"
+              execute "sudo -u www-data #{release_path}/vendor/bin/drush cr; true"
+          end
           info "set site to offline"
       end
   end
@@ -124,16 +130,11 @@ namespace :drupal do
   desc "Set the site online"
   task :site_online do
       on release_roles :app do
-        execute "drush -r #{release_path} sset system.maintenance_mode 0"
-        execute "drush -r #{release_path} cr"
+        within release_path do
+          execute "sudo -u www-data #{release_path}/vendor/bin/drush sset system.maintenance_mode 0"
+          execute "sudo -u www-data #{release_path}/vendor/bin/drush cr; true"
+        end
         info "set site to online"
-      end
-  end
-
-  desc "Set file system variables"
-  task :set_file_system_variables do
-      on release_roles :app do
-          execute "drush -r #{release_path} config-set -y system.file path.temporary #{fetch(:drupal_file_temporary_path)}"
       end
   end
 
@@ -228,7 +229,9 @@ namespace :drupal do
       on release_roles :drupal_primary do
         upload! ENV["SQL_DIR"] + ENV["SQL_FILE"], '/tmp/'+ENV["SQL_FILE"]
         execute "/home/deploy/sql/set_permission.sh"
-        execute "drush -r #{release_path} sql-cli < /tmp/"+ENV["SQL_FILE"]
+        within release_path do
+            execute "sudo -u www-data #{release_path}/vendor/bin/drush sql-cli < /tmp/"+ENV["SQL_FILE"]
+        end
       end
     end
     
@@ -244,21 +247,27 @@ namespace :drupal do
     desc "Clear the solr index"
     task :clear_search_index do
         on release_roles :drupal_primary do
-            execute "sudo -u www-data /usr/local/bin/drush -r #{release_path} search-api-clear"
+            within release_path do
+               execute "sudo -u www-data #{release_path}/vendor/bin/drush search-api-clear"
+            end
         end
     end
 
     desc "Update the solr index"
     task :update_search_index do
         on release_roles :drupal_primary do
-            execute "sudo -u www-data /usr/local/bin/drush -r #{release_path} search-api-index"
+            within release_path do
+                execute "sudo -u www-data #{release_path}/vendor/bin/drush search-api-index"
+            end
         end
     end
 
     desc "Update the drupal database"
     task :update do
         on release_roles :drupal_primary do
-          execute "sudo -u www-data /usr/local/bin/drush -r #{release_path} updatedb -y"
+            within release_path do
+                execute "sudo -u www-data #{release_path}/vendor/bin/drush updatedb -y"
+            end
         end
     end
   end
@@ -280,7 +289,6 @@ namespace :deploy do
       end
       invoke "drupal:install_assets"
       invoke "drupal:set_permissions_for_runtime"
-      invoke "drupal:set_file_system_variables"
       invoke "drupal:update_directory_owner"
   end
 

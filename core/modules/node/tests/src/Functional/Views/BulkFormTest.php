@@ -22,6 +22,11 @@ class BulkFormTest extends NodeTestBase {
   public static $modules = ['node_test_views', 'language'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Views used by this test.
    *
    * @var array
@@ -83,13 +88,13 @@ class BulkFormTest extends NodeTestBase {
     // Check that all created translations are selected by the test view.
     $view = Views::getView('test_node_bulk_form');
     $view->execute();
-    $this->assertEqual(count($view->result), 10, 'All created translations are selected.');
+    $this->assertCount(10, $view->result, 'All created translations are selected.');
 
     // Check the operations are accessible to the logged in user.
     $this->drupalLogin($this->drupalCreateUser(['administer nodes', 'access content overview', 'bypass node access']));
     $this->drupalGet('test-node-bulk-form');
     $elements = $this->xpath('//select[@id="edit-action"]//option');
-    $this->assertIdentical(count($elements), 8, 'All node operations are found.');
+    $this->assertCount(8, $elements, 'All node operations are found.');
   }
 
   /**
@@ -271,7 +276,7 @@ class BulkFormTest extends NodeTestBase {
     $node = $this->loadNode(4);
     $this->assertNull($node, '4: Node has been deleted');
     $node = $this->loadNode(5);
-    $this->assertTrue($node, '5: Node has not been deleted');
+    $this->assertNotEmpty($node, '5: Node has not been deleted');
 
     $this->assertText('Deleted 8 content items.');
   }
@@ -287,7 +292,7 @@ class BulkFormTest extends NodeTestBase {
    */
   protected function loadNode($id) {
     /** @var \Drupal\node\NodeStorage $storage */
-    $storage = $this->container->get('entity.manager')->getStorage('node');
+    $storage = $this->container->get('entity_type.manager')->getStorage('node');
     $storage->resetCache([$id]);
     return $storage->load($id);
   }

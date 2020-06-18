@@ -20,6 +20,11 @@ class BlockCacheTest extends BrowserTestBase {
   public static $modules = ['block', 'block_test', 'test_page_test'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
    * A user with permission to create and edit books and to administer blocks.
    *
    * @var object
@@ -205,10 +210,10 @@ class BlockCacheTest extends BrowserTestBase {
     \Drupal::state()->set('block_test.content', $current_content);
 
     $this->drupalGet('user');
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertNoText($old_content, 'Block content cached for the test page does not show up for the user page.');
     $this->drupalGet('test-page');
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertText($old_content, 'Block content cached for the test page.');
   }
 

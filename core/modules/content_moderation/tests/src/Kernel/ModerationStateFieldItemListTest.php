@@ -101,7 +101,7 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
    */
   public function testGet() {
     $this->assertEquals('draft', $this->testNode->moderation_state->get(0)->value);
-    $this->setExpectedException(\InvalidArgumentException::class);
+    $this->expectException(\InvalidArgumentException::class);
     $this->testNode->moderation_state->get(2);
   }
 
@@ -337,9 +337,9 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
   }
 
   /**
-   * Test customising the default moderation state.
+   * Test customizing the default moderation state.
    */
-  public function testWorkflowCustomisedInitialState() {
+  public function testWorkflowCustomizedInitialState() {
     $workflow = Workflow::load('editorial');
     $configuration = $workflow->getTypePlugin()->getConfiguration();
 

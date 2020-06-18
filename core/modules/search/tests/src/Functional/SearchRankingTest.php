@@ -5,9 +5,11 @@ namespace Drupal\Tests\search\Functional;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\search\Entity\SearchPage;
+use Drupal\search\SearchIndexInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\CronRunTrait;
 
@@ -32,6 +34,11 @@ class SearchRankingTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected static $modules = ['node', 'search', 'statistics', 'comment'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   protected function setUp() {
     parent::setUp();
@@ -74,13 +81,16 @@ class SearchRankingTest extends BrowserTestBase {
             case 'promote':
               $settings[$node_rank] = 1;
               break;
+
             case 'relevance':
               $settings['body'][0]['value'] .= " really rocks";
               break;
+
             case 'recent':
               // Node is 1 hour hold.
               $settings['created'] = REQUEST_TIME - 3600;
               break;
+
             case 'comments':
               $settings['comment'][0]['status'] = CommentItemInterface::OPEN;
               break;
@@ -118,7 +128,7 @@ class SearchRankingTest extends BrowserTestBase {
 
     // Check that all rankings are visible and set to 0.
     foreach ($node_ranks as $node_rank) {
-      $this->assertTrue($this->xpath('//select[@id="edit-rankings-' . $node_rank . '-value"]//option[@value="0"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 0.');
+      $this->assertNotEmpty($this->xpath('//select[@id="edit-rankings-' . $node_rank . '-value"]//option[@value="0"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 0.');
     }
 
     // Test each of the possible rankings.
@@ -128,7 +138,7 @@ class SearchRankingTest extends BrowserTestBase {
       $edit['rankings[' . $node_rank . '][value]'] = 10;
       $this->drupalPostForm('admin/config/search/pages/manage/node_search', $edit, t('Save search page'));
       $this->drupalGet('admin/config/search/pages/manage/node_search');
-      $this->assertTrue($this->xpath('//select[@id="edit-rankings-' . $node_rank . '-value"]//option[@value="10"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 10.');
+      $this->assertNotEmpty($this->xpath('//select[@id="edit-rankings-' . $node_rank . '-value"]//option[@value="10"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 10.');
 
       // Reload the plugin to get the up-to-date values.
       $this->nodeSearch = SearchPage::load('node_search');
@@ -146,7 +156,7 @@ class SearchRankingTest extends BrowserTestBase {
     $this->drupalPostForm('admin/config/search/pages/manage/node_search', $edit, t('Save search page'));
     $this->drupalGet('admin/config/search/pages/manage/node_search');
     foreach ($node_ranks as $node_rank) {
-      $this->assertTrue($this->xpath('//select[@id="edit-rankings-' . $node_rank . '-value"]//option[@value="0"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 0.');
+      $this->assertNotEmpty($this->xpath('//select[@id="edit-rankings-' . $node_rank . '-value"]//option[@value="0"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 0.');
     }
 
     // Try with sticky, then promoted. This is a test for issue
@@ -224,11 +234,13 @@ class SearchRankingTest extends BrowserTestBase {
     foreach ($shuffled_tags as $tag) {
       switch ($tag) {
         case 'a':
-          $settings['body'] = [['value' => \Drupal::l('Drupal Rocks', new Url('<front>')), 'format' => 'full_html']];
+          $settings['body'] = [['value' => Link::fromTextAndUrl('Drupal Rocks', Url::fromRoute('<front>'))->toString(), 'format' => 'full_html']];
           break;
+
         case 'notag':
           $settings['body'] = [['value' => 'Drupal Rocks']];
           break;
+
         default:
           $settings['body'] = [['value' => "<$tag>Drupal Rocks</$tag>", 'format' => 'full_html']];
           break;
@@ -238,7 +250,8 @@ class SearchRankingTest extends BrowserTestBase {
 
     // Update the search index.
     $this->nodeSearch->getPlugin()->updateIndex();
-    search_update_totals();
+    $search_index = \Drupal::service('search.index');
+    assert($search_index instanceof SearchIndexInterface);
 
     $this->nodeSearch->getPlugin()->setSearch('rocks', [], []);
     // Do the search and assert the results.
@@ -263,7 +276,6 @@ class SearchRankingTest extends BrowserTestBase {
 
       // Update the search index.
       $this->nodeSearch->getPlugin()->updateIndex();
-      search_update_totals();
 
       $this->nodeSearch->getPlugin()->setSearch('rocks', [], []);
       // Do the search and assert the results.

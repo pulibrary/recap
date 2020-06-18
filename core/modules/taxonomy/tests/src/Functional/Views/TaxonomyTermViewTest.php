@@ -24,6 +24,11 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
   public static $modules = ['taxonomy', 'views'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * An user with permissions to administer taxonomy.
    *
    * @var \Drupal\user\UserInterface
@@ -59,12 +64,14 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
     ];
     $this->createEntityReferenceField('node', 'article', $this->fieldName1, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
-    entity_get_form_display('node', 'article', 'default')
+    /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
+    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository->getFormDisplay('node', 'article')
       ->setComponent($this->fieldName1, [
         'type' => 'options_select',
       ])
       ->save();
-    entity_get_display('node', 'article', 'default')
+    $display_repository->getViewDisplay('node', 'article')
       ->setComponent($this->fieldName1, [
         'type' => 'entity_reference_label',
       ])
@@ -100,8 +107,6 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
       ->grantPermission('create content translations')
       ->grantPermission('translate any entity')
       ->save();
-    drupal_static_reset();
-    \Drupal::service('router.builder')->rebuild();
 
     $edit['title[0][value]'] = $translated_title = $this->randomMachineName();
 
@@ -143,7 +148,7 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
     $condition = $query->conditions();
     // We only want to check the no. of conditions in the query.
     unset($condition['#conjunction']);
-    $this->assertEqual(1, count($condition));
+    $this->assertCount(1, $condition);
 
     // Clear permissions for anonymous users to check access for default views.
     Role::load(RoleInterface::ANONYMOUS_ID)->revokePermission('access content')->save();
@@ -151,9 +156,9 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
     // Test the default views disclose no data by default.
     $this->drupalLogout();
     $this->drupalGet('taxonomy/term/' . $term->id());
-    $this->assertResponse(403);
+    $this->assertSession()->statusCodeEquals(403);
     $this->drupalGet('taxonomy/term/' . $term->id() . '/feed');
-    $this->assertResponse(403);
+    $this->assertSession()->statusCodeEquals(403);
   }
 
 }

@@ -358,37 +358,7 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
    * {@inheritdoc}
    */
   public function onEntityTypeCreate(EntityTypeInterface $entity_type) {
-    // When installing an entity type, we have to use the live (in-code) entity
-    // type and field storage definitions.
-    $this->entityType = $entity_type;
-    $this->fieldStorageDefinitions = $this->entityFieldManager->getFieldStorageDefinitions($entity_type->id());
-
-    $this->checkEntityType($entity_type);
-    $schema_handler = $this->database->schema();
-
-    // Create entity tables.
-    $schema = $this->getEntitySchema($entity_type, TRUE);
-    foreach ($schema as $table_name => $table_schema) {
-      if (!$schema_handler->tableExists($table_name)) {
-        $schema_handler->createTable($table_name, $table_schema);
-      }
-    }
-
-    // Create dedicated field tables.
-    $table_mapping = $this->getTableMapping($this->entityType);
-    foreach ($this->fieldStorageDefinitions as $field_storage_definition) {
-      if ($table_mapping->requiresDedicatedTableStorage($field_storage_definition)) {
-        $this->createDedicatedTableSchema($field_storage_definition);
-      }
-      elseif ($table_mapping->allowsSharedTableStorage($field_storage_definition)) {
-        // The shared tables are already fully created, but we need to save the
-        // per-field schema definitions for later use.
-        $this->createSharedTableSchema($field_storage_definition, TRUE);
-      }
-    }
-
-    // Save data about entity indexes and keys.
-    $this->saveEntitySchemaData($entity_type, $schema);
+    $this->onFieldableEntityTypeCreate($entity_type, $this->entityFieldManager->getFieldStorageDefinitions($entity_type->id()));
   }
 
   /**
@@ -441,6 +411,43 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
 
     // Delete the entity schema.
     $this->deleteEntitySchemaData($entity_type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function onFieldableEntityTypeCreate(EntityTypeInterface $entity_type, array $field_storage_definitions) {
+    // When installing a fieldable entity type, we have to use the provided
+    // entity type and field storage definitions.
+    $this->entityType = $entity_type;
+    $this->fieldStorageDefinitions = $field_storage_definitions;
+
+    $this->checkEntityType($entity_type);
+    $schema_handler = $this->database->schema();
+
+    // Create entity tables.
+    $schema = $this->getEntitySchema($entity_type, TRUE);
+    foreach ($schema as $table_name => $table_schema) {
+      if (!$schema_handler->tableExists($table_name)) {
+        $schema_handler->createTable($table_name, $table_schema);
+      }
+    }
+
+    // Create dedicated field tables.
+    $table_mapping = $this->getTableMapping($this->entityType);
+    foreach ($this->fieldStorageDefinitions as $field_storage_definition) {
+      if ($table_mapping->requiresDedicatedTableStorage($field_storage_definition)) {
+        $this->createDedicatedTableSchema($field_storage_definition);
+      }
+      elseif ($table_mapping->allowsSharedTableStorage($field_storage_definition)) {
+        // The shared tables are already fully created, but we need to save the
+        // per-field schema definitions for later use.
+        $this->createSharedTableSchema($field_storage_definition, TRUE);
+      }
+    }
+
+    // Save data about entity indexes and keys.
+    $this->saveEntitySchemaData($entity_type, $schema);
   }
 
   /**
@@ -560,6 +567,12 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
       $this->entityType = $entity_type;
       $this->fieldStorageDefinitions = $field_storage_definitions;
       $this->saveEntitySchemaData($entity_type, $new_entity_schema);
+
+      // The storage needs to use the updated definitions and table mapping
+      // before generating and saving the final field schema data.
+      $this->storage->setEntityType($entity_type);
+      $this->storage->setFieldStorageDefinitions($field_storage_definitions);
+      $this->storage->setTableMapping($new_table_mapping);
 
       // Store the updated field schema for each field storage.
       foreach ($field_storage_definitions as $field_storage_definition) {
@@ -1439,31 +1452,31 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
   /**
    * Processes the gathered schema for a base table.
    *
-   * @param \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type
-   *   The entity type.
-   * @param array $schema
-   *   The table schema, passed by reference.
-   */
-  protected function processBaseTable(ContentEntityTypeInterface $entity_type, array &$schema) {
-    // Process the schema for the 'id' entity key only if it exists.
-    if ($entity_type->hasKey('id')) {
-      $this->processIdentifierSchema($schema, $entity_type->getKey('id'));
-    }
-  }
-
-  /**
-   * Processes the gathered schema for a base table.
+   * This function will be removed in Drupal 9.0.x.
    *
    * @param \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type
    *   The entity type.
    * @param array $schema
    *   The table schema, passed by reference.
+   *
+   * @see https://www.drupal.org/node/3111613
+   */
+  protected function processBaseTable(ContentEntityTypeInterface $entity_type, array &$schema) {
+  }
+
+  /**
+   * Processes the gathered schema for a base table.
+   *
+   * This function will be removed in Drupal 9.0.x.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type
+   *   The entity type.
+   * @param array $schema
+   *   The table schema, passed by reference.
+   *
+   * @see https://www.drupal.org/node/3111613
    */
   protected function processRevisionTable(ContentEntityTypeInterface $entity_type, array &$schema) {
-    // Process the schema for the 'revision' entity key only if it exists.
-    if ($entity_type->hasKey('revision')) {
-      $this->processIdentifierSchema($schema, $entity_type->getKey('revision'));
-    }
   }
 
   /**
@@ -2082,6 +2095,7 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
 
     $field_name = $storage_definition->getName();
     $base_table = $this->storage->getBaseTable();
+    $revision_table = $this->storage->getRevisionTable();
 
     // Define the initial values, if any.
     $initial_value = $initial_value_from_field = [];
@@ -2141,7 +2155,7 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
 
       // Use the initial value of the field storage, if available.
       if ($initial_value && isset($initial_value[$field_column_name])) {
-        $schema['fields'][$schema_field_name]['initial'] = drupal_schema_get_field_value($column_schema, $initial_value[$field_column_name]);
+        $schema['fields'][$schema_field_name]['initial'] = SqlContentEntityStorageSchema::castValue($column_schema, $initial_value[$field_column_name]);
       }
       if (!empty($initial_value_from_field)) {
         $schema['fields'][$schema_field_name]['initial_from_field'] = $initial_value_from_field[$field_column_name];
@@ -2158,6 +2172,13 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
 
     if (!empty($field_schema['foreign keys'])) {
       $schema['foreign keys'] = $this->getFieldForeignKeys($field_name, $field_schema, $column_mapping);
+    }
+
+    // Process the 'id' and 'revision' entity keys for the base and revision
+    // tables.
+    if (($table_name === $base_table && $field_name === $this->entityType->getKey('id')) ||
+      ($table_name === $revision_table && $field_name === $this->entityType->getKey('revision'))) {
+      $this->processIdentifierSchema($schema, $field_name);
     }
 
     return $schema;
@@ -2546,6 +2567,42 @@ class SqlContentEntityStorageSchema implements DynamicallyFieldableEntityStorage
     $schema_handler = $this->database->schema();
     $schema_handler->dropUniqueKey($table, $name);
     $schema_handler->addUniqueKey($table, $name, $specifier);
+  }
+
+  /**
+   * Typecasts values to proper datatypes.
+   *
+   * MySQL PDO silently casts, e.g. FALSE and '' to 0, when inserting the value
+   * into an integer column, but PostgreSQL PDO does not. Use the schema
+   * information to correctly typecast the value.
+   *
+   * @param array $info
+   *   An array describing the schema field info. See hook_schema() and
+   *   https://www.drupal.org/node/146843 for details.
+   * @param mixed $value
+   *   The value to be converted.
+   *
+   * @return mixed
+   *   The converted value.
+   *
+   * @internal
+   *
+   * @see hook_schema()
+   * @see https://www.drupal.org/node/146843
+   */
+  public static function castValue(array $info, $value) {
+    // Preserve legal NULL values.
+    if (isset($value) || !empty($info['not null'])) {
+      if ($info['type'] === 'int' || $info['type'] === 'serial') {
+        return (int) $value;
+      }
+      elseif ($info['type'] === 'float') {
+        return (float) $value;
+      }
+      return (string) $value;
+    }
+
+    return $value;
   }
 
 }

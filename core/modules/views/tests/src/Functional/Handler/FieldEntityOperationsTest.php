@@ -28,6 +28,11 @@ class FieldEntityOperationsTest extends ViewTestBase {
    */
   public static $modules = ['node', 'language', 'views_ui'];
 
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
   protected function setUp($import_test_views = TRUE) {
     parent::setUp($import_test_views);
 
@@ -69,7 +74,7 @@ class FieldEntityOperationsTest extends ViewTestBase {
       /** @var \Drupal\Core\Language\LanguageInterface $language */
       foreach ($entity->getTranslationLanguages() as $language) {
         $entity = $entity->getTranslation($language->getId());
-        $operations = \Drupal::entityManager()->getListBuilder('node')->getOperations($entity);
+        $operations = \Drupal::service('entity_type.manager')->getListBuilder('node')->getOperations($entity);
         $this->assertTrue(count($operations) > 0, 'There are operations.');
         foreach ($operations as $operation) {
           $expected_destination = Url::fromUri('internal:/test-entity-operations')->toString();
@@ -77,7 +82,7 @@ class FieldEntityOperationsTest extends ViewTestBase {
           // test would by default point to the frontpage.
           $operation['url']->setOption('query', ['destination' => $expected_destination]);
           $result = $this->xpath('//ul[contains(@class, dropbutton)]/li/a[@href=:path and text()=:title]', [':path' => $operation['url']->toString(), ':title' => (string) $operation['title']]);
-          $this->assertEqual(count($result), 1, t('Found entity @operation link with destination parameter.', ['@operation' => $operation['title']]));
+          $this->assertCount(1, $result, t('Found entity @operation link with destination parameter.', ['@operation' => $operation['title']]));
           // Entities which were created in Hungarian should link to the Hungarian
           // edit form, others to the English one (which has no path prefix here).
           $base_path = \Drupal::request()->getBasePath();

@@ -17,6 +17,11 @@ class NodeCommentsTest extends CommentTestBase {
   public static $modules = ['history'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Views used by this test.
    *
    * @var array
@@ -28,9 +33,9 @@ class NodeCommentsTest extends CommentTestBase {
    */
   public function testNewComments() {
     $this->drupalGet('test-new-comments');
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
     $new_comments = $this->cssSelect(".views-field-new-comments a:contains('1')");
-    $this->assertEqual(count($new_comments), 1, 'Found the number of new comments for a certain node.');
+    $this->assertCount(1, $new_comments, 'Found the number of new comments for a certain node.');
   }
 
 }

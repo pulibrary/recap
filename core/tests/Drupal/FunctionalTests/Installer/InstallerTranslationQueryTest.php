@@ -12,6 +12,11 @@ namespace Drupal\FunctionalTests\Installer;
 class InstallerTranslationQueryTest extends InstallerTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Overrides the language code in which to install Drupal.
    *
    * @var string
@@ -54,7 +59,7 @@ class InstallerTranslationQueryTest extends InstallerTestBase {
    */
   public function testInstaller() {
     $this->assertUrl('user/1');
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
 
     // Verify German was configured but not English.
     $this->drupalGet('admin/config/regional/language');

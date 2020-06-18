@@ -3,7 +3,7 @@
     attach: function(context, settings) {
       // Cache the elements we'll need
       var menu = $("#block-pinwheel-main-menu", context);
-      console.log(menu);
+      // console.log(menu);
       var menuItems = menu.find("ul:first > li");
 
       // Toggle menu visibility

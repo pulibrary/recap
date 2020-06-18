@@ -20,6 +20,11 @@ class EntityAddUITest extends BrowserTestBase {
   public static $modules = ['entity_test'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Tests the add page for an entity type using bundle entities.
    */
   public function testAddPageWithBundleEntities() {
@@ -31,7 +36,7 @@ class EntityAddUITest extends BrowserTestBase {
     // Users without create access for bundles do not have access to the add
     // page if there are no bundles.
     $this->drupalGet('/entity_test_with_bundle/add');
-    $this->assertResponse(403);
+    $this->assertSession()->statusCodeEquals(403);
 
     $bundle_admin_user = $this->drupalCreateUser([
       'administer entity_test_with_bundle content',
@@ -92,12 +97,12 @@ class EntityAddUITest extends BrowserTestBase {
     $this->assertLink('Test2 label');
     $this->assertNoLink('Test3 label');
     $this->clickLink(t('Test label'));
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
 
     // Without any permissions, access must be denied.
     $this->drupalLogout();
     $this->drupalGet('/entity_test_with_bundle/add');
-    $this->assertResponse(403);
+    $this->assertSession()->statusCodeEquals(403);
 
     // Create a new user that has bundle create permissions.
     $user = $this->drupalCreateUser([

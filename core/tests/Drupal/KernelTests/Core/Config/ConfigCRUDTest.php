@@ -184,7 +184,7 @@ class ConfigCRUDTest extends KernelTestBase {
     // previously accessed with get()
     $new_config = $config_factory->get('non_existing_key');
     $this->assertTrue($new_config->isNew());
-    $this->assertEqual(0, count($config_factory->loadMultiple(['non_existing_key'])), 'loadMultiple() does not return new objects');
+    $this->assertCount(0, $config_factory->loadMultiple(['non_existing_key']), 'loadMultiple() does not return new objects');
   }
 
   /**
@@ -225,7 +225,7 @@ class ConfigCRUDTest extends KernelTestBase {
         unset($test_characters[$i]);
       }
     }
-    $this->assertTrue(empty($test_characters), format_string('Expected ConfigNameException was thrown for all invalid name characters: @characters', [
+    $this->assertTrue(empty($test_characters), new FormattableMarkup('Expected ConfigNameException was thrown for all invalid name characters: @characters', [
       '@characters' => implode(' ', $characters),
     ]));
 

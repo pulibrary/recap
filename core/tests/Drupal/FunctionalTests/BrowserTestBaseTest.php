@@ -8,6 +8,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\Traits\Core\CronRunTrait;
+use PHPUnit\Framework\ExpectationFailedException;
 
 /**
  * Tests BrowserTestBase functionality.
@@ -23,7 +24,17 @@ class BrowserTestBaseTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['test_page_test', 'form_test', 'system_test', 'node'];
+  public static $modules = [
+    'test_page_test',
+    'form_test',
+    'system_test',
+    'node',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'classy';
 
   /**
    * Tests basic page test.
@@ -41,8 +52,8 @@ class BrowserTestBaseTest extends BrowserTestBase {
 
     // Check that returned plain text is correct.
     $text = $this->getTextContent();
-    $this->assertContains('Test page text.', $text);
-    $this->assertNotContains('</html>', $text);
+    $this->assertStringContainsString('Test page text.', $text);
+    $this->assertStringNotContainsString('</html>', $text);
 
     // Response includes cache tags that we can assert.
     $this->assertSession()->responseHeaderEquals('X-Drupal-Cache-Tags', 'http_response rendered');
@@ -140,7 +151,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
 
     // Test drupalPostForm() with no-html response.
     $values = Json::decode($this->drupalPostForm('form_test/form-state-values-clean', [], t('Submit')));
-    $this->assertTrue(1000, $values['beer']);
+    $this->assertSame(1000, $values['beer']);
 
     // Test drupalPostForm() with form by HTML id.
     $this->drupalCreateContentType(['type' => 'page']);
@@ -158,17 +169,18 @@ class BrowserTestBaseTest extends BrowserTestBase {
   public function testClickLink() {
     $this->drupalGet('test-page');
     $this->clickLink('Visually identical test links');
-    $this->assertContains('user/login', $this->getSession()->getCurrentUrl());
+    $this->assertStringContainsString('user/login', $this->getSession()->getCurrentUrl());
     $this->drupalGet('test-page');
     $this->clickLink('Visually identical test links', 0);
-    $this->assertContains('user/login', $this->getSession()->getCurrentUrl());
+    $this->assertStringContainsString('user/login', $this->getSession()->getCurrentUrl());
     $this->drupalGet('test-page');
     $this->clickLink('Visually identical test links', 1);
-    $this->assertContains('user/register', $this->getSession()->getCurrentUrl());
+    $this->assertStringContainsString('user/register', $this->getSession()->getCurrentUrl());
   }
 
   public function testError() {
-    $this->setExpectedException('\Exception', 'User notice: foo');
+    $this->expectException('\Exception');
+    $this->expectExceptionMessage('User notice: foo');
     $this->drupalGet('test-error');
   }
 
@@ -199,7 +211,8 @@ class BrowserTestBaseTest extends BrowserTestBase {
    */
   public function testInvalidLinkExistsExact() {
     $this->drupalGet('test-pipe-char');
-    $this->setExpectedException(ExpectationException::class, 'Link with label foo|bar found');
+    $this->expectException(ExpectationException::class);
+    $this->expectExceptionMessage('Link with label foo|bar found');
     $this->assertSession()->linkExistsExact('foo|bar');
   }
 
@@ -220,7 +233,8 @@ class BrowserTestBaseTest extends BrowserTestBase {
    */
   public function testInvalidLinkNotExistsExact() {
     $this->drupalGet('test-pipe-char');
-    $this->setExpectedException(ExpectationException::class, 'Link with label foo|bar|baz not found');
+    $this->expectException(ExpectationException::class);
+    $this->expectExceptionMessage('Link with label foo|bar|baz not found');
     $this->assertSession()->linkNotExistsExact('foo|bar|baz');
   }
 
@@ -233,9 +247,17 @@ class BrowserTestBaseTest extends BrowserTestBase {
     $sanitized = Html::escape($dangerous);
     $this->assertNoText($dangerous);
     $this->assertText($sanitized);
+  }
 
-    // Test getRawContent().
-    $this->assertSame($this->getSession()->getPage()->getContent(), $this->getSession()->getPage()->getContent());
+  /**
+   * Tests legacy getRawContent().
+   *
+   * @group legacy
+   * @expectedDeprecation AssertLegacyTrait::getRawContent() is deprecated in drupal:8.2.0 and is removed from drupal:10.0.0. Use $this->getSession()->getPage()->getContent() instead. See https://www.drupal.org/node/3129738
+   */
+  public function testGetRawContent() {
+    $this->drupalGet('test-encoded');
+    $this->assertSame($this->getSession()->getPage()->getContent(), $this->getRawContent());
   }
 
   /**
@@ -260,7 +282,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertFieldByXPath("//input[@id = 'notexisting']");
       $this->fail('The "notexisting" field was found.');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass('assertFieldByXPath correctly failed. The "notexisting" field was not found.');
     }
 
@@ -276,7 +298,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertFieldsByValue($this->xpath("//input[@id = 'edit-name']"), 'not the value');
       $this->fail('The "edit-name" field is found with the value "not the value".');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass('The "edit-name" field is not found with the value "not the value".');
     }
   }
@@ -317,7 +339,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertField('invalid_name_and_id');
       $this->fail('The "invalid_name_and_id" field was found.');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass('assertField correctly failed. The "invalid_name_and_id" field was not found.');
     }
 
@@ -356,7 +378,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertFieldById('edit-name');
       $this->fail('The "edit-name" field with no value was found.');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass('The "edit-name" field with no value was not found.');
     }
 
@@ -365,7 +387,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertFieldById('edit-name', 'not the value');
       $this->fail('The "name" field was found, using the wrong value.');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass('The "name" field was not found, using the wrong value.');
     }
 
@@ -406,7 +428,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertFieldByName('non-existing-name');
       $this->fail('The "non-existing-name" field was found.');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass('The "non-existing-name" field was not found');
     }
 
@@ -415,7 +437,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertFieldByName('name', 'not the value');
       $this->fail('The "name" field with incorrect value was found.');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass('assertFieldByName correctly failed. The "name" field with incorrect value was not found.');
     }
 
@@ -470,7 +492,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertOptionSelected('options', 1);
       $this->fail('The select option "1" was selected.');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass($e->getMessage());
     }
 
@@ -489,7 +511,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
       $this->assertFieldById('Save', NULL);
       $this->fail('The field with id of "Save" was found.');
     }
-    catch (\PHPUnit_Framework_ExpectationFailedException $e) {
+    catch (ExpectationFailedException $e) {
       $this->pass($e->getMessage());
     }
 
@@ -634,7 +656,7 @@ class BrowserTestBaseTest extends BrowserTestBase {
    */
   public function testInstall() {
     $htaccess_filename = $this->tempFilesDirectory . '/.htaccess';
-    $this->assertTrue(file_exists($htaccess_filename), "$htaccess_filename exists");
+    $this->assertFileExists($htaccess_filename);
   }
 
   /**
@@ -685,7 +707,8 @@ class BrowserTestBaseTest extends BrowserTestBase {
    * Ensures we can't access modules we shouldn't be able to after install.
    */
   public function testProfileModules() {
-    $this->setExpectedException(\InvalidArgumentException::class, 'The module demo_umami_content does not exist.');
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('The module demo_umami_content does not exist.');
     $this->assertFileExists('core/profiles/demo_umami/modules/demo_umami_content/demo_umami_content.info.yml');
     \Drupal::service('extension.list.module')->getPathname('demo_umami_content');
   }
@@ -731,6 +754,39 @@ class BrowserTestBaseTest extends BrowserTestBase {
     $assert->responseContains('<div class="unescaped">');
     $assert->responseContains("<script>alert('Marked safe');alert(\"Marked safe\");</script>");
     $assert->assertNoEscaped("<script>alert('Marked safe');alert(\"Marked safe\");</script>");
+  }
+
+  /**
+   * Tests that deprecation headers do not get duplicated.
+   *
+   * @group legacy
+   *
+   * @see \Drupal\Core\Test\HttpClientMiddleware\TestHttpClientMiddleware::__invoke()
+   */
+  public function testDeprecationHeaders() {
+    $this->drupalGet('/test-deprecations');
+
+    $deprecation_messages = [];
+    foreach ($this->getSession()->getResponseHeaders() as $name => $values) {
+      if (preg_match('/^X-Drupal-Assertion-[0-9]+$/', $name, $matches)) {
+        foreach ($values as $value) {
+          // Call \Drupal\simpletest\WebTestBase::error() with the parameters from
+          // the header.
+          $parameters = unserialize(urldecode($value));
+          if (count($parameters) === 3) {
+            if ($parameters[1] === 'User deprecated function') {
+              $deprecation_messages[] = (string) $parameters[0];
+            }
+          }
+        }
+      }
+    }
+
+    $this->assertContains('Test deprecation message', $deprecation_messages);
+    $test_deprecation_messages = array_filter($deprecation_messages, function ($message) {
+      return $message === 'Test deprecation message';
+    });
+    $this->assertCount(1, $test_deprecation_messages);
   }
 
 }

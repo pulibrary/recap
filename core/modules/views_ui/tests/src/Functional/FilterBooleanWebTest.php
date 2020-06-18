@@ -18,6 +18,11 @@ class FilterBooleanWebTest extends UITestBase {
   public static $testViews = ['test_view'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Tests the filter boolean UI.
    */
   public function testFilterBooleanUI() {
@@ -53,7 +58,7 @@ class FilterBooleanWebTest extends UITestBase {
     $this->assertEqual($result[1]->getAttribute('checked'), 'checked');
 
     // Test that there is a remove link for each group.
-    $this->assertEqual(count($this->cssSelect('a.views-remove-link')), 3);
+    $this->assertCount(3, $this->cssSelect('a.views-remove-link'));
 
     // Test selecting a default and removing an item.
     $edit = [];

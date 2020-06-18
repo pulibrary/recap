@@ -17,6 +17,11 @@ class FeedParserTest extends AggregatorTestBase {
   /**
    * {@inheritdoc}
    */
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
     // Do not delete old aggregator items during these tests, since our sample
@@ -32,7 +37,7 @@ class FeedParserTest extends AggregatorTestBase {
     $feed = $this->createFeed($this->getRSS091Sample());
     $feed->refreshItems();
     $this->drupalGet('aggregator/sources/' . $feed->id());
-    $this->assertResponse(200, format_string('Feed %name exists.', ['%name' => $feed->label()]));
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertText('First example feed item title');
     $this->assertLinkByHref('http://example.com/example-turns-one');
     $this->assertText('First example feed item description.');
@@ -55,7 +60,7 @@ class FeedParserTest extends AggregatorTestBase {
     $feed = $this->createFeed($this->getAtomSample());
     $feed->refreshItems();
     $this->drupalGet('aggregator/sources/' . $feed->id());
-    $this->assertResponse(200, format_string('Feed %name exists.', ['%name' => $feed->label()]));
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertText('Atom-Powered Robots Run Amok');
     $this->assertLinkByHref('http://example.org/2003/12/13/atom03');
     $this->assertText('Some text.');
@@ -79,7 +84,7 @@ class FeedParserTest extends AggregatorTestBase {
     $feed = $this->createFeed($this->getHtmlEntitiesSample());
     $feed->refreshItems();
     $this->drupalGet('aggregator/sources/' . $feed->id());
-    $this->assertResponse(200, format_string('Feed %name exists.', ['%name' => $feed->label()]));
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertRaw("Quote&quot; Amp&amp;");
   }
 

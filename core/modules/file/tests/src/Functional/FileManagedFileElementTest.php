@@ -14,6 +14,11 @@ use Drupal\file\Entity\File;
 class FileManagedFileElementTest extends FileFieldTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Tests the managed_file element type.
    */
   public function testManagedFile() {
@@ -45,7 +50,7 @@ class FileManagedFileElementTest extends FileFieldTestBase {
             $file_field_name => \Drupal::service('file_system')->realpath($test_file->getFileUri()),
           ];
           $this->drupalPostForm(NULL, $edit, t('Save'));
-          $this->assertText('The form has become outdated. Copy any unsaved work in the form below');
+          $this->assertText('The form has become outdated.');
           $last_fid = $this->getLastFileId();
           $this->assertEqual($last_fid_prior, $last_fid, 'File was not saved when uploaded with an invalid form token.');
 
@@ -144,7 +149,7 @@ class FileManagedFileElementTest extends FileFieldTestBase {
     $this->drupalPostForm(NULL, $edit, t('Upload'));
 
     $fid = $this->getLastFileId();
-    $file = \Drupal::entityManager()->getStorage('file')->load($fid);
+    $file = \Drupal::entityTypeManager()->getStorage('file')->load($fid);
     $file->delete();
 
     $this->drupalPostForm(NULL, $edit, t('Upload'));
