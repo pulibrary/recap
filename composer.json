@@ -40,9 +40,13 @@
     "extra": {
         "drupal-scaffold": {
             "locations": {
-                "web-root": "./"
+              "web-root": "./"
+            },
+            "file-mapping": {
+              "[web-root]/sites/default/default.services.yml": false,
+              "[web-root]/sites/default/default.settings.php": false
             }
-        },
+          },
         "installer-paths": {
             "core": ["type:drupal-core"],
             "libraries/{$name}": ["type:drupal-library"],
