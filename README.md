@@ -47,6 +47,8 @@
     $settings['trusted_host_patterns'] = [
       '^recap.lndo.site$',
     ];
+
+    $settings['install_profile'] = 'standard';
     ```
 1. `mkdir .ssh` # excluded from version control
 1. `cp $HOME/.ssh/id_rsa .ssh/.`
