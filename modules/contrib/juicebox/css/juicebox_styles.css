@@ -1,0 +1,9 @@
+/* Make a best effort to add embedded gallery below navigation elements. This
+may not work for all themes */
+.juicebox-parent {
+  z-index: 0;
+}
+/* Ensure contextual links appear above Juicebox elements */
+.juicebox-parent .contextual {
+  z-index: 5000;
+}

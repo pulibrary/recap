@@ -193,7 +193,7 @@ display:
           plugin_id: field
       filters:
         status:
-          value: true
+          value: '1'
           table: node_field_data
           field: status
           plugin_id: boolean
@@ -237,10 +237,14 @@ display:
       display_extenders: {  }
     cache_metadata:
       contexts:
-        0: node_view_grants
-        1: user
-        3: language
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - 'user.node_grants:view'
+        - user.permissions
       cacheable: false
+      max-age: -1
+      tags:
+        - 'config:field.storage.node.field_image'
   page_1:
     display_plugin: page
     id: page_1
@@ -251,7 +255,11 @@ display:
       path: juicebox_test_row_formatter
     cache_metadata:
       contexts:
-        0: node_view_grants
-        1: user
-        3: language
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - 'user.node_grants:view'
+        - user.permissions
       cacheable: false
+      max-age: -1
+      tags:
+        - 'config:field.storage.node.field_image'

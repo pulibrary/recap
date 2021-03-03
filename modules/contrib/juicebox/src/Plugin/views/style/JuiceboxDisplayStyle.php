@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\juicebox\Plugin\Field\FieldFormatter\JuiceboxFormatter.
- */
-
 namespace Drupal\juicebox\Plugin\views\style;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -94,7 +89,6 @@ class JuiceboxDisplayStyle extends StylePluginBase {
    */
   protected $usesOptions = TRUE;
 
-
   /**
    * Factory to fetch required dependencies from container.
    */
@@ -106,20 +100,7 @@ class JuiceboxDisplayStyle extends StylePluginBase {
   }
 
   /**
-   * Constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   A Drupal entity type manager service.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   A Drupal entity field manager service.
-   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
-   *   A link generator service.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $translation
-   *   A string translation service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The Symfony request stack from which to extract the current request.
-   * @param \Drupal\juicebox\JuiceboxFormatterInterface
-   *   A Juicebox formatter service.
+   * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, LinkGeneratorInterface $link_generator, TranslationInterface $translation, RequestStack $request_stack, JuiceboxFormatterInterface $juicebox) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
@@ -139,19 +120,23 @@ class JuiceboxDisplayStyle extends StylePluginBase {
     $base_settings = $this->juicebox->confBaseOptions();
     // Structure the base settings in the "default" format that views wants.
     foreach ($base_settings as $setting => $value) {
-      $base_settings_default[$setting] = array('default' => $value);
+      $base_settings_default[$setting] = ['default' => $value];
     }
-    $options = array_merge($base_settings_default, array(
-      'image_field' => array('default' => ''),
+    $options = array_merge($base_settings_default, [
+      'image_field' => ['default' => ''],
       // If the library supports multi-size we can default to that for the main
       // image, otherwise use the "medium" style.
-      'image_field_style' => array('default' => (!empty($library['version']) && !in_array('juicebox_multisize_image_style', $library['disallowed_conf'])) ? 'juicebox_multisize' : 'juicebox_medium'),
-      'thumb_field' => array('default' => ''),
-      'thumb_field_style' => array('default' => 'juicebox_square_thumb'),
-      'title_field' => array('default' => ''),
-      'caption_field' => array('default' => ''),
-      'show_title' => array('default' => 0),
-    ));
+      'image_field_style' => [
+        'default' => (!empty($library['version']) &&
+      !in_array('juicebox_multisize_image_style', $library['disallowed_conf']))
+        ? 'juicebox_multisize' : 'juicebox_medium',
+      ],
+      'thumb_field' => ['default' => ''],
+      'thumb_field_style' => ['default' => 'juicebox_square_thumb'],
+      'title_field' => ['default' => ''],
+      'caption_field' => ['default' => ''],
+      'show_title' => ['default' => 0],
+    ]);
     return $options;
   }
 
@@ -165,73 +150,73 @@ class JuiceboxDisplayStyle extends StylePluginBase {
     $options = $this->confGetFieldSources();
     $missing_field_warning = '';
     if (empty($options['field_options_images'])) {
-      $missing_field_warning = t('<strong>You must add a field of type image, file or file ID to your view display before this value can be set.</strong><br/>');
+      $missing_field_warning = $this->t('<strong>You must add a field of type image, file or file ID to your view display before this value can be set.</strong><br/>');
     }
     // Add the view-specific elements.
-    $form['image_field'] = array(
+    $form['image_field'] = [
       '#type' => 'select',
-      '#title' => t('Image Source'),
+      '#title' => $this->t('Image Source'),
       '#default_value' => $settings['image_field'],
-      '#description' => t('The field source to use for each image in the gallery. Must be an image field, file field or a file ID. If using a multivalued field (*) only the <em>first</em> value from each entity will be used.'),
+      '#description' => $this->t('The field source to use for each image in the gallery. Must be an image field, file field or a file ID. If using a multivalued field (*) only the <em>first</em> value from each entity will be used.'),
       '#suffix' => $missing_field_warning,
       '#options' => $options['field_options_images'],
-      '#empty_option' => t('- Select -'),
-    );
-    $form['thumb_field'] = array(
+      '#empty_option' => $this->t('- Select -'),
+    ];
+    $form['thumb_field'] = [
       '#type' => 'select',
-      '#title' => t('Thumbnail Source'),
+      '#title' => $this->t('Thumbnail Source'),
       '#default_value' => $settings['thumb_field'],
-      '#description' => t('The field source to use for each thumbnail in the gallery. Must be an image field, file field or a file ID. Typically you will choose the same value that was set in the "Image Source" option above.'),
+      '#description' => $this->t('The field source to use for each thumbnail in the gallery. Must be an image field, file field or a file ID. Typically you will choose the same value that was set in the "Image Source" option above.'),
       '#suffix' => $missing_field_warning,
       '#options' => $options['field_options_images'],
-      '#empty_option' => t('- Select -'),
-    );
-    $form['image_field_style'] = array(
+      '#empty_option' => $this->t('- Select -'),
+    ];
+    $form['image_field_style'] = [
       '#type' => 'select',
-      '#title' => t('Image Field Style'),
+      '#title' => $this->t('Image Field Style'),
       '#default_value' => $settings['image_field_style'],
-      '#description' => t('The style formatter for the image. Any formatting settings configured on the field itself will be ignored and this style setting will always be used.'),
+      '#description' => $this->t('The style formatter for the image. Any formatting settings configured on the field itself will be ignored and this style setting will always be used.'),
       '#options' => $this->juicebox->confBaseStylePresets(),
-      '#empty_option' => t('None (original image)'),
-    );
-    $form['thumb_field_style'] = array(
+      '#empty_option' => $this->t('None (original image)'),
+    ];
+    $form['thumb_field_style'] = [
       '#type' => 'select',
-      '#title' => t('Thumbnail Field Style'),
+      '#title' => $this->t('Thumbnail Field Style'),
       '#default_value' => $settings['thumb_field_style'],
-      '#description' => t('The style formatter for the thumbnail. Any formatting settings configured on the field itself will be ignored and this style setting will always be used.'),
+      '#description' => $this->t('The style formatter for the thumbnail. Any formatting settings configured on the field itself will be ignored and this style setting will always be used.'),
       '#options' => $this->juicebox->confBaseStylePresets(FALSE),
-      '#empty_option' => t('None (original image)'),
-    );
-    $form['title_field'] = array(
+      '#empty_option' => $this->t('None (original image)'),
+    ];
+    $form['title_field'] = [
       '#type' => 'select',
-      '#title' => t('Title Field'),
+      '#title' => $this->t('Title Field'),
       '#default_value' => $settings['title_field'],
-      '#description' => t('The view\'s field that should be used for the title of each image in the gallery. Any formatting settings configured on the field itself will be respected.'),
+      '#description' => $this->t("The view's field that should be used for the title of each image in the gallery. Any formatting settings configured on the field itself will be respected."),
       '#options' => $options['field_options'],
-      '#empty_option' => t('None'),
-    );
-    $form['caption_field'] = array(
+      '#empty_option' => $this->t('None'),
+    ];
+    $form['caption_field'] = [
       '#type' => 'select',
-      '#title' => t('Caption Field'),
+      '#title' => $this->t('Caption Field'),
       '#default_value' => $settings['caption_field'],
-      '#description' => t('The view\'s field that should be used for the caption of each image in the gallery. Any formatting settings configured on the field itself will be respected.'),
+      '#description' => $this->t("The view's field that should be used for the caption of each image in the gallery. Any formatting settings configured on the field itself will be respected."),
       '#options' => $options['field_options'],
-      '#empty_option' => t('None'),
-    );
-    $form['show_title'] = array(
+      '#empty_option' => $this->t('None'),
+    ];
+    $form['show_title'] = [
       '#type' => 'checkbox',
-      '#title' => t('Show Gallery Title'),
+      '#title' => $this->t('Show Gallery Title'),
       '#default_value' => $settings['show_title'],
-      '#description' => t('Show the view display title as the gallery title.'),
-    );
+      '#description' => $this->t('Show the view display title as the gallery title.'),
+    ];
     // Add the common form elements.
     $form = $this->juicebox->confBaseForm($form, $settings);
     // Add view-sepcific field options for the linkURL setting.
-    $linkurl_field_options = array();
+    $linkurl_field_options = [];
     foreach ($options['field_options'] as $field_key => $field_name) {
-      $linkurl_field_options[$field_key] = t('Field') . ' - ' . $field_name;
+      $linkurl_field_options[$field_key] = $this->t('Field') . ' - ' . $field_name;
     }
-    $form['linkurl_source']['#description'] = $form['linkurl_source']['#description'] . '</br><strong>' . t('If using a field source it must render a properly formatted URL and nothing else.') . '</strong>';
+    $form['linkurl_source']['#description'] = $form['linkurl_source']['#description'] . '</br><strong>' . $this->t('If using a field source it must render a properly formatted URL and nothing else.') . '</strong>';
     $form['linkurl_source']['#options'] = array_merge($form['linkurl_source']['#options'], $linkurl_field_options);
   }
 
@@ -239,25 +224,30 @@ class JuiceboxDisplayStyle extends StylePluginBase {
    * {@inheritdoc}
    */
   public function render() {
-    $element = array();
+    $element = [];
     $view = $this->view;
     $settings = $this->options;
     $display_name = isset($view->current_display) ? $view->current_display : 'default';
-    $view_args = empty($view->args) ? array() : $view->args;
     // Generate xml details.
-    $xml_route_info = array(
+    $xml_route_info = [
       'route_name' => 'juicebox.xml_viewsstyle',
-      'route_parameters' => array('viewName' => $view->id(), 'displayName' => $display_name),
-      'options' => array('query' => $this->argsToQuery() + $this->request->query->all()),
-    );
+      'route_parameters' => [
+        'viewName' => $view->id(),
+        'displayName' => $display_name,
+      ],
+      'options' => [
+        'query' => $this->argsToQuery() +
+        $this->request->query->all(),
+      ],
+    ];
     // If we are previewing the view in the admin interface any changes made
     // will not be propogated through to the XML until the view is saved. This
     // can be very confusing as the preview will appear to be broken, so we
     // simply hide the preview output.
     if ($this->request->get('_route') == 'entity.view.preview_form') {
       $message = $this->stringTranslation->translate("Juicebox galleries cannot be viewed as a live preview. Please save your view and visit the full page URL for this display to preview this gallery.");
-      drupal_set_message($message, 'warning');
-      return array('#markup' => $message);
+      $this->messenger()->addWarning($message);
+      return ['#markup' => $message];
     }
     // Try building the gallery and its XML.
     try {
@@ -286,7 +276,7 @@ class JuiceboxDisplayStyle extends StylePluginBase {
   protected function buildGallery(JuiceboxGalleryInterface $gallery) {
     $view = $this->view;
     $settings = $this->options;
-    // Populate $this->rendered_fields
+    // Populate $this->rendered_fields.
     $this->renderFields($view->result);
     // Get all row image data in the format of Drupal file field items.
     $image_items = $thumb_items = $this->getItems($settings['image_field']);
@@ -337,20 +327,21 @@ class JuiceboxDisplayStyle extends StylePluginBase {
    *
    * @param array $xml_route_info
    *   Associative array of route info used to generate the XML.
+   *
    * @return array
    *   An associated array of calculated contextual link information.
    */
-  protected function buildContextualLinks($xml_route_info) {
-    $contextual = array();
+  protected function buildContextualLinks(array $xml_route_info) {
+    $contextual = [];
     // Add a contextual link to view the XML. Note that we include any query
     // params as route paramaters. These won't be used in the actual route
     // but they will be preserved as query paramaters on the contextual link
     // (which may be needed during the XML request).
-    $xml_query = !empty($xml_route_info['options']['query']) ? $xml_route_info['options']['query'] : array();
+    $xml_query = !empty($xml_route_info['options']['query']) ? $xml_route_info['options']['query'] : [];
     // Add a contextual link to view the XML.
-    $contextual['juicebox_xml_viewsstyle'] = array(
+    $contextual['juicebox_xml_viewsstyle'] = [
       'route_parameters' => $xml_route_info['route_parameters'] + $xml_query,
-    );
+    ];
     return $contextual;
   }
 
@@ -362,6 +353,7 @@ class JuiceboxDisplayStyle extends StylePluginBase {
    *   of the row data to get the file identifer from will depend on the field
    *   type, and this method will resolve that based on the view's field handler
    *   details.
+   *
    * @return array
    *   An indexed array, keyed by row id, of file field entities that were
    *   extracted based on row data.
@@ -373,13 +365,13 @@ class JuiceboxDisplayStyle extends StylePluginBase {
     // Get the field source options and make sure the passed-source is valid.
     $source_options = $this->confGetFieldSources();
     if (empty($source_options['field_options_images_type'][$source_field])) {
-      throw new \Exception(t('Empty or invalid field source @source detected for Juicebox view-based gallery.', array('@source' => $source_field)));
+      throw new \Exception('Empty or invalid field source @source detected for Juicebox view-based gallery.', ['@source' => $source_field]);
     }
     else {
       $source_type = $source_options['field_options_images_type'][$source_field];
     }
-    $fids = array();
-    $items = array();
+    $fids = [];
+    $items = [];
     // Pass 1 - get the fids based on the source type.
     foreach ($view->result as $row_index => $row) {
       switch ($source_type) {
@@ -390,7 +382,8 @@ class JuiceboxDisplayStyle extends StylePluginBase {
           if (!empty($target_id) && is_numeric($target_id)) {
             $fids[$row_index] = $target_id;
           }
-          continue;
+          continue 2;
+
         case 'file_field':
           // The source is a file field so we fetch the fid through the
           // target_id property if the field item.
@@ -434,49 +427,51 @@ class JuiceboxDisplayStyle extends StylePluginBase {
    *     for other purposes (text and caption sorces, etc.)
    */
   public function confGetFieldSources() {
-    $options = array(
-      'field_options_images' => array(),
-      'field_options_images_type' => array(),
-      'field_options' => array(),
-    );
+    $options = [
+      'field_options_images' => [],
+      'field_options_images_type' => [],
+      'field_options' => [],
+    ];
     $view = $this->view;
     $field_handlers = $view->display_handler->getHandlers('field');
     $field_labels = $view->display_handler->getFieldLabels();
     // Separate image fields from non-image fields. For image fields we can
     // work with fids and fields of type image or file.
-    foreach ($field_handlers as $field => $handler) {
+    foreach ($field_handlers as $viewfield => $handler) {
       $is_image = FALSE;
       $id = $handler->getPluginId();
-      $name = $field_labels[$field];
+      $name = $field_labels[$viewfield];
       if ($id == 'field') {
         // The field definition is on the handler, it's right bloody there, but
         // it's protected so we can't access it. This means we have to take the
         // long road (via our own injected entity manager) to get the field type
         // info.
-        $entity_type = $handler->getEntityType();
-        $field_definition = $this->entityFieldManager->getFieldStorageDefinitions($entity_type)[$field];
-        $field_type = $field_definition->getType();
-        if ($field_type == 'image' || $field_type == 'file') {
-          $field_cardinality = $field_definition->get('cardinality');
-          $options['field_options_images'][$field] = $name . ($field_cardinality == 1 ? '' : '*');
-          $options['field_options_images_type'][$field] = 'file_field';
-          $is_image = TRUE;
-        }
-        elseif ($field_type == 'integer' && $field == 'fid') {
-          $options['field_options_images'][$field] = $name;
-          $options['field_options_images_type'][$field] = 'file_id_field';
-          $is_image = TRUE;
+        $entity = $this->entityFieldManager->getFieldStorageDefinitions($handler->getEntityType());
+        if (isset($handler->field) && array_key_exists($handler->field, $entity)) {
+          $field_definition = $entity[$handler->field];
+          $field_type = $field_definition->getType();
+          if ($field_type == 'image' || $field_type == 'file' || $field_type == 'entity_reference') {
+            $field_cardinality = $field_definition->get('cardinality');
+            $options['field_options_images'][$viewfield] = $name . ($field_cardinality == 1 ? '' : '*');
+            $options['field_options_images_type'][$viewfield] = 'file_field';
+            $is_image = TRUE;
+          }
+          elseif ($field_type == 'integer' && $handler->field == 'fid') {
+            $options['field_options_images'][$viewfield] = $name;
+            $options['field_options_images_type'][$viewfield] = 'file_id_field';
+            $is_image = TRUE;
+          }
         }
       }
       // Previous D8 betas listed files differently, so we still try to support
       // that case for legacy purposes.
-      elseif ($id == 'file' && $field == 'fid') {
-        $options['field_options_images'][$field] = $name;
-        $options['field_options_images_type'][$field] = 'file_id_field';
+      elseif ($id == 'file' && $viewfield == 'fid') {
+        $options['field_options_images'][$viewfield] = $name;
+        $options['field_options_images_type'][$viewfield] = 'file_id_field';
         $is_image = TRUE;
       }
       if (!$is_image) {
-        $options['field_options'][$field] = $name;
+        $options['field_options'][$viewfield] = $name;
       }
     }
     return $options;
@@ -489,8 +484,10 @@ class JuiceboxDisplayStyle extends StylePluginBase {
     $errors = parent::validate();
     $pager_options = $this->displayHandler->getOption('pager');
     if (isset($pager_options['type']) && !($pager_options['type'] == 'none' || $pager_options['type'] == 'some')) {
-      // @todo: Re-enable this error once issue #2579931 is resolved.
-      // $errors[] = $this->stringTranslation->translate('The Juicebox style cannot be used with a pager. Please disable the "Use a pager" option for this display.');
+      // @todo Re-enable this error once issue #2579931 is resolved.
+      // $errors[] = $this->stringTranslation->translate('The Juicebox
+      // style cannot be used with a pager. Please disable the "Use a pager"
+      // option for this display.');
     }
     $style = $this->displayHandler->getOption('style');
     // We want to somewhat "nag" the user if they have not yet configured the
@@ -500,14 +497,13 @@ class JuiceboxDisplayStyle extends StylePluginBase {
     // the Juicebox-specific plugin settings (such as
     // admin/structure/views/add).
     if (empty($style['options']['image_field']) || empty($style['options']['thumb_field'])) {
-      drupal_set_message($this->stringTranslation->translate("To ensure a fully functional Juicebox gallery please remember to add at least one field of type Image, File or File ID to your Juicebox view display, and to configure all Juicebox Gallery format settings. Once you have completed these steps, re-save your view to remove this warning."), 'warning', FALSE);
+      $this->messenger()->addWarning($this->stringTranslation->translate("To ensure a fully functional Juicebox gallery please remember to add at least one field of type Image, File or File ID to your Juicebox view display, and to configure all Juicebox Gallery format settings. Once you have completed these steps, re-save your view to remove this warning."), FALSE);
     }
     return $errors;
   }
 
   /**
-   * Utility to extract the current set of view args into a list of simple
-   * query params.
+   * Utility to extract current set of view args into list of query params.
    *
    * @return array
    *   An array of items that can be used directly as part of the 'query' array
@@ -515,7 +511,7 @@ class JuiceboxDisplayStyle extends StylePluginBase {
    *   arg_0, arg_1,... arg_N with the same indexed order of the view args.
    */
   protected function argsToQuery() {
-    $query = array();
+    $query = [];
     foreach ($this->view->args as $key => $arg) {
       $query['arg_' . $key] = $arg;
     }

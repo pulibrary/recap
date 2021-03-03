@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Interface definition for a Juicebox Formatter service.
- */
-
 namespace Drupal\juicebox;
 
 use Drupal\file\FileInterface;
@@ -22,10 +17,11 @@ interface JuiceboxFormatterInterface {
    *   This is typically based on the arguments that will be used to create a
    *   URL for the gallery XML, but no formal structure is strictly required.
    *   This information should uniquely identify the gallery.
+   *
    * @return Drupal\juicebox\JuiceboxGalleryInterface
    *   An initialized Juicebox gallery object.
    */
-  public function newGallery($id_args);
+  public function newGallery(array $id_args);
 
   /**
    * Getter method for common global settings.
@@ -43,34 +39,38 @@ interface JuiceboxFormatterInterface {
    * currently loaded version if needed (e.g., to accomodate XML requests that
    * don't come from this site).
    *
-   * @param boolean $force_local
+   * @param bool $force_local
    *   Whether-or-not to force detection of the LOCALLY installed Juicebox
    *   library details. If FALSE Libraries API detection may be bypased if
    *   library version details can be detected through the URL.
-   * @param boolean $reset
+   * @param bool $reset
    *   Whether-or-not to bypass and reset any caching information.
+   *
    * @return array
    *   An associative array of the library information.
    */
   public function getLibrary($force_local = FALSE, $reset = FALSE);
 
   /**
-   * Common post-build tasks that should take place whenever a gallery of any
-   * type/source is built.
+   * Common post-build task.
+   *
+   * Task that should take place whenever gallery of any type/source is built.
    *
    * @param Drupal\juicebox\JuiceboxGalleryInterface $gallery
    *   An initialized Juicebox gallery object.
-   * @param $settings
+   * @param array $settings
    *   An associative array of common gallery-specific settings.
    * @param mixed $data
    *   Drupal source data that was used to build the gallery. This is included
    *   purely for reference.
    */
-  public function runCommonBuild(JuiceboxGalleryInterface $gallery, $settings, $data = NULL);
+  public function runCommonBuild(JuiceboxGalleryInterface $gallery, array $settings, $data = NULL);
 
   /**
-   * Utility to extract image source data in an array structure that can be
-   * used when adding a new image to the gallery.
+   * Utility to extract image source data.
+   *
+   * Extract in an array structure that can be used when adding a new
+   * image to the gallery.
    *
    * @param Drupal\file\FileInterface $image_file
    *   A file entity representing the main image.
@@ -80,8 +80,9 @@ interface JuiceboxFormatterInterface {
    *   A file entity representing the thumbnail image.
    * @param string $thumb_style
    *   The Drupal image style to apply to the thumbnail image.
-   * @param $settings
+   * @param array $settings
    *   An associative array of gallery-specific settings.
+   *
    * @return array
    *   An associative array of image source URLs that's ready to be added
    *   to a Juicebox gallery, including:
@@ -92,11 +93,12 @@ interface JuiceboxFormatterInterface {
    *   - juicebox_compatible: Boolean indicating if the raw source file for the
    *     main image is directly compatible with the Juicebox library.
    */
-  public function styleImageSrcData(FileInterface $image_file, $image_style, FileInterface $thumb_file, $thumb_style, $settings);
+  public function styleImageSrcData(FileInterface $image_file, $image_style, FileInterface $thumb_file, $thumb_style, array $settings);
 
   /**
-   * Build a render array for the embed code of a Juicebox gallery after images
-   * and options have been added.
+   * Build a render array for the embed code of a Juicebox gallery.
+   *
+   * Build once images and options have been added.
    *
    * Note that this is different from
    * Drupal\juicebox\JuiceboxGalleryInterface:renderEmbed() in that it handles
@@ -107,7 +109,7 @@ interface JuiceboxFormatterInterface {
    *
    * @param Drupal\juicebox\JuiceboxGalleryInterface $gallery
    *   An fully populated Juicebox gallery object.
-   * @param $settings
+   * @param array $settings
    *   An associative array of gallery-specific settings.
    * @param array $xml_route_info
    *   Associative array of routing info that can be used to generate the URL to
@@ -116,10 +118,10 @@ interface JuiceboxFormatterInterface {
    *   - route_parameters: Route parameters for the gallery XML.
    *   - options: An optional associative array of options that can be used by
    *     Drupal URL methods like Drupal\Core\Routing::generateFromRoute().
-   * @param boolean $add_js
+   * @param bool $add_js
    *   Whether-or-not to add the Juicebox library and gallery-specific
    *   javascript.
-   * @param boolean $add_xml
+   * @param bool $add_xml
    *   It may be difficult or impossible to rebuild some types of formatters
    *   during a separate XML request, so this option offers a way around that by
    *   embedding the XML for the gallery directly into the HTML output. This
@@ -132,13 +134,15 @@ interface JuiceboxFormatterInterface {
    *   Optional contextual link information that may be used in the display.
    *   This array will be added as-is to the #contextual-links part of the
    *   render array that's used for the gallery's embed code.
+   *
    * @return array
    *   Drupal render array for the embed code that describes a gallery.
    */
-  public function buildEmbed(JuiceboxGalleryInterface $gallery, $settings, $xml_route_info, $add_js = TRUE, $add_xml = FALSE, $contextual = array());
+  public function buildEmbed(JuiceboxGalleryInterface $gallery, array $settings, array $xml_route_info, $add_js = TRUE, $add_xml = FALSE, array $contextual = []);
 
   /**
-   * Get the "base" values of common Drupal settings used to describe a gallery.
+   * Get "base" values of common Drupal settings used to describe a gallery.
+   *
    * This is used for the management of default configuration values.
    *
    * @return array
@@ -157,23 +161,26 @@ interface JuiceboxFormatterInterface {
    * @param array $settings
    *   An associative array containing all the current settings for a Juicebox
    *   gallery (used to set default values).
+   *
    * @return array
    *   The common form elements merged within a form array.
    */
-  public function confBaseForm($form, $settings);
+  public function confBaseForm(array $form, array $settings);
 
   /**
-   * Get the image style preset options that should be available in
-   * configuration style picklists.
+   * Get the image style preset options.
+   *
+   * Options that should be available in configuration style picklists.
    *
    * This is in may ways just a wrapper for image_style_options() that allows
    * the addition of specical options that only Juicebox understands (e.g.
    * "multi-size").
    *
-   * @param boolean $allow_multisize
+   * @param bool $allow_multisize
    *   Whether-or-not to allow the addition of a PRO "multi-size" option. This
    *   is only included if this option is TRUE and the currently detected
    *   library is compatible with multi-size features.
+   *
    * @return array
    *   An associative array of style presets.
    */

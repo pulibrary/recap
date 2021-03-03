@@ -2,15 +2,14 @@ name: Juicebox
 type: module
 description: 'Provides an integration between the Juicebox HTML5 responsive gallery library and Drupal.'
 package: Media
-# core: 8.x
+core: 8.x
+core_version_requirement: ^8 || ^9
+configure: juicebox.admin_settings
 dependencies:
-  - file
-  - image
-  - libraries
-configure: admin/config/media/juicebox
+  - drupal:file
+  - drupal:image
 
-# Information added by Drupal.org packaging script on 2016-02-13
-version: '8.x-2.0-beta3'
-core: '8.x'
+# Information added by Drupal.org packaging script on 2020-12-17
+version: '8.x-3.0-alpha2'
 project: 'juicebox'
-datestamp: 1455394441
+datestamp: 1608186082
