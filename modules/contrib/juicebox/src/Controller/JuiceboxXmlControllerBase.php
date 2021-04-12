@@ -162,7 +162,7 @@ abstract class JuiceboxXmlControllerBase implements ContainerInjectionInterface 
     $server->remove('HTTP_ACCEPT');
     $server->remove('HTTP_X_REQUESTED_WITH');
     $subRequest = Request::create($this->request->getBaseUrl() . '/' . $path, 'GET', $this->request->query->all(), $this->request->cookies->all(), $this->request->files->all(), $server->all());
-    // @todo: See if this session check is needed.
+    // @todo See if this session check is needed.
     $session = $this->request->getSession();
     if ($session) {
       $subRequest->setSession($session);

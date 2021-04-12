@@ -6,7 +6,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldItemInterface;
-use Drupal\image\Plugin\Field\FieldFormatter\ImageFormatterBase;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\field\FieldConfigInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -16,6 +16,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\juicebox\JuiceboxFormatterInterface;
 use Drupal\juicebox\JuiceboxGalleryInterface;
 use Drupal\Core\Url;
+use Drupal\Core\Entity\EntityDisplayRepository;
 
 /**
  * Plugin implementation of the 'juicebox' formatter.
@@ -25,11 +26,12 @@ use Drupal\Core\Url;
  *   label = @Translation("Juicebox Gallery"),
  *   field_types = {
  *     "image",
- *     "file"
+ *     "file",
+ *     "entity_reference"
  *   },
  * )
  */
-class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFactoryPluginInterface {
+class JuiceboxFieldFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
   /**
    * A Juicebox formatter service.
@@ -67,15 +69,23 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
   protected $renderer;
 
   /**
+   * The entity_display repository.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepository
+   */
+  protected $entityDisplayRepo;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager, LinkGeneratorInterface $link_generator, RequestStack $request_stack, JuiceboxFormatterInterface $juicebox, RendererInterface $renderer) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager, LinkGeneratorInterface $link_generator, RequestStack $request_stack, JuiceboxFormatterInterface $juicebox, RendererInterface $renderer, EntityDisplayRepository $entity_display_repo) {
     parent::__construct($plugin_id, $plugin_definition, $configuration['field_definition'], $configuration['settings'], $configuration['label'], $configuration['view_mode'], $configuration['third_party_settings']);
     $this->entityTypeManager = $entity_type_manager;
     $this->linkGenerator = $link_generator;
     $this->request = $request_stack->getCurrentRequest();
     $this->juicebox = $juicebox;
     $this->renderer = $renderer;
+    $this->entityDisplayRepo = $entity_display_repo;
   }
 
   /**
@@ -85,7 +95,7 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
     // Create a new instance of the plugin. This also allows us to extract
     // services from the container and inject them into our plugin via its own
     // constructor as needed.
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity.manager'), $container->get('link_generator'), $container->get('request_stack'), $container->get('juicebox.formatter'), $container->get('renderer'));
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.manager'), $container->get('link_generator'), $container->get('request_stack'), $container->get('juicebox.formatter'), $container->get('renderer'), $container->get('entity_display.repository'));
   }
 
   /**
@@ -275,7 +285,10 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
     // Get settings.
     $settings = $this->getSettings();
     // Iterate over items and extract image data.
-    foreach ($items as $delta => $item) {
+    foreach ($items as $item) {
+      if ($item->getPluginId() === 'field_item:entity_reference') {
+        $item = $item->entity->field_media_image[0];
+      }
       if ($item->isDisplayed() && !empty($item->target_id)) {
         // Calculate the source data that Juicebox requires.
         $src_data = $this->juicebox->styleImageSrcData($item->entity, $settings['image_style'], $item->entity, $settings['thumb_style'], $settings);
@@ -329,7 +342,7 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
       // Calculate a contextual link that can be used to edit the gallery type.
       // @see \Drupal\juicebox\Plugin\Derivative\JuiceboxConfFieldContextualLinks::getDerivativeDefinitions()
       $bundle = $this->fieldDefinition->getTargetBundle();
-      $display_entity = entity_get_display($entity_type_id, $bundle, $this->viewMode);
+      $display_entity = $this->entityDisplayRepo->getViewDisplay($entity_type_id, $bundle, $this->viewMode);
       $contextual['juicebox_conf_field_' . $entity_type_id] = [
         'route_parameters' => [
           'view_mode_name' => (!$display_entity->status() || $display_entity->isNew()) ? 'default' : $this->viewMode,
@@ -364,7 +377,7 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
     // view row). In this case the instance data is most likely fake, and cannot
     // tell us anything about what field options are available. When this
     // happens we pretend all relevent instance options are active.
-    if ($this->isPseudoInstance()) {
+    if ($this->isPseudoInstance() || $this->isEntityReference()) {
       foreach (['alt_field', 'title_field', 'description_field'] as $value) {
         $field_settings[$value] = TRUE;
       }
@@ -384,7 +397,7 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
         $text_source_options['description'] = $this->t('File - Description text (processed by fallback text format)');
       }
     }
-    // @todo: Add support for fieldable file entities and/or media entities.
+
     return $text_source_options;
   }
 
@@ -410,11 +423,13 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
     // If the text source is the filename we need to get the data from the
     // item's related file entity.
     if ($source == 'filename' && isset($item->entity)) {
-      $entity = $item->entity;
       $entity_properties = $item->entity->toArray();
       if (isset($entity_properties[$source])) {
         // A processed_text render array will utilize text filters on rendering.
-        $text_to_build = ['#type' => 'processed_text', '#text' => $item->entity->get($source)->value];
+        $text_to_build = [
+          '#type' => 'processed_text',
+          '#text' => $item->entity->get($source)->value,
+        ];
         return $this->renderer->render($text_to_build);
       }
     }
@@ -425,10 +440,13 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
     // plain values.
     if (isset($item->{$source}) && is_string($item->{$source})) {
       // A processed_text render array will utilize text filters on rendering.
-      $text_to_build = ['#type' => 'processed_text', '#text' => $item->{$source}];
+      $text_to_build = [
+        '#type' => 'processed_text',
+        '#text' => $item->{$source},
+      ];
       return $this->renderer->render($text_to_build);
     }
-    // @todo: Add support for fieldable file entities and/or media entities.
+
     return '';
   }
 
@@ -446,6 +464,21 @@ class JuiceboxFieldFormatter extends ImageFormatterBase implements ContainerFact
       return FALSE;
     }
     return TRUE;
+  }
+
+  /**
+   * Helper to check if the field is media and if the target bundle is image.
+   *
+   * @return boolean
+   *   Returns TRUE if the fields is Entity reference and of type image.
+   */
+  protected function isEntityReference() {
+    if ($this->fieldDefinition->getType() != 'entity_reference' &&
+      isset($this->fieldDefinition->getSettings()['handler_settings']['target_bundles'])) {
+        if (array_keys($this->fieldDefinition->getSettings()['handler_settings']['target_bundles'])[0] == 'image') {
+          return true;
+        }
+    }
   }
 
 }

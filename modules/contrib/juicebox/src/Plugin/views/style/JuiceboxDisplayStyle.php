@@ -126,7 +126,11 @@ class JuiceboxDisplayStyle extends StylePluginBase {
       'image_field' => ['default' => ''],
       // If the library supports multi-size we can default to that for the main
       // image, otherwise use the "medium" style.
-      'image_field_style' => ['default' => (!empty($library['version']) && !in_array('juicebox_multisize_image_style', $library['disallowed_conf'])) ? 'juicebox_multisize' : 'juicebox_medium'],
+      'image_field_style' => [
+        'default' => (!empty($library['version']) &&
+      !in_array('juicebox_multisize_image_style', $library['disallowed_conf']))
+        ? 'juicebox_multisize' : 'juicebox_medium',
+      ],
       'thumb_field' => ['default' => ''],
       'thumb_field_style' => ['default' => 'juicebox_square_thumb'],
       'title_field' => ['default' => ''],
@@ -224,12 +228,17 @@ class JuiceboxDisplayStyle extends StylePluginBase {
     $view = $this->view;
     $settings = $this->options;
     $display_name = isset($view->current_display) ? $view->current_display : 'default';
-    $view_args = empty($view->args) ? [] : $view->args;
     // Generate xml details.
     $xml_route_info = [
       'route_name' => 'juicebox.xml_viewsstyle',
-      'route_parameters' => ['viewName' => $view->id(), 'displayName' => $display_name],
-      'options' => ['query' => $this->argsToQuery() + $this->request->query->all()],
+      'route_parameters' => [
+        'viewName' => $view->id(),
+        'displayName' => $display_name,
+      ],
+      'options' => [
+        'query' => $this->argsToQuery() +
+        $this->request->query->all(),
+      ],
     ];
     // If we are previewing the view in the admin interface any changes made
     // will not be propogated through to the XML until the view is saved. This
@@ -356,7 +365,7 @@ class JuiceboxDisplayStyle extends StylePluginBase {
     // Get the field source options and make sure the passed-source is valid.
     $source_options = $this->confGetFieldSources();
     if (empty($source_options['field_options_images_type'][$source_field])) {
-      throw new \Exception($this->t('Empty or invalid field source @source detected for Juicebox view-based gallery.', ['@source' => $source_field]));
+      throw new \Exception('Empty or invalid field source @source detected for Juicebox view-based gallery.', ['@source' => $source_field]);
     }
     else {
       $source_type = $source_options['field_options_images_type'][$source_field];
@@ -441,7 +450,7 @@ class JuiceboxDisplayStyle extends StylePluginBase {
         if (isset($handler->field) && array_key_exists($handler->field, $entity)) {
           $field_definition = $entity[$handler->field];
           $field_type = $field_definition->getType();
-          if ($field_type == 'image' || $field_type == 'file') {
+          if ($field_type == 'image' || $field_type == 'file' || $field_type == 'entity_reference') {
             $field_cardinality = $field_definition->get('cardinality');
             $options['field_options_images'][$viewfield] = $name . ($field_cardinality == 1 ? '' : '*');
             $options['field_options_images_type'][$viewfield] = 'file_field';
@@ -475,7 +484,7 @@ class JuiceboxDisplayStyle extends StylePluginBase {
     $errors = parent::validate();
     $pager_options = $this->displayHandler->getOption('pager');
     if (isset($pager_options['type']) && !($pager_options['type'] == 'none' || $pager_options['type'] == 'some')) {
-      // @todo: Re-enable this error once issue #2579931 is resolved.
+      // @todo Re-enable this error once issue #2579931 is resolved.
       // $errors[] = $this->stringTranslation->translate('The Juicebox
       // style cannot be used with a pager. Please disable the "Use a pager"
       // option for this display.');

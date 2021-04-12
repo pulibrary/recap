@@ -106,7 +106,7 @@ class JuiceboxXmlControllerField extends JuiceboxXmlControllerBase {
       // All looks good.
       return;
     }
-    throw new \Exception(t('Cannot instantiate field-based Juicebox gallery as no entity can be loaded.'));
+    throw new \Exception('Cannot instantiate field-based Juicebox gallery as no entity can be loaded.');
   }
 
   /**
@@ -132,7 +132,7 @@ class JuiceboxXmlControllerField extends JuiceboxXmlControllerBase {
     if (!empty($field[0]['#gallery']) && $field[0]['#gallery'] instanceof JuiceboxGalleryInterface && $field[0]['#gallery']->getId()) {
       return $field[0]['#gallery'];
     }
-    throw new \Exception(t('Cannot build Juicebox XML for field-based gallery.'));
+    throw new \Exception('Cannot build Juicebox XML for field-based gallery.');
   }
 
   /**

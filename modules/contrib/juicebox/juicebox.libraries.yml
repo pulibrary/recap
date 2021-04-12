@@ -1,12 +1,15 @@
 juicebox:
-  js: {}
+  js:
+    /libraries/juicebox/juicebox.js: {preprocess: false, minified: true}
+juicebox.sites:
+  js:
+    /sites/all/libraries/juicebox/juicebox.js: {preprocess: false, minified: true}
 juicebox.local:
   js:
-    js/juicebox_load.js: {}
+    js/juicebox_load.js: {preprocess: false, minified: true}
   css:
     theme:
-      component:
-        css/juicebox_styles.css: {}
+      css/juicebox_styles.css: {}
   dependencies:
     - core/jquery
     - core/drupal

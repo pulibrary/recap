@@ -12,7 +12,7 @@ use Drupal\Component\Utility\Html;
  */
 class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
 
-  // @todo: Reactivate config_translation when issue #2573975 is resolved.
+  // @todo Reactivate config_translation when issue #2573975 is resolved.
   /**
    * Public static $modules = array('node', 'field_ui', 'image', 'juicebox');.
    *
@@ -26,7 +26,7 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
   public function setUp() {
     parent::setUp();
     // Create and login user.
-    // @todo: Reactivate translation perms when issue #2573975 is resolved.
+    // @todo Reactivate translation perms when issue #2573975 is resolved.
     // $this->webUser = $this->drupalCreateUser(array('access content', 'access
     // administration pages', 'administer site configuration', 'administer
     // content types', 'administer nodes', 'administer node fields', 'administer
@@ -67,8 +67,9 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     $edit = [
       'enable_cors' => TRUE,
     ];
-    $this->drupalPostForm('admin/config/media/juicebox', $edit, t('Save configuration'));
-    $this->assertText(t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
+    $this->drupalGet('admin/config/media/juicebox');
+    $this->submitForm($edit, 'Save configuration');
+    $this->assertText($this->t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
     // Now check the resulting XML again as an anon user.
     $this->drupalLogout();
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
@@ -80,7 +81,7 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
   /**
    * Test global Juicebox interface translation settings.
    *
-   * @todo: Reactivate this test when issue #2573975 is resolved.
+   * @todo Reactivate this test when issue #2573975 is resolved.
    */
   public function voidtestGlobalTrans() {
     $node = $this->node;
@@ -93,14 +94,16 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     $edit = [
       'locale_translate_english' => TRUE,
     ];
-    $this->drupalPostForm('admin/config/regional/language/edit/en', $edit, t('Save language'));
+    $this->drupalGet('admin/config/regional/language/edit/en');
+    $this->submitForm($edit, 'Save language');
     // Enable translation-related global settings.
     $edit = [
       'translate_interface' => TRUE,
       'base_languagelist' => 'Show Thumbnails|Hide Thumbnails|Expand Gallery|Close Gallery|Open Image in New Window',
     ];
-    $this->drupalPostForm('admin/config/media/juicebox', $edit, t('Save configuration'));
-    $this->assertText(t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
+    $this->drupalGet('admin/config/media/juicebox');
+    $this->submitForm($edit, 'Save configuration');
+    $this->assertText($this->t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
     // We need to set a translation for our languagelist string. There is
     // probably a good way to do this directly in code, but for now it's fairly
     // easy to just brute-force it via the UI. First we need to visit the
@@ -112,14 +115,15 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     $edit = [
       'string' => 'Show Thumbnails|Hide Thumbnails|Expand Gallery|Close Gallery|Open Image in New Window',
     ];
-    $this->drupalPostForm('admin/config/regional/translate', $edit, t('Filter'));
+    $this->drupalGet('admin/config/media/juicebox');
+    $this->submitForm($edit, 'Filter');
     $matches = [];
     $this->assertTrue(preg_match('/name="strings\[([0-9]+)\]\[translations\]\[0\]"/', $this->getRawContent(), $matches), 'Languagelist base string is available for translation.');
     $edit = [
       'strings[' . $matches[1] . '][translations][0]' => 'Translated|Lang|List',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save translations'));
-    $this->assertText(t('The strings have been saved'), 'Languagelist translation saved.');
+    $this->submitForm($edit, 'Save translations');
+    $this->assertText($this->t('The strings have been saved'), 'Languagelist translation saved.');
     // Now check the resulting XML again as an anon user.
     $this->drupalLogout();
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
@@ -143,15 +147,17 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     $edit = [
       'juicebox_multisize_large' => 'large',
     ];
-    $this->drupalPostForm('admin/config/media/juicebox', $edit, t('Save configuration'));
-    $this->assertText(t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
+    $this->drupalGet('admin/config/media/juicebox');
+    $this->submitForm($edit, 'Save configuration');
+    $this->assertText($this->t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
     // Alter field formatter specific settings to use multi-size style.
-    $this->drupalPostForm('admin/structure/types/manage/' . $this->instBundle . '/display', [], $this->instFieldName . '_settings_edit', [], 'entity-view-display-edit-form');
+    $this->drupalGet('admin/structure/types/manage/' . $this->instBundle . '/display');
+    $this->submitForm([], $this->instFieldName . '_settings_edit', 'entity-view-display-edit-form');
     $edit = [
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][image_style]' => 'juicebox_multisize',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
-    $this->assertText(t('Your settings have been saved.'), 'Gallery configuration changes saved.');
+    $this->submitForm($edit, 'Save');
+    $this->assertText($this->t('Your settings have been saved.'), 'Gallery configuration changes saved.');
     // Calculate the multi-size styles that should be found in the XML.
     $uri = File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
     $formatted_image_small = entity_load('image_style', 'juicebox_small')->buildUrl($uri);

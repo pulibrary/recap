@@ -2,8 +2,6 @@
 
 namespace Drupal\juicebox;
 
-use DOMDocument;
-
 /**
  * Class to generate the script and markup for a Juicebox gallery.
  *
@@ -219,7 +217,7 @@ class JuiceboxGallery implements JuiceboxGalleryInterface {
   public function renderXml($embed_wrap_id = NULL) {
     // We use DOMDocument instead of a SimpleXMLElement to build the XML as it's
     // much more flexible (CDATA is supported, etc.).
-    $dom = new DOMDocument('1.0', 'UTF-8');
+    $dom = new \DOMDocument('1.0', 'UTF-8');
     $dom->formatOutput = TRUE;
     $juicebox = $dom->appendChild($dom->createElement('juicebox'));
     // Get filtered attributes.
@@ -299,7 +297,7 @@ class JuiceboxGallery implements JuiceboxGalleryInterface {
       'debugmode',
     ];
     $current_options = $this->getOptions(TRUE);
-    foreach ($load_before_xml as $key => $option) {
+    foreach ($load_before_xml as $option) {
       if (!empty($current_options[$option])) {
         $vars[$option] = $current_options[$option];
       }
@@ -331,7 +329,10 @@ class JuiceboxGallery implements JuiceboxGalleryInterface {
       // specialized keys that are no longer valid, but still want to support
       // them as input. These values are special and cannot be handled alone by
       // the word-separator processing logic below.
-      $name_mappings = ['image_url_small' => 'smallImageURL', 'image_url_large' => 'largeImageURL'];
+      $name_mappings = [
+        'image_url_small' => 'smallImageURL',
+        'image_url_large' => 'largeImageURL',
+      ];
       if (array_key_exists($name, $name_mappings)) {
         $name = $name_mappings[$name];
       }

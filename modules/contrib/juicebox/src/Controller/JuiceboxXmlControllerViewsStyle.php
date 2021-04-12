@@ -54,7 +54,7 @@ class JuiceboxXmlControllerViewsStyle extends JuiceboxXmlControllerBase {
       // All looks good.
       return;
     }
-    throw new \Exception(t('Cannot instantiate view-based Juicebox gallery as no view can be loaded.'));
+    throw new \Exception('Cannot instantiate view-based Juicebox gallery as no view can be loaded.');
   }
 
   /**
@@ -75,7 +75,7 @@ class JuiceboxXmlControllerViewsStyle extends JuiceboxXmlControllerBase {
     if (!empty($rendered_view['#rows']['#gallery']) && $rendered_view['#rows']['#gallery'] instanceof JuiceboxGalleryInterface && $rendered_view['#rows']['#gallery']->getId()) {
       return $rendered_view['#rows']['#gallery'];
     }
-    throw new \Exception(t('Cannot build Juicebox XML for view-based gallery.'));
+    throw new \Exception('Cannot build Juicebox XML for view-based gallery.');
   }
 
   /**
@@ -98,7 +98,7 @@ class JuiceboxXmlControllerViewsStyle extends JuiceboxXmlControllerBase {
     $query_args = $this->request->query->all();
     foreach ($query_args as $param => $value) {
       if (preg_match('/^arg_[0-9]+$/', $param)) {
-        list($prefix, $key) = explode('_', $param);
+        list(, $key) = explode('_', $param);
         $args[$key] = $value;
       }
     }

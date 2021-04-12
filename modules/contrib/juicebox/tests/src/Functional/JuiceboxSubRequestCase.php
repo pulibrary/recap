@@ -59,7 +59,6 @@ class JuiceboxSubRequestCase extends JuiceboxCaseTestBase {
   // list above, to use the "standard" profile's article type for this test
   // instead of the one we create manually (should also work, but will be slow).
   // protected $profile = 'standard';.
-
   /**
    * Define setup tasks.
    */
@@ -115,7 +114,12 @@ class JuiceboxSubRequestCase extends JuiceboxCaseTestBase {
     $this->assertNotNull($matches[2], 'xml-source-id value found in Drupal.settings.');
     // Check for correct XML. This example is dependent on a sub-request XML
     // lookup, so everything below would fail without that feature.
-    $this->drupalGet($xml_path, ['query' => ['xml-source-path' => $matches[1], 'xml-source-id' => $matches[2]]]);
+    $this->drupalGet($xml_path, [
+      'query' => [
+        'xml-source-path' => $matches[1],
+        'xml-source-id' => $matches[2],
+      ],
+    ]);
     $this->assertRaw('<?xml version="1.0" encoding="UTF-8"?>', 'Valid XML detected.');
     $this->assertRaw('imageURL="' . Html::escape($test_image_url), 'Test image found in XML.' . $test_image_url);
     $this->assertRaw('thumbURL="' . Html::escape($test_thumb_url), 'Test thumbnail found in XML.' . $test_thumb_url);

@@ -3,6 +3,7 @@ type: module
 description: 'Provides an article content type, with image field, that is similar to the one provided by the "standard" profile.'
 package: Testing
 core: 8.x
+core_version_requirement: ^8 || ^9
 dependencies:
   - drupal:node
   - drupal:image
@@ -10,7 +11,7 @@ dependencies:
   - drupal:user
   - drupal:entity_reference
 
-# Information added by Drupal.org packaging script on 2020-07-29
-version: '8.x-2.0-beta4'
+# Information added by Drupal.org packaging script on 2020-12-17
+version: '8.x-3.0-alpha2'
 project: 'juicebox'
-datestamp: 1596048776
+datestamp: 1608186082

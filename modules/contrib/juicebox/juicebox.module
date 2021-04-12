@@ -5,7 +5,6 @@
  * Module file for Juicebox.
  */
 
-use Drupal\Core\Render\Element;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\juicebox\JuiceboxGalleryInterface;
 
@@ -53,89 +52,64 @@ function juicebox_theme_suggestions_field_alter(array &$suggestions, array $vari
 }
 
 /**
- * Implements hook_library_info_alter().
+ * Builds library variable depending on version of library.
+ *
+ * Library can be in sites/all/libraries/juicebox or /library.
+ *
+ * param mixed $librarypath
+ *   The path to the library.
+ *
+ * @param mixed $library
+ *   The name of the library.
  */
-function juicebox_library_info_alter(&$libraries, $module) {
-  if ($module != 'juicebox') {
-    return;
-  }
-  // We don't currently have a way to process library details from Libraries
-  // API automatically, so extract a core library definition manually.
-  // see: https://www.drupal.org/node/2350877
-  if (isset($libraries['juicebox'])) {
-    $library = \Drupal::service('juicebox.formatter')->getLibrary();
-    if (!empty($library['installed']) && !empty($library['files']) && !empty($library['library path'])) {
-      foreach ($library['files'] as $type => $file) {
-        foreach ($file as $filename => $options) {
-          $uri = '/' . $library['library path'] . '/' . $filename;
-          $libraries['juicebox'][$type][$uri] = $options;
-        }
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_libraries_info().
- */
-function juicebox_libraries_info() {
-  $libraries['juicebox'] = [
-    'name' => 'Juicebox',
-    'vendor url' => 'http://www.juicebox.net/',
-    'download url' => 'http://www.juicebox.net/download/',
-    'version arguments' => [
-      'file' => 'juicebox.js',
-      'pattern' => '/Juicebox.([a-zA-Z]+[0-9\.\ -]+)/',
-      'lines' => 5,
-    ],
-    'files' => [
-      // Note that we do not want the Juicebox library javascript to be
-      // aggregated by Drupal (set preprocess option = FALSE). This is because
-      // some supporting library CSS files must be at a specific location
-      // RELATIVE to to the main js file. Aggregation breaks this.
-      'js' => ['juicebox.js' => ['preprocess' => FALSE, 'group' => JS_LIBRARY]],
-    ],
-    'callbacks' => [
-      'info' => ['juicebox_library_add_info'],
-      'post-detect' => ['juicebox_library_post_detect'],
-    ],
+function juicebox_build_library_array($librarypath, &$library) {
+  $options = [
+    'file' => 'juicebox.js',
+    'pattern' => '/Juicebox.([a-zA-Z]+[0-9\.\ -]+)/',
+    'lines' => 5,
+    'cols' => 200,
   ];
-  return $libraries;
-}
-
-/**
- * Libraries API Info Callback.
- *
- * Add baseline variables to a Juicebox library array that are not version
- * specific but should always be defined. These values are generic to all
- * Juicebox libraries and may be referenced even when the local library info
- * cannot be loaded or is not used.
- *
- * @see juicebox_libraries_info()
- */
-function juicebox_library_add_info(&$library) {
+  $library['name'] = 'Juicebox';
+  $library['vendor url'] = 'http://www.juicebox.net/';
+  $library['download url'] = 'http://www.juicebox.net/download/';
+  $library['version arguments'] = [
+    'file' => 'juicebox.js',
+    'pattern' => '/Juicebox.([a-zA-Z]+[0-9\.\ -]+)/',
+    'lines' => 5,
+  ];
+  $library['files'] = [
+    // Note that we do not want the Juicebox library javascript to be
+    // aggregated by Drupal (set preprocess option = FALSE). This is because
+    // some supporting library CSS files must be at a specific location
+    // RELATIVE to to the main js file. Aggregation breaks this.
+    'js' => ['juicebox.js' => ['preprocess' => FALSE, 'group' => JS_LIBRARY]],
+  ];
+  $library['module'] = 'juicebox';
+  $library['machine name'] = 'juicebox';
+  $library['path'] = '';
+  $library['library path'] = $librarypath;
   $library['disallowed_conf'] = [];
   $library['compatible_mimetypes'] = ['image/gif', 'image/jpeg', 'image/png'];
   $library['base_languagelist'] = 'Show Thumbnails|Hide Thumbnails|Expand Gallery|Close Gallery|Open Image in New Window';
-}
-
-/**
- * Libraries API Post-Detect Callback.
- *
- * Add detailed variables to a Juicebox library array after the version info can
- * be detected.
- *
- * @see juicebox_libraries_info()
- */
-function juicebox_library_post_detect(&$library) {
+  $file = DRUPAL_ROOT . $librarypath;
+  if (empty($options['file']) || !file_exists($file)) {
+    return;
+  }
+  $file = fopen($file, 'r');
+  while ($options['lines'] && $line = fgets($file, $options['cols'])) {
+    if (preg_match($options['pattern'], $line, $version)) {
+      $library['version'] = $version[1];
+    }
+    $options['lines']--;
+  }
+  fclose($file);
   $pro = FALSE;
   $disallowed_conf = [];
   if (!empty($library['version'])) {
     // Check if this is a Pro version.
     if (stripos($library['version'], "Pro") !== FALSE) {
-      $pro = TRUE;
+      $pro = "TRUE";
     }
-    // Get numeric part of the version statement.
     $version_number = 0;
     $matches = [];
     preg_match("/[0-9\.]+[^\.]$/u", $library['version'], $matches);
@@ -166,8 +140,12 @@ function juicebox_library_post_detect(&$library) {
       }
     }
   }
-  $library['pro'] = $pro;
+  if ($pro) {
+    $library['pro'] = "Pro";
+  }
   $library['disallowed_conf'] = $disallowed_conf;
+  $library['installed'] = TRUE;
+  return ($library);
 }
 
 /**
@@ -196,25 +174,3 @@ function juicebox_element_validate_config($element, FormStateInterface $form_sta
   }
 }
 
-/**
- * Form pre-render callback.
- *
- * Visually render fieldsets without affecting tree-based variable storage.
- *
- * This technique/code is taken almost directly from the D7 Views module in
- * views_ui_pre_render_add_fieldset_markup()
- */
-function juicebox_form_pre_render_fieldsets($form) {
-  foreach (Element::children($form) as $key) {
-    $element = $form[$key];
-    // In our form builder functions, we added an arbitrary #jb_fieldset
-    // property to any element that belongs in a fieldset. If this form element
-    // has that property, move it into its fieldset.
-    if (isset($element['#jb_fieldset']) && isset($form[$element['#jb_fieldset']])) {
-      $form[$element['#jb_fieldset']][$key] = $element;
-      // Remove the original element this duplicates.
-      unset($form[$key]);
-    }
-  }
-  return $form;
-}

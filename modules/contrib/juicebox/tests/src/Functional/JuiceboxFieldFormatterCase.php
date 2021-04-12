@@ -71,15 +71,16 @@ class JuiceboxFieldFormatterCase extends JuiceboxCaseTestBase {
     $this->assertResponse(200, 'Control request of XML was successful.');
     // Alter field formatter specific settings to contain custom values.
     $this->drupalLogin($this->webUser);
-    $this->drupalPostForm('admin/structure/types/manage/' . $this->instBundle . '/display', [], $this->instFieldName . '_settings_edit', [], 'entity-view-display-edit-form');
+    $this->drupalGet('admin/structure/types/manage/' . $this->instBundle . '/display');
+    $this->submitForm([], $this->instFieldName . '_settings_edit', 'entity-view-display-edit-form');
     $edit = [
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][image_style]' => '',
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][thumb_style]' => 'thumbnail',
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][caption_source]' => 'alt',
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][title_source]' => 'title',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
-    $this->assertText(t('Your settings have been saved.'), 'Gallery configuration changes saved.');
+    $this->submitForm($edit, 'Save');
+    $this->assertText($this->t('Your settings have been saved.'), 'Gallery configuration changes saved.');
     // Get the urls to the image and thumb derivatives expected.
     $uri = File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
     $test_formatted_image_url = file_create_url($uri);
@@ -101,9 +102,11 @@ class JuiceboxFieldFormatterCase extends JuiceboxCaseTestBase {
     // be found in search results. First we update the search index by marking
     // our test node as dirty and running cron.
     $this->drupalLogin($this->webUser);
-    $this->drupalPostForm('node/' . $node->id() . '/edit', [], t('Save'));
+    $this->drupalGet('node/' . $node->id() . '/edit');
+    $this->submitForm([], 'Save');
     $this->cronRun();
-    $this->drupalPostForm('search', ['keys' => '"Some title text"'], t('Search'));
+    $this->drupalGet('search');
+    $this->submitForm(['keys' => '"Some title text"'], 'Search');
     $this->assertText('Test Juicebox Gallery Node', 'Juicebox node found in search for title text.');
     // The Juicebox javascript should have been excluded from the search results
     // page.

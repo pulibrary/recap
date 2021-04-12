@@ -3,11 +3,12 @@ type: module
 description: 'Provides juicebox views for tests.'
 package: Testing
 core: 8.x
+core_version_requirement: ^8 || ^9
 dependencies:
   - drupal:views
   - juicebox:juicebox
 
-# Information added by Drupal.org packaging script on 2020-07-29
-version: '8.x-2.0-beta4'
+# Information added by Drupal.org packaging script on 2020-12-17
+version: '8.x-3.0-alpha2'
 project: 'juicebox'
-datestamp: 1596048776
+datestamp: 1608186082

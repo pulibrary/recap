@@ -2,22 +2,26 @@
 
 namespace Drupal\juicebox;
 
+use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\Unicode;
 use Drupal\file\FileInterface;
-use Drupal\image\Entity\ImageStyle;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\Render\Element;
 
 /**
  * Class to define a Drupal service with common formatter methods.
  */
-class JuiceboxFormatter implements JuiceboxFormatterInterface {
+class JuiceboxFormatter implements JuiceboxFormatterInterface, TrustedCallbackInterface {
+  use StringTranslationTrait;
 
   /**
    * A Drupal configuration factory service.
@@ -25,13 +29,6 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
-
-  /**
-   * A Drupal string translation service.
-   *
-   * @var \Drupal\Core\StringTranslation\TranslationInterface
-   */
-  protected $stringTranslation;
 
   /**
    * A Drupal URL generator service.
@@ -69,29 +66,90 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
   static protected $library = [];
 
   /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * A Drupal entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The Drupal config factory that can be used to derive global Juicebox
    *   settings.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $translation
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   A string translation service.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   A URL generator service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_manager
    *   A module manager service.
    * @param \Drupal\Core\Path\CurrentPathStack $currentPathStack
-   *   A currnet path service.
+   *   A current path service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The Symfony request stack from which to extract the current request.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger_interface
+   *   The messenger interface.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, TranslationInterface $translation, UrlGeneratorInterface $url_generator, ModuleHandlerInterface $module_manager, CurrentPathStack $currentPathStack, RequestStack $request_stack) {
+  public function __construct(ConfigFactoryInterface $config_factory,
+  TranslationInterface $string_translation,
+  UrlGeneratorInterface $url_generator,
+  ModuleHandlerInterface $module_manager,
+  CurrentPathStack $currentPathStack,
+  RequestStack $request_stack,
+  MessengerInterface $messenger_interface,
+  EntityTypeManagerInterface $entity_type_manager) {
     $this->configFactory = $config_factory;
-    $this->stringTranslation = $translation;
+    $this->stringTranslation = $string_translation;
     $this->urlGenerator = $url_generator;
     $this->moduleManager = $module_manager;
     $this->currentPathStack = $currentPathStack;
     $this->request = $request_stack->getCurrentRequest();
+    $this->messenger = $messenger_interface;
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return [
+      'preRenderFieldsets',
+    ];
+  }
+
+  /**
+   * Form pre-render callback.
+   *
+   * Visually render fieldsets without affecting tree-based variable storage.
+   *
+   * This technique/code is taken almost directly from the D7 Views module in
+   * views_ui_pre_render_add_fieldset_markup()
+   *
+   * @param $form
+   */
+  public static function preRenderFieldsets($form) {
+    foreach (Element::children($form) as $key) {
+      $element = $form[$key];
+      // In our form builder functions, we added an arbitrary #jb_fieldset
+      // property to any element that belongs in a fieldset. If this form element
+      // has that property, move it into its fieldset.
+      if (isset($element['#jb_fieldset']) && isset($form[$element['#jb_fieldset']])) {
+        $form[$element['#jb_fieldset']][$key] = $element;
+        // Remove the original element this duplicates.
+        unset($form[$key]);
+      }
+    }
+    return $form;
   }
 
   /**
@@ -122,7 +180,7 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
     if ($gallery instanceof JuiceboxGalleryInterface) {
       return $gallery;
     }
-    throw new \Exception(t('Cound not instantiate Juicebox gallery.'));
+    throw new \Exception('Could not instantiate Juicebox gallery.');
   }
 
   /**
@@ -136,31 +194,23 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
    * {@inheritdoc}
    */
   public function getLibrary($force_local = FALSE, $reset = FALSE) {
-    // We use our own static cache to lazy-load the lib. Libraries API detection
-    // has a static cache, but as we may be bypassing full local detection in
-    // certain situations, we can't always use it.
-    $library = &self::$library;
-    if (!$library || $reset) {
-      // See if we have been passed version details in the URL. If so we bypass
-      // local detection and build our own libraries array.
-      $query = \Drupal::request()->query->all();
-      if (!empty($query['jb-version']) && !$force_local) {
-        juicebox_library_info($library);
-        $version_number = Html::escape($query['jb-version']);
-        if (!empty($query['jb-pro'])) {
-          $library['pro'] = TRUE;
-          $version = 'Pro';
-        }
-        else {
-          $version = 'Lite';
-        }
-        $library['version'] = $version . ' ' . $version_number;
-        juicebox_library_post_detect($library);
-      }
-      // Otherwise we just use the Libraries API to detect the local lib.
-      else {
-        $library = libraries_detect('juicebox');
-      }
+    // We "default" to sites/all/libraries and that will override
+    // anything in /libraries. Rationale is that sites/all/libraries
+    // was the original location for these files theoretically,
+    // we could check the versions of both and pick the one
+    // with the highest version not sure the juice(box) is worth the squeeze.
+    if (file_exists(DRUPAL_ROOT . '/' . 'sites/all/libraries/juicebox/juicebox.js')) {
+      $librarypath = '/sites/all/libraries/juicebox/juicebox.js';
+    }
+    elseif (file_exists(DRUPAL_ROOT . '/' . 'libraries/juicebox/juicebox.js')) {
+      $librarypath = '/libraries/juicebox/juicebox.js';
+    }
+    if (isset($librarypath)) {
+      juicebox_build_library_array($librarypath, $library);
+    }
+    else {
+      $notification_top = $this->t('The Juicebox Javascript library does not appear to be installed. Please download and install the most recent version of the Juicebox library.');
+      $this->messenger->addError($notification_top);
     }
     return $library;
   }
@@ -176,7 +226,8 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
     if ($global_settings['translate_interface']) {
       $base_string = $global_settings['base_languagelist'];
       if (!empty($base_string)) {
-        $gallery->addOption('languagelist', Html::escape($this->stringTranslation->translate($base_string)), FALSE);
+        $base_string = Html::escape($base_string);
+        $gallery->addOption('languagelist', $base_string, FALSE);
       }
     }
     // Allow other modules to alter the built gallery data before it's
@@ -231,7 +282,16 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
       $xml_options = array_merge_recursive(['query' => $xml_query_additions], $xml_route_info['options']);
       $xml_url = $this->urlGenerator->generateFromRoute($xml_route_info['route_name'], $xml_route_info['route_parameters'], $xml_options);
       // Add the main library.
-      $output['#attached']['library'][] = 'juicebox/juicebox';
+      if (file_exists(DRUPAL_ROOT . '/' . 'sites/all/libraries/juicebox/juicebox.js')) {
+        $output['#attached']['library'][] = 'juicebox/juicebox.sites';
+      }
+      elseif (file_exists(DRUPAL_ROOT . '/' . 'libraries/juicebox/juicebox.js')) {
+        $output['#attached']['library'][] = 'juicebox/juicebox';
+      }
+      else {
+        $notification_top = $this->t('The Juicebox Javascript library does not appear to be installed. Please download and install the most recent version of the Juicebox library.');
+        $this->messenger->addError($notification_top);
+      }
       // Add the JS gallery details as Drupal.settings.
       $output['#attached']['drupalSettings']['juicebox'] = [$embed_id => $gallery->getJavascriptVars($xml_url)];
       // Add some local JS (implementing Drupal.behaviors) that will process
@@ -332,7 +392,7 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
       }
       foreach ($sizes as $size => $style_each) {
         if (!empty($style_each)) {
-          $style_obj = ImageStyle::load($style_each);
+          $style_obj = $this->entityTypeManager->getStorage('image_style')->load($style_each);
           if ($style_obj) {
             $image_data[$size] = $style_obj->buildUrl($file->getFileUri());
           }
@@ -368,7 +428,7 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
     ] as $name) {
       if (isset($settings[$name])) {
         $name_real = str_replace('jlib_', '', $name);
-        $gallery->addOption(Unicode::strtolower($name_real), trim(Html::escape($settings[$name])));
+        $gallery->addOption(mb_strtolower($name_real), trim(Html::escape($settings[$name])));
       }
     }
     // Get the bool options set via the GUI.
@@ -377,7 +437,7 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
     ] as $name) {
       if (isset($settings[$name])) {
         $name_real = str_replace('jlib_', '', $name);
-        $gallery->addOption(Unicode::strtolower($name_real), (!empty($settings[$name]) ? 'TRUE' : 'FALSE'));
+        $gallery->addOption(mb_strtolower($name_real), (!empty($settings[$name]) ? 'TRUE' : 'FALSE'));
       }
     }
     // Merge-in the manually assigned options making sure they take priority
@@ -392,8 +452,8 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
           // values.
           $matches = [];
           preg_match('/^([A-Za-z0-9]+?)="([^"]+?)"$/u', $option, $matches);
-          list($full_match, $name, $value) = $matches;
-          $gallery->addOption(Unicode::strtolower($name), Html::escape($value));
+          list(, $name, $value) = $matches;
+          $gallery->addOption(mb_strtolower($name), Html::escape($value));
         }
       }
     }
@@ -434,23 +494,25 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
       // If we don't have a known version of the Juicebox library, just show a
       // generic warning.
       if (empty($library['version'])) {
-        $notification_top = t('<strong>Notice:</strong> Your Juicebox Library version could not be detected. Some options below may not function correctly.');
+        $notification_top = $this->t('<strong>Notice:</strong> Your Juicebox Library version could not be detected. Some options below may not function correctly.');
       }
       // If this version does not support some LITE optins, show a message.
       elseif (!empty($library['disallowed_conf'])) {
         $disallowed_conf = $library['disallowed_conf'];
-        $notification_top = t('<strong>Notice:</strong> You are currently using Juicebox library version <strong>@version</strong> which is not compatible with some of the options listed below. These options will appear disabled until you upgrade to the most recent Juicebox library version.', ['@version' => $library['version']]);
-        $notification_label = t('&nbsp;(not available in @version)', ['@version' => $library['version']]);
+        $notification_top = $this->t('<strong>Notice:</strong> You are currently using Juicebox library version <strong>@version</strong> which is not compatible with some of the options listed below. These options will appear disabled until you upgrade to the most recent Juicebox library version.', ['@version' => $library['version']]);
+        $notification_label = $this->t('&nbsp;(not available in @version)', ['@version' => $library['version']]);
       }
     }
     // If the library itself is not installed, display formal error message.
     else {
-      $notification_top = t('The Juicebox Javascript library does not appear to be installed. Please download and install the most recent version of the Juicebox library.');
-      drupal_set_message($notification_top, 'error');
+      $notification_top = $this->t('The Juicebox Javascript library does not appear to be installed. Please download and install the most recent version of the Juicebox library.');
+      $this->messenger->addError($notification_top);
+      $form['#pre_render'] = [static::class . '::preRenderFieldsets'];
+      return $form;
     }
     $form['juicebox_config'] = [
       '#type' => 'details',
-      '#title' => t('Juicebox Library - Lite Config'),
+      '#title' => $this->t('Juicebox Library - Lite Config'),
       '#open' => FALSE,
       '#description' => !empty($notification_top) ? '<p>' . $notification_top . '</p>' : '',
       '#weight' => 10,
@@ -458,122 +520,122 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
     $form['jlib_galleryWidth'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'textfield',
-      '#title' => t('Gallery Width'),
-      '#description' => t('Set the gallery width in a standard numeric format (such as 100% or 300px).'),
+      '#title' => $this->t('Gallery Width'),
+      '#description' => $this->t('Set the gallery width in a standard numeric format (such as 100% or 300px).'),
       '#element_validate' => ['juicebox_element_validate_dimension'],
     ];
     $form['jlib_galleryHeight'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'textfield',
-      '#title' => t('Gallery Height'),
-      '#description' => t('Set the gallery height in a standard numeric format (such as 100% or 300px).'),
+      '#title' => $this->t('Gallery Height'),
+      '#description' => $this->t('Set the gallery height in a standard numeric format (such as 100% or 300px).'),
       '#element_validate' => ['juicebox_element_validate_dimension'],
     ];
     $form['jlib_backgroundColor'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'textfield',
-      '#title' => t('Background Color'),
-      '#description' => t('Set the gallery background color as a CSS3 color value (such as rgba(10,50,100,0.7) or #FF00FF).'),
+      '#title' => $this->t('Background Color'),
+      '#description' => $this->t('Set the gallery background color as a CSS3 color value (such as rgba(10,50,100,0.7) or #FF00FF).'),
     ];
     $form['jlib_textColor'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'textfield',
-      '#title' => t('Text Color'),
-      '#description' => t('Set the color of all gallery text as a CSS3 color value (such as rgba(255,255,255,1) or #FF00FF).'),
+      '#title' => $this->t('Text Color'),
+      '#description' => $this->t('Set the color of all gallery text as a CSS3 color value (such as rgba(255,255,255,1) or #FF00FF).'),
     ];
     $form['jlib_thumbFrameColor'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'textfield',
-      '#title' => t('Thumbnail Frame Color'),
-      '#description' => t('Set the color of the thumbnail frame as a CSS3 color value (such as rgba(255,255,255,.5) or #FF00FF).'),
+      '#title' => $this->t('Thumbnail Frame Color'),
+      '#description' => $this->t('Set the color of the thumbnail frame as a CSS3 color value (such as rgba(255,255,255,.5) or #FF00FF).'),
     ];
     $form['jlib_showOpenButton'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'checkbox',
-      '#title' => t('Show Open Image Button'),
-      '#description' => t('Whether to show the "Open Image" button. This will link to the full size version of the image within a new tab to facilitate downloading.'),
+      '#title' => $this->t('Show Open Image Button'),
+      '#description' => $this->t('Whether to show the "Open Image" button. This will link to the full size version of the image within a new tab to facilitate downloading.'),
     ];
     $form['jlib_showExpandButton'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'checkbox',
-      '#title' => t('Show Expand Button'),
-      '#description' => t('Whether to show the "Expand" button. Clicking this button expands the gallery to fill the browser window.'),
+      '#title' => $this->t('Show Expand Button'),
+      '#description' => $this->t('Whether to show the "Expand" button. Clicking this button expands the gallery to fill the browser window.'),
     ];
     $form['jlib_useFullscreenExpand'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'checkbox',
-      '#title' => t('Use Fullscreen Expand'),
-      '#description' => t('Whether to trigger fullscreen mode when clicking the expand button (for supported browsers).'),
+      '#title' => $this->t('Use Fullscreen Expand'),
+      '#description' => $this->t('Whether to trigger fullscreen mode when clicking the expand button (for supported browsers).'),
     ];
     $form['jlib_showThumbsButton'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'checkbox',
-      '#title' => t('Show Thumbs Button'),
-      '#description' => t('Whether to show the "Toggle Thumbnails" button.'),
+      '#title' => $this->t('Show Thumbs Button'),
+      '#description' => $this->t('Whether to show the "Toggle Thumbnails" button.'),
     ];
     $form['jlib_useThumbDots'] = [
       '#jb_fieldset' => 'juicebox_config',
       '#type' => 'checkbox',
-      '#title' => t('Show Thumbs Dots'),
-      '#description' => t('Whether to replace the thumbnail images with small dots.'),
+      '#title' => $this->t('Show Thumbs Dots'),
+      '#description' => $this->t('Whether to replace the thumbnail images with small dots.'),
     ];
     $form['juicebox_manual_config'] = [
       '#type' => 'details',
-      '#title' => t('Juicebox Library - Pro / Manual Config'),
+      '#title' => $this->t('Juicebox Library - Pro / Manual Config'),
       '#open' => FALSE,
-      '#description' => t('Specify any additional Juicebox library configuration options (such as "Pro" options) here.<br/>Options set here always take precedence over those set in the "Lite" options above if there is a conflict.'),
+      '#description' => $this->t('Specify any additional Juicebox library configuration options (such as "Pro" options) here.<br/>Options set here always take precedence over those set in the "Lite" options above if there is a conflict.'),
       '#weight' => 20,
     ];
     $form['manual_config'] = [
       '#jb_fieldset' => 'juicebox_manual_config',
       '#type' => 'textarea',
-      '#title' => t('Pro / Manual Configuraton Options'),
-      '#description' => t('Add one option per line in the format <strong>optionName="optionValue"</strong><br/>See also: http://www.juicebox.net/support/config_options'),
+      '#title' => $this->t('Pro / Manual Configuraton Options'),
+      '#description' => $this->t('Add one option per line in the format <strong>optionName="optionValue"</strong><br/>See also: http://www.juicebox.net/support/config_options'),
       '#element_validate' => ['juicebox_element_validate_config'],
     ];
     $form['advanced'] = [
       '#type' => 'details',
-      '#title' => t('Juicebox - Advanced Options'),
+      '#title' => $this->t('Juicebox - Advanced Options'),
       '#open' => FALSE,
       '#weight' => 30,
     ];
     $form['incompatible_file_action'] = [
       '#jb_fieldset' => 'advanced',
       '#type' => 'select',
-      '#title' => t('Incompatible File Type Handling'),
+      '#title' => $this->t('Incompatible File Type Handling'),
       '#options' => [
-        'skip' => 'Bypass incompatible files',
-        'show_icon' => 'Show mimetype icon placehoder',
-        'show_icon_and_link' => 'Show mimetype icon placholder and link to file',
+        'skip' => $this->t('Bypass incompatible files'),
+        'show_icon' => $this->t('Show mimetype icon placehoder'),
+        'show_icon_and_link' => $this->t('Show mimetype icon placholder and link to file'),
       ],
-      '#empty_option' => t('Do nothing'),
-      '#description' => t('Specify any special handling that should be applied to files that Juicebox cannot display (non-images).'),
+      '#empty_option' => $this->t('Do nothing'),
+      '#description' => $this->t('Specify any special handling that should be applied to files that Juicebox cannot display (non-images).'),
     ];
     $form['linkurl_source'] = [
       '#jb_fieldset' => 'advanced',
       '#type' => 'select',
-      '#title' => t("LinkURL Source"),
-      '#description' => t('The linkURL is an image-specific path for accessing each image outside the gallery. This is used by features such as the "Open Image Button".'),
+      '#title' => $this->t("LinkURL Source"),
+      '#description' => $this->t('The linkURL is an image-specific path for accessing each image outside the gallery. This is used by features such as the "Open Image Button".'),
       '#options' => ['image_styled' => 'Main Image - Styled (use this gallery\'s main image style setting)'],
-      '#empty_option' => t('Main Image - Unstyled (original image)'),
+      '#empty_option' => $this->t('Main Image - Unstyled (original image)'),
     ];
     $form['linkurl_target'] = [
       '#jb_fieldset' => 'advanced',
       '#type' => 'select',
-      '#title' => t('LinkURL Target'),
+      '#title' => $this->t('LinkURL Target'),
       '#options' => [
-        '_blank' => '_blank',
-        '_self' => '_self',
-        '_parent' => '_parent',
-        '_top' => '_top',
+        '_blank' => $this->t('_blank'),
+        '_self' => $this->t('_self'),
+        '_parent' => $this->t('_parent'),
+        '_top' => $this->t('_top'),
       ],
-      '#description' => t('Specify a target for any links that make user of the image linkURL.'),
+      '#description' => $this->t('Specify a target for any links that make user of the image linkURL.'),
     ];
     $form['custom_parent_classes'] = [
       '#jb_fieldset' => 'advanced',
       '#type' => 'textfield',
-      '#title' => t('Custom Classes for Parent Container'),
-      '#description' => t('Define any custom classes that should be added to the parent container within the Juicebox embed markup.<br/>This can be handy if you want to apply more advanced styling or dimensioning rules to this gallery via CSS. Enter as space-separated values.'),
+      '#title' => $this->t('Custom Classes for Parent Container'),
+      '#description' => $this->t('Define any custom classes that should be added to the parent container within the Juicebox embed markup.<br/>This can be handy if you want to apply more advanced styling or dimensioning rules to this gallery via CSS. Enter as space-separated values.'),
     ];
     // Set values that are directly related to each key.
     foreach ($form as $conf_key => &$conf_value) {
@@ -587,7 +649,7 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
     }
     // Add a pre render callback that will ensure that the items are nested
     // correctly into fieldsets just before display.
-    $form['#pre_render'] = ['juicebox_form_pre_render_fieldsets'];
+    $form['#pre_render'] = [static::class . '::preRenderFieldsets'];
     return $form;
   }
 
@@ -600,7 +662,7 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface {
     $presets = image_style_options(FALSE);
     // If multisize is allowed, include it with the normal styles.
     if ($allow_multisize && !in_array('juicebox_multisize_image_style', $library['disallowed_conf'])) {
-      $presets = ['juicebox_multisize' => t('Juicebox PRO multi-size (adaptive)')] + $presets;
+      $presets = ['juicebox_multisize' => $this->t('Juicebox PRO multi-size (adaptive)')] + $presets;
     }
     return $presets;
   }

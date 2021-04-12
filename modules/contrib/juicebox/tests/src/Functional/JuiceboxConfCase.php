@@ -64,7 +64,8 @@ class JuiceboxConfCase extends JuiceboxCaseTestBase {
     $this->assertRaw('<juicebox gallerywidth="100%" galleryheight="100%" backgroundcolor="#222222" textcolor="rgba(255,255,255,1)" thumbframecolor="rgba(255,255,255,.5)" showopenbutton="TRUE" showexpandbutton="TRUE" showthumbsbutton="TRUE" usethumbdots="FALSE" usefullscreenexpand="FALSE">', 'Expected default configuration options set in XML.');
     // Alter settings to contain custom values.
     $this->drupalLogin($this->webUser);
-    $this->drupalPostForm('admin/structure/types/manage/' . $this->instBundle . '/display', [], $this->instFieldName . '_settings_edit', [], 'entity-view-display-edit-form');
+    $this->drupalGet('admin/structure/types/manage/' . $this->instBundle . '/display');
+    $this->submitForm([], $this->instFieldName . '_settings_edit', 'entity-view-display-edit-form');
     $edit = [
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][jlib_galleryWidth]' => '50%',
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][jlib_galleryHeight]' => '200px',
@@ -77,8 +78,8 @@ class JuiceboxConfCase extends JuiceboxCaseTestBase {
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][jlib_useThumbDots]' => TRUE,
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][jlib_useFullscreenExpand]' => TRUE,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
-    $this->assertText(t('Your settings have been saved.'), 'Gallery configuration changes saved.');
+    $this->submitForm($edit, 'Save');
+    $this->assertText($this->t('Your settings have been saved.'), 'Gallery configuration changes saved.');
     // Now check the resulting XML again as an anon user.
     $this->drupalLogout();
     // Check for correct embed markup.
@@ -107,13 +108,14 @@ class JuiceboxConfCase extends JuiceboxCaseTestBase {
     // Set new manual options and also add a manual customization that's
     // intended to override a custom Lite option.
     $this->drupalLogin($this->webUser);
-    $this->drupalPostForm('admin/structure/types/manage/' . $this->instBundle . '/display', [], $this->instFieldName . '_settings_edit', [], 'entity-view-display-edit-form');
+    $this->drupalGet('admin/structure/types/manage/' . $this->instBundle . '/display');
+    $this->submitForm([], $this->instFieldName . '_settings_edit', 'entity-view-display-edit-form');
     $edit = [
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][jlib_showExpandButton]' => FALSE,
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][manual_config]' => "sHoWoPeNbUtToN=\"FALSE\"\nshowexpandbutton=\"TRUE\"\ngallerywidth=\"50%\"\nmyCustomSetting=\"boomsauce\"",
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
-    $this->assertText(t('Your settings have been saved.'), 'Gallery configuration changes saved.');
+    $this->submitForm($edit, 'Save');
+    $this->assertText($this->t('Your settings have been saved.'), 'Gallery configuration changes saved.');
     $this->drupalLogout();
     // Check for correct embed markup.
     $this->drupalGet('node/' . $node->id());
@@ -142,15 +144,16 @@ class JuiceboxConfCase extends JuiceboxCaseTestBase {
     $this->assertRaw('linkURL="' . $test_image_url, 'Test unstyled image found in XML');
     // Set new advanced options.
     $this->drupalLogin($this->webUser);
-    $this->drupalPostForm('admin/structure/types/manage/' . $this->instBundle . '/display', [], $this->instFieldName . '_settings_edit', [], 'entity-view-display-edit-form');
+    $this->drupalGet('admin/structure/types/manage/' . $this->instBundle . '/display');
+    $this->submitForm([], $this->instFieldName . '_settings_edit', 'entity-view-display-edit-form');
     $edit = [
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][image_style]' => 'juicebox_medium',
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][linkurl_source]' => 'image_styled',
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][linkurl_target]' => '_self',
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][custom_parent_classes]' => 'my-custom-wrapper',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
-    $this->assertText(t('Your settings have been saved.'), 'Gallery configuration changes saved.');
+    $this->submitForm($edit, 'Save');
+    $this->assertText($this->t('Your settings have been saved.'), 'Gallery configuration changes saved.');
     $this->drupalLogout();
     // Check case with custom configuration.
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');

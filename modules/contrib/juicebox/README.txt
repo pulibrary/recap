@@ -33,6 +33,12 @@ INSTALLATION
 ------------
 Install as normal (see http://drupal.org/documentation/install/modules-themes).
 
+Installing Library
+1. Download the Library from https://juicebox.net/download/ and paste it inside
+   your drupal sites /libraries folder
+2. Go inside /libraries/juicebox/web/jbcore and copy the juicebox.js file and
+   classic folder and paste it under /libraries/juicebox/
+
 
 CONFIGURATION
 ============

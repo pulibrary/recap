@@ -46,8 +46,7 @@ class JuiceboxViewsCase extends JuiceboxCaseTestBase {
   // Uncomment the line below, and remove juicebox_mimic_article from the module
   // list above, to use the "standard" profile's article type for this test
   // instead of the one we create manually (should also work, but will be slow).
-  // protected $profile = 'standard';.
-
+  // $profile = 'standard;'.
   /**
    * Define setup tasks.
    */
@@ -85,7 +84,8 @@ class JuiceboxViewsCase extends JuiceboxCaseTestBase {
     $this->drupalLogin($this->webUser);
     $node = $this->node;
     $xml_path = 'juicebox/xml/viewsstyle/juicebox_views_test/page_2';
-    $xml_url = \Drupal::url('juicebox.xml_viewsstyle', ['viewName' => 'juicebox_views_test', 'displayName' => 'page_2']);
+    $xml_url = \Drupal::url('juicebox.xml_viewsstyle',
+     ['viewName' => 'juicebox_views_test', 'displayName' => 'page_2']);
     // Get the urls to the test image and thumb derivative used by default.
     $uri = File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
     $test_image_url = entity_load('image_style', 'juicebox_medium')->buildUrl($uri);

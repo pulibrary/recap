@@ -6,11 +6,41 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\juicebox\JuiceboxFormatter;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a form that configures global Juicebox settings.
  */
 class SettingsForm extends ConfigFormBase {
+
+  /**
+   * The Juicebox formatter service.
+   *
+   * @var Drupal\juicebox\JuiceboxFormatter\JuiceboxFormatterInterface
+   */
+  protected $juiceboxFormatter;
+
+  /**
+   * Constructs a new SettingsForm object.
+   *
+   * @param \Drupal\juicebox\JuiceboxFormatter $juicebox_formatter
+   *   The Juicebox formatter service.
+   */
+  public function __construct(JuiceboxFormatter $juicebox_formatter) {
+    $this->juiceboxFormatter = $juicebox_formatter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    // Instantiates this form class.
+    return new static(
+        // Load the service required to construct this class.
+        $container->get('juicebox.formatter')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -32,7 +62,7 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $library = \Drupal::service('juicebox.formatter')->getLibrary(TRUE, TRUE);
+    $library = $this->juiceboxFormatter->getLibrary(TRUE, TRUE);
     $version = !empty($library['version']) ? $library['version'] : $this->t('Unknown');
     // Get all settings.
     $settings = $this->config('juicebox.settings')->get();
@@ -138,7 +168,7 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $library = \Drupal::service('juicebox.formatter')->getLibrary(TRUE, TRUE);
+    $library = $this->juiceboxFormatter->getLibrary(TRUE, TRUE);
     if ($form_state->getvalue('translate_interface') && !empty($library['installed']) && $form_state->getvalue('base_languagelist') != $library['base_languagelist']) {
       $this->messenger()->addWarning($this->t('Interface translations are enabled but the base translation string does not match the suggested value for your version of the Juicebox javascript library. If some parts of the Juicebox interface do not appear translated correctly please verify that your base translation string is correct.'));
     }
