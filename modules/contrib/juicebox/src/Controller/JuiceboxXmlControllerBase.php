@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Controller routines for Juicebox XML.
- */
-
 namespace Drupal\juicebox\Controller;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -18,7 +13,6 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableResponseInterface;
-
 
 /**
  * Controller routines for Juicebox XML.
@@ -51,15 +45,14 @@ abstract class JuiceboxXmlControllerBase implements ContainerInjectionInterface 
    *
    * @var array
    */
-  protected $settings = array();
+  protected $settings = [];
 
   /**
    * An array for Drupal cache tags that applies to the page request.
    *
    * @var array
    */
-  protected $cacheTags = array('juicebox_gallery');
-
+  protected $cacheTags = ['juicebox_gallery'];
 
   /**
    * Factory to fetch required dependencies from container.
@@ -70,7 +63,7 @@ abstract class JuiceboxXmlControllerBase implements ContainerInjectionInterface 
   }
 
   /**
-   * Constructor
+   * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The Drupal config factory that can be used to derive global Juicebox
@@ -91,7 +84,7 @@ abstract class JuiceboxXmlControllerBase implements ContainerInjectionInterface 
   /**
    * Common controller for the Juicebox XML.
    *
-   * @return Response $xml
+   * @return \Symfony\Component\HttpFoundation\Response
    *   A Symfony response object containing the XML information.
    */
   public function xmlController() {
@@ -131,10 +124,10 @@ abstract class JuiceboxXmlControllerBase implements ContainerInjectionInterface 
       }
     }
     // Calculate headers.
-    $headers = array(
+    $headers = [
       'Content-Type' => 'application/xml; charset=utf-8',
       'X-Robots-Tag' => 'noindex',
-    );
+    ];
     if ($this->settings['enable_cors']) {
       $headers['Access-Control-Allow-Origin'] = '*';
     }
@@ -155,6 +148,7 @@ abstract class JuiceboxXmlControllerBase implements ContainerInjectionInterface 
    * @param string $id
    *   The id to search for within the sub-request content that will contain
    *   the embedded XML.
+   *
    * @return string
    *   The embedded XML if found or an empty string.
    */
@@ -176,7 +170,7 @@ abstract class JuiceboxXmlControllerBase implements ContainerInjectionInterface 
     $subResponse = $this->httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
     // Search for the XML within the sub-request markup. We could parse the
     // DOM for this with DOMDocument, but a regex lookup is more lightweight.
-    $matches = array();
+    $matches = [];
     preg_match('/<script[^>]*id=\"' . $id . '\"[^>]*>(.*)<\/script>/simU', $subResponse->getContent(), $matches);
     if (!empty($matches[1]) && strpos($matches[1], '<?xml') === 0) {
       $xml = $matches[1];
@@ -197,7 +191,7 @@ abstract class JuiceboxXmlControllerBase implements ContainerInjectionInterface 
   /**
    * Check access to the Drupal data that will be used to build the gallery.
    *
-   * @return boolean
+   * @return bool
    *   Returns TRUE if access is allowed for the current user and FALSE if not.
    *   Can also return NULL if access cannot be determined.
    */

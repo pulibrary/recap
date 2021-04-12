@@ -1,17 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\juicebox\Plugin\Derivative\JuiceboxConfFieldContextualLinks.
- */
-
 namespace Drupal\juicebox\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-
 
 /**
  * Provides dynamic contextual links for Juicebox field conf editing.
@@ -25,9 +19,8 @@ class JuiceboxConfFieldContextualLinks extends DeriverBase implements ContainerD
    */
   protected $entityTypeManager;
 
-
   /**
-   * Constructor
+   * Constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.

@@ -1,26 +1,37 @@
 <?php
 
-/**
- * @file
- * Test case for Juicebox file handling.
- */
+namespace Drupal\Tests\juicebox\Functional;
 
-namespace Drupal\juicebox\Tests;
-
+use Drupal\file\Entity\File;
 use Drupal\Component\Utility\Html;
-
 
 /**
  * Tests general file and non-image handling.
  *
  * @group Juicebox
  */
-class JuiceboxFileCase extends JuiceboxBaseCase {
+class JuiceboxFileCase extends JuiceboxCaseTestBase {
 
-  public static $modules = array('node', 'field_ui', 'image', 'juicebox');
+  /**
+   * Modules to install.
+   *
+   * @var array
+   */
+  public static $modules = ['node', 'field_ui', 'image', 'juicebox'];
+
+  /**
+   * The field name.
+   *
+   * @var string
+   */
   protected $instFieldName = 'field_file';
-  public $instFieldType = 'file';
 
+  /**
+   * The field type.
+   *
+   * @var string
+   */
+  public $instFieldType = 'file';
 
   /**
    * Define setup tasks.
@@ -28,7 +39,16 @@ class JuiceboxFileCase extends JuiceboxBaseCase {
   public function setUp() {
     parent::setUp();
     // Create and login user.
-    $this->webUser = $this->drupalCreateUser(array('access content', 'access administration pages', 'administer site configuration', 'administer content types', 'administer nodes', 'administer node fields', 'administer node display', 'bypass node access'));
+    $this->webUser = $this->drupalCreateUser([
+      'access content',
+      'access administration pages',
+      'administer site configuration',
+      'administer content types',
+      'administer nodes',
+      'administer node fields',
+      'administer node display',
+      'bypass node access',
+    ]);
     $this->drupalLogin($this->webUser);
     // Prep a node with an image/file field and create a test entity.
     $this->initNode();
@@ -44,15 +64,20 @@ class JuiceboxFileCase extends JuiceboxBaseCase {
     $this->createNodeWithFile();
     $node = $this->node;
     $xml_path = 'juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full';
-    $xml_url = \Drupal::url('juicebox.xml_field', array('entityType' => 'node', 'entityId' => $node->id(), 'fieldName' => $this->instFieldName, 'displayName' => 'full'));
+    $xml_url = \Drupal::url('juicebox.xml_field', [
+      'entityType' => 'node',
+      'entityId' => $node->id(),
+      'fieldName' => $this->instFieldName,
+      'displayName' => 'full',
+    ]);
     // Get the urls to the test image and thumb derivative used by default.
-    $uri = \Drupal\file\Entity\File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
+    $uri = File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
     $test_image_url = entity_load('image_style', 'juicebox_medium')->buildUrl($uri);
     $test_thumb_url = entity_load('image_style', 'juicebox_square_thumb')->buildUrl($uri);
     // Check for correct embed markup as anon user.
     $this->drupalLogout();
     $this->drupalGet('node/' . $node->id());
-    $this->assertRaw(trim(json_encode(array('configUrl' => $xml_url)), '{}"'), 'Gallery setting found in Drupal.settings.');
+    $this->assertRaw(trim(json_encode(['configUrl' => $xml_url]), '{}"'), 'Gallery setting found in Drupal.settings.');
     $this->assertRaw('id="node--' . $node->id() . '--' . str_replace('_', '-', $this->instFieldName) . '--full"', 'Embed code wrapper found.');
     $this->assertRaw(Html::escape(file_url_transform_relative($test_image_url)), 'Test image found in embed code');
     // Check for correct XML.
@@ -78,10 +103,10 @@ class JuiceboxFileCase extends JuiceboxBaseCase {
     $this->assertPattern('|imageURL=.*text.png.*thumbURL=.*text.png|', 'Non-image mimetype placeholder found for image and thumbnail.');
     // Change the file handling option to "skip".
     $this->drupalLogin($this->webUser);
-    $this->drupalPostAjaxForm('admin/structure/types/manage/' . $this->instBundle . '/display', array(), $this->instFieldName . '_settings_edit', NULL, array(), array(), 'entity-view-display-edit-form');
-    $edit = array(
+    $this->drupalPostForm('admin/structure/types/manage/' . $this->instBundle . '/display', [], $this->instFieldName . '_settings_edit', [], 'entity-view-display-edit-form');
+    $edit = [
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][incompatible_file_action]' => 'skip',
-    );
+    ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
     $this->assertText(t('Your settings have been saved.'), 'Gallery configuration changes saved.');
     // Re-check the XML. This time no image should appear at all.

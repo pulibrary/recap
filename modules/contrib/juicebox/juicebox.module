@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Module file for Juicebox.
@@ -7,27 +8,24 @@
 use Drupal\Core\Render\Element;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\juicebox\JuiceboxGalleryInterface;
-use Drupal\juicebox\JuiceboxGalleryDrupalInterface;
-
 
 /**
  * Implements hook_theme().
  */
 function juicebox_theme() {
-  return array(
+  return [
     // Template for the main Juicebox embed markup.
-    'juicebox_embed_markup' => array(
+    'juicebox_embed_markup' => [
       'template' => 'juicebox-embed-markup',
       'file' => 'templates/juicebox.theme.inc',
       'render element' => 'element',
-    ),
+    ],
     // Field template for use with relative-width galleries.
-    'field__juicebox_relative_width' => array(
+    'field__juicebox_relative_width' => [
       'base hook' => 'field',
-    ),
-  );
+    ],
+  ];
 }
-
 
 /**
  * Implements hook_theme_suggestions_HOOK_alter().
@@ -54,7 +52,6 @@ function juicebox_theme_suggestions_field_alter(array &$suggestions, array $vari
   }
 }
 
-
 /**
  * Implements hook_library_info_alter().
  */
@@ -78,38 +75,36 @@ function juicebox_library_info_alter(&$libraries, $module) {
   }
 }
 
-
 /**
  * Implements hook_libraries_info().
  */
 function juicebox_libraries_info() {
-  $libraries['juicebox'] = array(
+  $libraries['juicebox'] = [
     'name' => 'Juicebox',
     'vendor url' => 'http://www.juicebox.net/',
     'download url' => 'http://www.juicebox.net/download/',
-    'version arguments' => array(
+    'version arguments' => [
       'file' => 'juicebox.js',
       'pattern' => '/Juicebox.([a-zA-Z]+[0-9\.\ -]+)/',
       'lines' => 5,
-    ),
-    'files' => array(
+    ],
+    'files' => [
       // Note that we do not want the Juicebox library javascript to be
       // aggregated by Drupal (set preprocess option = FALSE). This is because
       // some supporting library CSS files must be at a specific location
       // RELATIVE to to the main js file. Aggregation breaks this.
-      'js' => array('juicebox.js' => array('preprocess' => FALSE, 'group' => JS_LIBRARY)),
-    ),
-    'callbacks' => array(
-      'info' => array('juicebox_library_add_info'),
-      'post-detect' => array('juicebox_library_post_detect'),
-    ),
-  );
+      'js' => ['juicebox.js' => ['preprocess' => FALSE, 'group' => JS_LIBRARY]],
+    ],
+    'callbacks' => [
+      'info' => ['juicebox_library_add_info'],
+      'post-detect' => ['juicebox_library_post_detect'],
+    ],
+  ];
   return $libraries;
 }
 
-
 /**
- * Libraries API Info Callback
+ * Libraries API Info Callback.
  *
  * Add baseline variables to a Juicebox library array that are not version
  * specific but should always be defined. These values are generic to all
@@ -119,14 +114,13 @@ function juicebox_libraries_info() {
  * @see juicebox_libraries_info()
  */
 function juicebox_library_add_info(&$library) {
-  $library['disallowed_conf'] = array();
-  $library['compatible_mimetypes'] = array('image/gif', 'image/jpeg', 'image/png');
+  $library['disallowed_conf'] = [];
+  $library['compatible_mimetypes'] = ['image/gif', 'image/jpeg', 'image/png'];
   $library['base_languagelist'] = 'Show Thumbnails|Hide Thumbnails|Expand Gallery|Close Gallery|Open Image in New Window';
 }
 
-
 /**
- * Libraries API Post-Detect Callback
+ * Libraries API Post-Detect Callback.
  *
  * Add detailed variables to a Juicebox library array after the version info can
  * be detected.
@@ -135,33 +129,46 @@ function juicebox_library_add_info(&$library) {
  */
 function juicebox_library_post_detect(&$library) {
   $pro = FALSE;
-  $disallowed_conf = array();
+  $disallowed_conf = [];
   if (!empty($library['version'])) {
     // Check if this is a Pro version.
     if (stripos($library['version'], "Pro") !== FALSE) {
       $pro = TRUE;
-      $library['base_languagelist'] = 'Show Thumbnails|Hide Thumbnails|Expand Gallery|Close Gallery|Open Image in New Window|Next Image|Previous Image|Play Audio|Pause Audio|Show Information|Hide Information|Start AutoPlay|Stop AutoPlay|AutoPlay ON|AutoPlay OFF|Go Back|Buy this Image|Share on Facebook|Share on Twitter|Share on Google+|Share on Pinterest|Share on Tumblr|of';
     }
     // Get numeric part of the version statement.
     $version_number = 0;
-    $matches = array();
+    $matches = [];
     preg_match("/[0-9\.]+[^\.]$/u", $library['version'], $matches);
     if (!empty($matches[0])) {
       $version_number = $matches[0];
     }
     // Some options are not available as LITE options < v1.3.
     if (!$pro && version_compare($version_number, '1.3', '<')) {
-      $disallowed_conf = array_merge($disallowed_conf, array('jlib_textColor', 'jlib_thumbFrameColor', 'jlib_useFullscreenExpand', 'jlib_useThumbDots'));
+      $disallowed_conf = array_merge($disallowed_conf, [
+        'jlib_textColor',
+        'jlib_thumbFrameColor',
+        'jlib_useFullscreenExpand',
+        'jlib_useThumbDots',
+      ]);
     }
-    // Multisize features are only available in PRO >= v1.4
+    // Multisize features are only available in PRO >= v1.4.
     if (!$pro || version_compare($version_number, '1.4', '<')) {
-      $disallowed_conf = array_merge($disallowed_conf, array('juicebox_multisize_image_style'));
+      $disallowed_conf = array_merge($disallowed_conf, ['juicebox_multisize_image_style']);
+    }
+    // Set the correct languageList string.
+    if (version_compare($version_number, '1.4.0', '>=')) {
+      $library['base_languagelist'] .= '|Images';
+    }
+    if ($pro) {
+      $library['base_languagelist'] .= '|Next Image|Previous Image|Play Audio|Pause Audio|Show Information|Hide Information|Start AutoPlay|Stop AutoPlay|AutoPlay ON|AutoPlay OFF|Go Back|Buy this Image|Share on Facebook|Share on Twitter|Share on Google+|Share on Pinterest|Share on Tumblr|of';
+      if (version_compare($version_number, '1.5.0', '>=')) {
+        $library['base_languagelist'] .= '|Send Email|Download';
+      }
     }
   }
   $library['pro'] = $pro;
   $library['disallowed_conf'] = $disallowed_conf;
 }
-
 
 /**
  * Form validation callback: validate width/height inputs.
@@ -171,7 +178,6 @@ function juicebox_element_validate_dimension($element, FormStateInterface $form_
     $form_state->setError($element, t('Please ensure that your width and height values are entered in a standard numeric format (such as <strong>100%</strong> or <strong>300px</strong>).'));
   }
 }
-
 
 /**
  * Form validation callback: validate Juicebox configuration options.
@@ -185,15 +191,15 @@ function juicebox_element_validate_config($element, FormStateInterface $form_sta
     $option = trim($option);
     $line_number = $key + 1;
     if (!empty($option) && !preg_match('/^[A-Za-z0-9]+?="[^"]+?"$/u', $option)) {
-      $form_state->setError($element, t('One of your manual configuration options appears to be formatted incorrectly. Please check line @line of this field and ensure that you are using the format <strong>optionName="optionValue"</strong> and that all spaces have been removed.', array('@line' => $line_number)));
+      $form_state->setError($element, t('One of your manual configuration options appears to be formatted incorrectly. Please check line @line of this field and ensure that you are using the format <strong>optionName="optionValue"</strong> and that all spaces have been removed.', ['@line' => $line_number]));
     }
   }
 }
 
-
 /**
- * Form pre-render callback: visually render fieldsets without affecting
- * tree-based variable storage.
+ * Form pre-render callback.
+ *
+ * Visually render fieldsets without affecting tree-based variable storage.
  *
  * This technique/code is taken almost directly from the D7 Views module in
  * views_ui_pre_render_add_fieldset_markup()

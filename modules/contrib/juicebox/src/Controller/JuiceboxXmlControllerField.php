@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Controller routines for field-based XML.
- */
-
 namespace Drupal\juicebox\Controller;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -17,7 +12,6 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
-
 
 /**
  * Controller routines for field-based XML.
@@ -73,7 +67,6 @@ class JuiceboxXmlControllerField extends JuiceboxXmlControllerBase {
    */
   protected $entityRepository;
 
-
   /**
    * Factory to fetch required dependencies from container.
    */
@@ -83,19 +76,7 @@ class JuiceboxXmlControllerField extends JuiceboxXmlControllerBase {
   }
 
   /**
-   * Constructor
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The Drupal config factory that can be used to derive global Juicebox
-   *   settings.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The Symfony request stack from which to extract the current request.
-   * @param \Symfony\Component\HttpKernel\HttpKernelInterface $http_kernel
-   *   The Symfony http kernel service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   A Drupal entity type manager service.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository;
-   *   A Drupal entity repository service.
+   * {@inheritdoc}
    */
   public function __construct(ConfigFactoryInterface $config_factory, RequestStack $request_stack, HttpKernelInterface $http_kernel, EntityTypeManagerInterface $entity_type_manager, EntityRepositoryInterface $entity_repository) {
     parent::__construct($config_factory, $request_stack, $http_kernel);
@@ -159,19 +140,22 @@ class JuiceboxXmlControllerField extends JuiceboxXmlControllerBase {
    */
   protected function calculateXmlCacheTags() {
     // Add tags for the entity that this XML comes from.
-    $entity_tags = $this->entity instanceof CacheableDependencyInterface ? $this->entity->getCacheTags() : array();
+    $entity_tags = $this->entity instanceof CacheableDependencyInterface ? $this->entity->getCacheTags() : [];
     // Also fetch the tags from the display configuration as that is where our
     // gallery-specific settings are stored (so changes there should also
     // invalidate the XML).
-    $display = entity_get_display($this->entityType, $this->entity->bundle(), $this->displayName);
-    $display_tags = array();
+    $display = $this->entityTypeManager->getStorage('entity_view_display')
+      ->load($this->entityType . '.' . $this->entity->bundle() . '.' . $this->displayName);
+    $display_tags = [];
     if ($display instanceof CacheableDependencyInterface) {
       $display_tags = $display->getCacheTags();
       // If this is not a custom display then we need to also include the
       // default display cache tags as Drupal may reference this display
       // elsewhere by the "default" label.
       if (!$display->status() || $display->isNew()) {
-        $display_default = entity_get_display($this->entityType, $this->entity->bundle(), 'default');
+        $display_default = $this->entityTypeManager
+          ->getStorage('entity_view_display')
+          ->load($this->entityType . '.' . $this->entity->bundle() . '.default');
         if ($display_default instanceof CacheableDependencyInterface) {
           $display_tags = Cache::mergeTags($display_tags, $display_default->getCacheTags());
         }
