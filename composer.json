@@ -24,6 +24,7 @@
         "drupal/juicebox": "^2.0@beta",
         "drupal/libraries": "^3.0@alpha",
         "drupal/twitter_block": "^3",
+        "drupal/upgrade_status": "^3.4",
         "drush/drush": "^10.2"
     },
     "require-dev": {
