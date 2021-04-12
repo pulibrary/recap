@@ -1,15 +1,15 @@
 <?php
 
-namespace Drupal\twitter_block\Tests;
+namespace Drupal\Tests\twitter_block\Functional;
 
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests if the twitter block is available.
  *
  * @group twitter_block
  */
-class TwitterBlockTest extends WebTestBase {
+class TwitterBlockTest extends BrowserTestBase {
 
   /**
    * Modules to enable.
@@ -21,13 +21,14 @@ class TwitterBlockTest extends WebTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  public function setUp() {
     parent::setUp();
-    // Create and login user.
-    $admin_user = $this->drupalCreateUser(array(
-      'administer blocks', 'administer site configuration',
+
+    $admin_user = $this->drupalCreateUser([
+      'administer blocks',
+      'administer site configuration',
       'access administration pages',
-    ));
+    ]);
     $this->drupalLogin($admin_user);
   }
 
@@ -41,17 +42,17 @@ class TwitterBlockTest extends WebTestBase {
     foreach (['bartik', 'seven', 'stark'] as $theme) {
       $this->drupalGet('admin/structure/block/list/' . $theme);
       // Configure and save the block.
-      $this->drupalPlaceBlock('twitter_block', array(
+      $this->drupalPlaceBlock('twitter_block', [
         'username' => 'drupal',
         'width' => 180,
         'height' => 200,
         'region' => 'content',
         'theme' => $theme,
-      ));
+      ]);
       // Set the default theme and ensure the block is placed.
       $theme_settings->set('default', $theme)->save();
       $this->drupalGet('');
-      $this->assertText('Tweets by @drupal', 'Twitter block found');
+      $this->assertSession()->pageTextContains('Tweets by @drupal', 'Twitter block found');
     }
   }
 
