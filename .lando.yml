@@ -3,7 +3,7 @@ recipe: drupal8
 config:
   php: '7.4'
   webroot: .
-  composer_version: '1.10.7'
+  composer_version: '2.0.12'
 services:
   appserver:
     build:
