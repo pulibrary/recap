@@ -18,7 +18,6 @@ use Drupal\views\ViewExecutable;
  * include the same methods.
  *
  * @see \Drupal\Tests\views\Kernel\ViewsKernelTestBase
- * @see \Drupal\simpletest\WebTestBase
  */
 abstract class ViewTestBase extends BrowserTestBase {
 
@@ -29,12 +28,12 @@ abstract class ViewTestBase extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['views', 'views_test_config'];
+  protected static $modules = ['views', 'views_test_config'];
 
   protected function setUp($import_test_views = TRUE) {
     parent::setUp();
     if ($import_test_views) {
-      ViewTestData::createTestViews(get_class($this), ['views_test_config']);
+      ViewTestData::createTestViews(static::class, ['views_test_config']);
     }
   }
 

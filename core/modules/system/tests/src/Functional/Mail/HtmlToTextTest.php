@@ -57,7 +57,7 @@ class HtmlToTextTest extends BrowserTestBase {
     $tested_tags = implode(', ', array_unique($matches[1]));
     $message .= ' (' . $tested_tags . ')';
     $result = MailFormatHelper::htmlToText($html, $allowed_tags);
-    $this->assertEqual($result, $text, Html::escape($message));
+    $this->assertEqual($text, $result, Html::escape($message));
     $verbose = 'html = <pre>' . $this->stringToHtml($html)
       . '</pre><br />result = <pre>' . $this->stringToHtml($result)
       . '</pre><br />expected = <pre>' . $this->stringToHtml($text)
@@ -358,8 +358,9 @@ EOT;
       // rather than characters.
       $maximum_line_length = max($maximum_line_length, strlen($line . $eol));
     }
-    $verbose = 'Maximum line length found was ' . $maximum_line_length . ' octets.';
-    $this->assertTrue($maximum_line_length <= 1000, $verbose);
+    // Verify that the maximum line length found was less than or equal to 1000
+    // characters as per RFC 821.
+    $this->assertLessThanOrEqual(1000, $maximum_line_length);
   }
 
   /**
@@ -370,7 +371,7 @@ EOT;
   public function testRemoveTrailingWhitespace() {
     $text = "Hi there! \nHerp Derp";
     $mail_lines = explode("\n", MailFormatHelper::wrapMail($text));
-    $this->assertNotEqual(" ", substr($mail_lines[0], -1), 'Trailing whitespace removed.');
+    $this->assertNotEquals(" ", substr($mail_lines[0], -1), 'Trailing whitespace removed.');
   }
 
   /**

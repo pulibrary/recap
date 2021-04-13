@@ -105,7 +105,7 @@ function hook_field_ui_preconfigured_options_alter(array &$options, $field_type)
  * @see entity_crud
  */
 function hook_field_storage_config_update_forbid(\Drupal\field\FieldStorageConfigInterface $field_storage, \Drupal\field\FieldStorageConfigInterface $prior_field_storage) {
-  if ($field_storage->module == 'options' && $field_storage->hasData()) {
+  if ($field_storage->getTypeProvider() == 'options' && $field_storage->hasData()) {
     // Forbid any update that removes allowed values with actual data.
     $allowed_values = $field_storage->getSetting('allowed_values');
     $prior_allowed_values = $prior_field_storage->getSetting('allowed_values');
@@ -190,11 +190,11 @@ function hook_field_widget_info_alter(array &$info) {
  * @see hook_field_widget_multivalue_form_alter()
  */
 function hook_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
-  // Add a css class to widget form elements for all fields of type mytype.
+  // Add a css class to widget form elements for all fields of type my_type.
   $field_definition = $context['items']->getFieldDefinition();
-  if ($field_definition->getType() == 'mytype') {
+  if ($field_definition->getType() == 'my_type') {
     // Be sure not to overwrite existing attributes.
-    $element['#attributes']['class'][] = 'myclass';
+    $element['#attributes']['class'][] = 'my-class';
   }
 }
 
@@ -257,11 +257,11 @@ function hook_field_widget_WIDGET_TYPE_form_alter(&$element, \Drupal\Core\Form\F
  * @see hook_field_widget_multivalue_WIDGET_TYPE_form_alter()
  */
 function hook_field_widget_multivalue_form_alter(array &$elements, \Drupal\Core\Form\FormStateInterface $form_state, array $context) {
-  // Add a css class to widget form elements for all fields of type mytype.
+  // Add a css class to widget form elements for all fields of type my_type.
   $field_definition = $context['items']->getFieldDefinition();
-  if ($field_definition->getType() == 'mytype') {
+  if ($field_definition->getType() == 'my_type') {
     // Be sure not to overwrite existing attributes.
-    $elements['#attributes']['class'][] = 'myclass';
+    $elements['#attributes']['class'][] = 'my-class';
   }
 }
 

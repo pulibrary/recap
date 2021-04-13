@@ -24,7 +24,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'content_translation',
     'comment',
     'datetime',
@@ -50,7 +50,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Remove the classic node table made in setup.
@@ -103,7 +103,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
     // that only the complete migration ran.
     $results = $this->nodeMigrateMapTableCount('7');
     $this->assertSame(0, $results['node']);
-    $this->assertSame(7, $results['node_complete']);
+    $this->assertSame(8, $results['node_complete']);
 
     $db = \Drupal::database();
     $this->assertEquals($this->expectedNodeFieldRevisionTable(), $db->select('node_field_revision', 'nr')

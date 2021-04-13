@@ -25,7 +25,7 @@ class UserRoleAdminTest extends BrowserTestBase {
    *
    * @var string[]
    */
-  public static $modules = ['block'];
+  protected static $modules = ['block'];
 
   /**
    * {@inheritdoc}
@@ -35,7 +35,7 @@ class UserRoleAdminTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->adminUser = $this->drupalCreateUser([
       'administer permissions',
@@ -63,33 +63,33 @@ class UserRoleAdminTest extends BrowserTestBase {
     // correctly distinguish between role names and IDs.)
     $role_name = '123';
     $edit = ['label' => $role_name, 'id' => $role_name];
-    $this->drupalPostForm('admin/people/roles/add', $edit, t('Save'));
+    $this->drupalPostForm('admin/people/roles/add', $edit, 'Save');
     $this->assertRaw(t('Role %label has been added.', ['%label' => 123]));
     $role = Role::load($role_name);
     $this->assertIsObject($role);
 
     // Check that the role was created in site default language.
-    $this->assertEqual($role->language()->getId(), $default_langcode);
+    $this->assertEqual($default_langcode, $role->language()->getId());
 
     // Try adding a duplicate role.
-    $this->drupalPostForm('admin/people/roles/add', $edit, t('Save'));
-    $this->assertRaw(t('The machine-readable name is already in use. It must be unique.'), 'Duplicate role warning displayed.');
+    $this->drupalPostForm('admin/people/roles/add', $edit, 'Save');
+    $this->assertRaw(t('The machine-readable name is already in use. It must be unique.'));
 
     // Test renaming a role.
     $role_name = '456';
     $edit = ['label' => $role_name];
-    $this->drupalPostForm("admin/people/roles/manage/{$role->id()}", $edit, t('Save'));
+    $this->drupalPostForm("admin/people/roles/manage/{$role->id()}", $edit, 'Save');
     $this->assertRaw(t('Role %label has been updated.', ['%label' => $role_name]));
     \Drupal::entityTypeManager()->getStorage('user_role')->resetCache([$role->id()]);
     $new_role = Role::load($role->id());
-    $this->assertEqual($new_role->label(), $role_name, 'The role name has been successfully changed.');
+    $this->assertEqual($role_name, $new_role->label(), 'The role name has been successfully changed.');
 
     // Test deleting a role.
     $this->drupalGet("admin/people/roles/manage/{$role->id()}");
     $this->clickLink(t('Delete'));
-    $this->drupalPostForm(NULL, [], t('Delete'));
+    $this->submitForm([], 'Delete');
     $this->assertRaw(t('The role %label has been deleted.', ['%label' => $role_name]));
-    $this->assertNoLinkByHref("admin/people/roles/manage/{$role->id()}", 'Role edit link removed.');
+    $this->assertSession()->linkByHrefNotExists("admin/people/roles/manage/{$role->id()}", 'Role edit link removed.');
     \Drupal::entityTypeManager()->getStorage('user_role')->resetCache([$role->id()]);
     $this->assertNull(Role::load($role->id()), 'A deleted role can no longer be loaded.');
 
@@ -97,10 +97,10 @@ class UserRoleAdminTest extends BrowserTestBase {
     // interface.
     $this->drupalGet('admin/people/roles/manage/' . RoleInterface::ANONYMOUS_ID);
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertNoText(t('Delete role'), 'Delete button for the anonymous role is not present.');
+    $this->assertNoText('Delete role');
     $this->drupalGet('admin/people/roles/manage/' . RoleInterface::AUTHENTICATED_ID);
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertNoText(t('Delete role'), 'Delete button for the authenticated role is not present.');
+    $this->assertNoText('Delete role');
   }
 
   /**
@@ -121,8 +121,8 @@ class UserRoleAdminTest extends BrowserTestBase {
       $saved_rids[] = $role->id();
       $weight--;
     }
-    $this->drupalPostForm('admin/people/roles', $edit, t('Save'));
-    $this->assertText(t('The role settings have been updated.'), 'The role settings form submitted successfully.');
+    $this->drupalPostForm('admin/people/roles', $edit, 'Save');
+    $this->assertText('The role settings have been updated.');
 
     // Load up the user roles with the new weights.
     $roles = user_roles();
@@ -133,7 +133,7 @@ class UserRoleAdminTest extends BrowserTestBase {
       $rids[] = $role->id();
     }
     // The order of the roles should be reversed.
-    $this->assertIdentical($rids, array_reverse($saved_rids));
+    $this->assertSame(array_reverse($saved_rids), $rids);
   }
 
 }

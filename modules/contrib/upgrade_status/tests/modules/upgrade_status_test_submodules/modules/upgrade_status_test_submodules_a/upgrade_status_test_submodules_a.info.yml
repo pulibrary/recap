@@ -7,7 +7,7 @@ core_version_requirement: ^8 || ^9
 dependencies:
   - drupal:upgrade_status_test_submodules
 
-# Information added by Drupal.org packaging script on 2021-02-03
-version: '8.x-3.4'
+# Information added by Drupal.org packaging script on 2021-03-11
+version: '8.x-3.5-alpha2'
 project: 'upgrade_status'
-datestamp: 1612379528
+datestamp: 1615458308

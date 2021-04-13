@@ -19,7 +19,7 @@ class StateValuesCleanTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['form_test'];
+  protected static $modules = ['form_test'];
 
   /**
    * {@inheritdoc}
@@ -30,7 +30,7 @@ class StateValuesCleanTest extends BrowserTestBase {
    * Tests \Drupal\Core\Form\FormState::cleanValues().
    */
   public function testFormStateValuesClean() {
-    $this->drupalPostForm('form_test/form-state-values-clean', [], t('Submit'));
+    $this->drupalPostForm('form_test/form-state-values-clean', [], 'Submit');
     $values = Json::decode($this->getSession()->getPage()->getContent());
 
     // Setup the expected result.
@@ -58,7 +58,7 @@ class StateValuesCleanTest extends BrowserTestBase {
     $this->assertTrue(isset($values['baz']['beer']), 'Nested form value still exists.');
 
     // Verify that actual form values equal resulting form values.
-    $this->assertEqual($values, $result, 'Expected form values equal actual form values.');
+    $this->assertEqual($result, $values, 'Expected form values equal actual form values.');
   }
 
 }

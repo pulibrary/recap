@@ -20,7 +20,7 @@ class StreamWrapperTest extends FileTestBase {
    *
    * @var array
    */
-  public static $modules = ['file_test'];
+  protected static $modules = ['file_test'];
 
   /**
    * A stream wrapper scheme to register for the test.
@@ -36,7 +36,7 @@ class StreamWrapperTest extends FileTestBase {
    */
   protected $classname = 'Drupal\file_test\StreamWrapper\DummyStreamWrapper';
 
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     // Add file_private_path setting.
@@ -82,26 +82,25 @@ class StreamWrapperTest extends FileTestBase {
     $this->assertEqual('Drupal\Core\StreamWrapper\PublicStream', get_class($instance), 'Got correct class type for public URI.');
 
     // Test file_uri_target().
-    $this->assertEqual($stream_wrapper_manager::getTarget('public://foo/bar.txt'), 'foo/bar.txt', 'Got a valid stream target from public://foo/bar.txt.');
-    $this->assertEqual($stream_wrapper_manager::getTarget('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=='), 'image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==', t('Got a valid stream target from a data URI.'));
+    $this->assertEqual('foo/bar.txt', $stream_wrapper_manager::getTarget('public://foo/bar.txt'), 'Got a valid stream target from public://foo/bar.txt.');
+    $this->assertEqual('image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==', $stream_wrapper_manager::getTarget('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=='), t('Got a valid stream target from a data URI.'));
     $this->assertFalse($stream_wrapper_manager::getTarget('foo/bar.txt'), 'foo/bar.txt is not a valid stream.');
     $this->assertSame($stream_wrapper_manager::getTarget('public://'), '');
     $this->assertSame($stream_wrapper_manager::getTarget('data:'), '');
 
     // Test file_build_uri() and
     // Drupal\Core\StreamWrapper\LocalStream::getDirectoryPath().
-    $this->assertEqual(file_build_uri('foo/bar.txt'), 'public://foo/bar.txt', 'Expected scheme was added.');
-    $this->assertEqual($stream_wrapper_manager->getViaScheme('public')->getDirectoryPath(), PublicStream::basePath(), 'Expected default directory path was returned.');
+    $this->assertEqual('public://foo/bar.txt', file_build_uri('foo/bar.txt'), 'Expected scheme was added.');
+    $this->assertEqual(PublicStream::basePath(), $stream_wrapper_manager->getViaScheme('public')->getDirectoryPath(), 'Expected default directory path was returned.');
     $file_system = \Drupal::service('file_system');
     assert($file_system instanceof FileSystemInterface);
-    $this->assertEqual($stream_wrapper_manager->getViaScheme('temporary')->getDirectoryPath(), $file_system->getTempDirectory(), 'Expected temporary directory path was returned.');
+    $this->assertEqual($file_system->getTempDirectory(), $stream_wrapper_manager->getViaScheme('temporary')->getDirectoryPath(), 'Expected temporary directory path was returned.');
     $config->set('default_scheme', 'private')->save();
-    $this->assertEqual(file_build_uri('foo/bar.txt'), 'private://foo/bar.txt', 'Got a valid URI from foo/bar.txt.');
+    $this->assertEqual('private://foo/bar.txt', file_build_uri('foo/bar.txt'), 'Got a valid URI from foo/bar.txt.');
 
     // Test file_create_url()
     // TemporaryStream::getExternalUrl() uses Url::fromRoute(), which needs
     // route information to work.
-    $this->container->get('router.builder')->rebuild();
     $this->assertStringContainsString('system/temporary?file=test.txt', file_create_url('temporary://test.txt'), 'Temporary external URL correctly built.');
     $this->assertStringContainsString(Settings::get('file_public_path') . '/test.txt', file_create_url('public://test.txt'), 'Public external URL correctly built.');
     $this->assertStringContainsString('system/files/test.txt', file_create_url('private://test.txt'), 'Private external URL correctly built.');

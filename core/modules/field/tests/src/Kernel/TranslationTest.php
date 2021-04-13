@@ -23,7 +23,7 @@ class TranslationTest extends FieldKernelTestBase {
    *
    * @var array
    */
-  public static $modules = ['language', 'node'];
+  protected static $modules = ['language', 'node'];
 
   /**
    * The name of the field to use in this test.
@@ -70,7 +70,7 @@ class TranslationTest extends FieldKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installEntitySchema('node');
@@ -174,7 +174,7 @@ class TranslationTest extends FieldKernelTestBase {
     // @todo Test every translation once the Entity Translation API allows for
     //   multilingual defaults.
     $langcode = $entity->language()->getId();
-    $this->assertEqual($entity->getTranslation($langcode)->{$field_name_default}->getValue(), $field->getDefaultValueLiteral(), new FormattableMarkup('Default value correctly populated for language %language.', ['%language' => $langcode]));
+    $this->assertEqual($field->getDefaultValueLiteral(), $entity->getTranslation($langcode)->{$field_name_default}->getValue(), new FormattableMarkup('Default value correctly populated for language %language.', ['%language' => $langcode]));
 
     $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
     // Check that explicit empty values are not overridden with default values.

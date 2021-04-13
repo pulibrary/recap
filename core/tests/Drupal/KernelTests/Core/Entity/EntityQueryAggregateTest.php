@@ -18,7 +18,7 @@ class EntityQueryAggregateTest extends EntityKernelTestBase {
    *
    * @var array
    */
-  public static $modules = [];
+  protected static $modules = [];
 
   /**
    * The entity_test storage to create the test entities.
@@ -34,7 +34,7 @@ class EntityQueryAggregateTest extends EntityKernelTestBase {
    */
   protected $queryResult;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->entityStorage = $this->entityTypeManager->getStorage('entity_test');
@@ -131,10 +131,14 @@ class EntityQueryAggregateTest extends EntityKernelTestBase {
 
     // Apply a simple aggregation for different aggregation functions.
     foreach ($function_expected as $aggregation_function => $expected) {
-      $this->queryResult = $this->entityStorage->getAggregateQuery()
-        ->aggregate('id', $aggregation_function)
-        ->execute();
-      $this->assertEqual($this->queryResult, $expected);
+      $query = $this->entityStorage->getAggregateQuery()
+        ->aggregate('id', $aggregation_function);
+      $this->queryResult = $query->execute();
+      // We need to check that a character exists before and after the table,
+      // column and alias identifiers. These would be the quote characters
+      // specific for each database system.
+      $this->assertRegExp('/' . $aggregation_function . '\(.entity_test.\..id.\) AS .id_' . $aggregation_function . './', (string) $query, 'The argument to the aggregation function should be a quoted field.');
+      $this->assertEquals($expected, $this->queryResult);
     }
 
     // Apply aggregation and groupby on the same query.
@@ -517,7 +521,7 @@ class EntityQueryAggregateTest extends EntityKernelTestBase {
       ['field_test_1' => 1, 'field_test_2_count' => 2],
     ]);
 
-    // Groupby and aggregate by fieldapi field, and sort by the aggregated
+    // Group by and aggregate by Field API field, and sort by the aggregated
     // field.
     $this->queryResult = $this->entityStorage->getAggregateQuery()
       ->groupBy('field_test_1')
@@ -593,7 +597,7 @@ class EntityQueryAggregateTest extends EntityKernelTestBase {
       $found = FALSE;
       break;
     }
-    return $this->assertTrue($found, strtr('!expected expected, !found found', ['!expected' => print_r($expected, TRUE), '!found' => print_r($this->queryResult, TRUE)]));
+    $this->assertTrue($found, strtr('!expected expected, !found found', ['!expected' => print_r($expected, TRUE), '!found' => print_r($this->queryResult, TRUE)]));
   }
 
   /**

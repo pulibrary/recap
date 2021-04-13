@@ -43,12 +43,12 @@ class ToolkitGdTest extends KernelTestBase {
    *
    * @var array
    */
-  public static $modules = ['system'];
+  protected static $modules = ['system'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Set the image factory service.
@@ -106,7 +106,7 @@ class ToolkitGdTest extends KernelTestBase {
   public function testManipulations() {
 
     // Test that the image factory is set to use the GD toolkit.
-    $this->assertEqual($this->imageFactory->getToolkitId(), 'gd', 'The image factory is set to use the \'gd\' image toolkit.');
+    $this->assertEqual('gd', $this->imageFactory->getToolkitId(), 'The image factory is set to use the \'gd\' image toolkit.');
 
     // Test the list of supported extensions.
     $expected_extensions = ['png', 'gif', 'jpeg', 'jpg', 'jpe'];
@@ -410,7 +410,7 @@ class ToolkitGdTest extends KernelTestBase {
         $this->assertEqual('#ffff00', $image_reloaded->getToolkit()->getTransparentColor(), new FormattableMarkup('Image file %file has the correct transparent color channel set.', ['%file' => $file]));
       }
       else {
-        $this->assertEqual(NULL, $image_reloaded->getToolkit()->getTransparentColor(), new FormattableMarkup('Image file %file has no color channel set.', ['%file' => $file]));
+        $this->assertNull($image_reloaded->getToolkit()->getTransparentColor(), new FormattableMarkup('Image file %file has no color channel set.', ['%file' => $file]));
       }
     }
 
@@ -428,8 +428,13 @@ class ToolkitGdTest extends KernelTestBase {
 
   /**
    * Tests that GD resources are freed from memory.
+   *
+   * @todo Remove the method for PHP 8.0+ https://www.drupal.org/node/3179058
    */
   public function testResourceDestruction() {
+    if (PHP_VERSION_ID >= 80000) {
+      $this->markTestSkipped('In PHP8 resources are no longer used. \GdImage objects are used instead. These will be garbage collected like the regular objects they are.');
+    }
     // Test that an Image object going out of scope releases its GD resource.
     $image = $this->imageFactory->get('core/tests/fixtures/files/image-test.png');
     $res = $image->getToolkit()->getResource();
@@ -525,7 +530,7 @@ class ToolkitGdTest extends KernelTestBase {
   public function testMissingOperation() {
 
     // Test that the image factory is set to use the GD toolkit.
-    $this->assertEqual($this->imageFactory->getToolkitId(), 'gd', 'The image factory is set to use the \'gd\' image toolkit.');
+    $this->assertEqual('gd', $this->imageFactory->getToolkitId(), 'The image factory is set to use the \'gd\' image toolkit.');
 
     // An image file that will be tested.
     $file = 'image-test.png';

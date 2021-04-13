@@ -21,7 +21,7 @@ class AccessDeniedTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['block', 'node', 'system_test'];
+  protected static $modules = ['block', 'node', 'system_test'];
 
   /**
    * {@inheritdoc}
@@ -30,7 +30,7 @@ class AccessDeniedTest extends BrowserTestBase {
 
   protected $adminUser;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalPlaceBlock('page_title_block');
@@ -51,7 +51,7 @@ class AccessDeniedTest extends BrowserTestBase {
 
   public function testAccessDenied() {
     $this->drupalGet('admin');
-    $this->assertText(t('Access denied'), 'Found the default 403 page');
+    $this->assertText('Access denied');
     $this->assertSession()->statusCodeEquals(403);
 
     // Ensure that users without permission are denied access and have the
@@ -60,9 +60,9 @@ class AccessDeniedTest extends BrowserTestBase {
     $this->drupalGet('admin', ['query' => ['foo' => 'bar']]);
 
     $settings = $this->getDrupalSettings();
-    $this->assertEqual($settings['path']['currentPath'], 'admin');
-    $this->assertEqual($settings['path']['currentPathIsAdmin'], TRUE);
-    $this->assertEqual($settings['path']['currentQuery'], ['foo' => 'bar']);
+    $this->assertEqual('admin', $settings['path']['currentPath']);
+    $this->assertTrue($settings['path']['currentPathIsAdmin']);
+    $this->assertEqual(['foo' => 'bar'], $settings['path']['currentQuery']);
 
     $this->drupalLogin($this->adminUser);
 
@@ -70,14 +70,14 @@ class AccessDeniedTest extends BrowserTestBase {
     $edit = [
       'site_403' => 'user/' . $this->adminUser->id(),
     ];
-    $this->drupalPostForm('admin/config/system/site-information', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/system/site-information', $edit, 'Save configuration');
     $this->assertRaw(new FormattableMarkup("The path '%path' has to start with a slash.", ['%path' => $edit['site_403']]));
 
     // Use a custom 403 page.
     $edit = [
       'site_403' => '/user/' . $this->adminUser->id(),
     ];
-    $this->drupalPostForm('admin/config/system/site-information', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/system/site-information', $edit, 'Save configuration');
 
     // Enable the user login block.
     $block = $this->drupalPlaceBlock('user_login_block', ['id' => 'login']);
@@ -85,22 +85,22 @@ class AccessDeniedTest extends BrowserTestBase {
     // Log out and check that the user login block is shown on custom 403 pages.
     $this->drupalLogout();
     $this->drupalGet('admin');
-    $this->assertText($this->adminUser->getAccountName(), 'Found the custom 403 page');
-    $this->assertText(t('Username'), 'Blocks are shown on the custom 403 page');
+    $this->assertText($this->adminUser->getAccountName());
+    $this->assertText('Username');
 
     // Log back in and remove the custom 403 page.
     $this->drupalLogin($this->adminUser);
     $edit = [
       'site_403' => '',
     ];
-    $this->drupalPostForm('admin/config/system/site-information', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/system/site-information', $edit, 'Save configuration');
 
     // Logout and check that the user login block is shown on default 403 pages.
     $this->drupalLogout();
     $this->drupalGet('admin');
-    $this->assertText(t('Access denied'), 'Found the default 403 page');
+    $this->assertText('Access denied');
     $this->assertSession()->statusCodeEquals(403);
-    $this->assertText(t('Username'), 'Blocks are shown on the default 403 page');
+    $this->assertText('Username');
 
     // Log back in, set the custom 403 page to /user/login and remove the block
     $this->drupalLogin($this->adminUser);
@@ -113,10 +113,10 @@ class AccessDeniedTest extends BrowserTestBase {
       'name' => $this->adminUser->getAccountName(),
       'pass' => $this->adminUser->pass_raw,
     ];
-    $this->drupalPostForm('admin/config/system/site-information', $edit, t('Log in'));
+    $this->drupalPostForm('admin/config/system/site-information', $edit, 'Log in');
 
     // Check that we're still on the same page.
-    $this->assertText(t('Basic site settings'));
+    $this->assertText('Basic site settings');
   }
 
   /**

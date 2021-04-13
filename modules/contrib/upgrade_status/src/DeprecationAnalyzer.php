@@ -2,7 +2,6 @@
 
 namespace Drupal\upgrade_status;
 
-use Composer\Semver\Semver;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
@@ -13,15 +12,9 @@ use Drupal\Core\Template\TwigEnvironment;
 use DrupalFinder\DrupalFinder;
 use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
+use Twig\Util\DeprecationCollector;
 
 final class DeprecationAnalyzer {
-
-  /**
-   * The oldest supported core minor version.
-   *
-   * @var string
-   */
-  const CORE_MINOR_OLDEST_SUPPORTED = '8.8';
 
   /**
    * Upgrade status scan result storage.
@@ -323,7 +316,7 @@ final class DeprecationAnalyzer {
     $twig_deprecations = $this->analyzeTwigTemplates($extension->getPath());
     foreach ($twig_deprecations as $twig_deprecation) {
       preg_match('/\s([a-zA-Z0-9\_\-\/]+.html\.twig)\s/', $twig_deprecation, $file_matches);
-      preg_match('/\s(\d).?$/', $twig_deprecation, $line_matches);
+      preg_match('/\s(\d+).?$/', $twig_deprecation, $line_matches);
       $twig_deprecation = preg_replace('! in (.+)\.twig at line \d+\.!', '.', $twig_deprecation);
       $twig_deprecation .= ' See https://drupal.org/node/3071078.';
       $result['data']['files'][$file_matches[1]]['messages'][] = [
@@ -354,7 +347,7 @@ final class DeprecationAnalyzer {
       $result['data']['totals']['file_errors']++;
     }
 
-    // Assume this project is Drupal 9 ready unless proven otherwise.
+    // Assume this project is ready for the next major core version unless proven otherwise.
     $result['data']['totals']['upgrade_status_split']['declared_ready'] = TRUE;
 
     $info_files = $this->getSubExtensionInfoFiles($project_dir);
@@ -379,9 +372,9 @@ final class DeprecationAnalyzer {
           $result['data']['totals']['file_errors']++;
           $result['data']['totals']['upgrade_status_split']['declared_ready'] = FALSE;
         }
-        elseif (!Semver::satisfies('9.0.0', $info['core_version_requirement'])) {
+        elseif (!ProjectCollector::isCompatibleWithNextMajorDrupal($info['core_version_requirement'])) {
           $result['data']['files'][$error_path]['messages'][] = [
-            'message' => "Value of core_version_requirement: {$info['core_version_requirement']} is not compatible with Drupal 9.0.0. See https://drupal.org/node/3070687.",
+            'message' => "Value of core_version_requirement: {$info['core_version_requirement']} is not compatible with the next major version of Drupal core. See https://drupal.org/node/3070687.",
             'line' => 0,
           ];
           $result['data']['totals']['errors']++;
@@ -404,16 +397,16 @@ final class DeprecationAnalyzer {
       $composer_json = json_decode(file_get_contents($project_dir . '/composer.json'));
       if (empty($composer_json) || !is_object($composer_json)) {
         $result['data']['files'][$extension->getPath() . '/composer.json']['messages'][] = [
-          'message' => "Parse error in composer.json. Having a composer.json is not a requirement for Drupal 9 compatibility but if there is one, it should be valid. See https://drupal.org/node/2514612.",
+          'message' => "Parse error in composer.json. Having a composer.json is not a requirement in general, but if there is one, it should be valid. See https://drupal.org/node/2514612.",
           'line' => 0,
         ];
         $result['data']['totals']['errors']++;
         $result['data']['totals']['file_errors']++;
         $result['data']['totals']['upgrade_status_split']['declared_ready'] = FALSE;
       }
-      elseif (!empty($composer_json->require->{'drupal/core'}) && !Semver::satisfies('9.0.0', $composer_json->require->{'drupal/core'})) {
+      elseif (!empty($composer_json->require->{'drupal/core'}) && !projectCollector::isCompatibleWithNextMajorDrupal($composer_json->require->{'drupal/core'})) {
         $result['data']['files'][$extension->getPath() . '/composer.json']['messages'][] = [
-          'message' => "The drupal/core requirement is not Drupal 9 compatible. Either remove it or update it to be compatible with Drupal 9. See https://drupal.org/node/2514612#s-drupal-9-compatibility.",
+          'message' => "The drupal/core requirement is not compatible with the next major version of Drupal. Either remove it or update it to be compatible. See https://drupal.org/node/2514612#s-drupal-9-compatibility.",
           'line' => 0,
         ];
         $result['data']['totals']['errors']++;
@@ -447,7 +440,8 @@ final class DeprecationAnalyzer {
 
         // Sum up the error based on the category it ended up in. Split the
         // categories into two high level buckets needing attention now or
-        // later for Drupal 9 compatibility. Ignore Drupal 10 here.
+        // later for compatibility with the next major version. Issues in the
+        // 'ignore' category are intentionally not counted in either.
         @$result['data']['totals']['upgrade_status_category'][$category]++;
         if (in_array($category, ['safe', 'old', 'rector'])) {
           @$result['data']['totals']['upgrade_status_split']['error']++;
@@ -458,7 +452,7 @@ final class DeprecationAnalyzer {
       }
     }
 
-    // For contributed projects, attempt to grab Drupal 9 plan information.
+    // For contributed projects, attempt to grab upgrade plan information.
     if (!empty($extension->info['project'])) {
       try {
         /** @var \Psr\Http\Message\ResponseInterface $response */
@@ -492,7 +486,7 @@ final class DeprecationAnalyzer {
    * @return array
    */
   protected function analyzeTwigTemplates($directory) {
-    return (new \Twig_Util_DeprecationCollector($this->twigEnvironment))->collectDir($directory, '.html.twig');
+    return (new DeprecationCollector($this->twigEnvironment))->collectDir($directory, '.html.twig');
   }
 
   /**
@@ -570,11 +564,11 @@ final class DeprecationAnalyzer {
     // 8.6.0, so use that version number. Otherwise use the number from the
     // message.
     $version = '';
-    if (preg_match('!\\\\(Web|)TestBase. Deprecated in [Dd]rupal[ :]8.8.0 !', $error)) {
+    if (preg_match('!\\\\(Web|)TestBase. Deprecated in [Dd]rupal[ :]8\.8\.0 !', $error)) {
       $version = '8.6.0';
       $error .= " Replacement available from drupal:8.6.0.";
     }
-    elseif (preg_match('!Deprecated (in|as of) [Dd]rupal[ :](8.\d)!', $error, $version_found)) {
+    elseif (preg_match('!Deprecated (in|as of) [Dd]rupal[ :](\d+\.\d)!', $error, $version_found)) {
       $version = $version_found[2];
     }
 
@@ -589,7 +583,7 @@ final class DeprecationAnalyzer {
         // If the found deprecation is older or equal to the oldest
         // supported core version, it should be old enough to update
         // either way.
-        if (version_compare($version, self::CORE_MINOR_OLDEST_SUPPORTED) <= 0) {
+        if (version_compare($version, ProjectCollector::getOldestSupportedMinor()) <= 0) {
           $category = 'old';
         }
         // If the deprecation is not old and we are dealing with a contrib
@@ -616,10 +610,12 @@ final class DeprecationAnalyzer {
       $category = 'rector';
     }
 
-    // If the deprecation is already for Drupal 10, put it in the ignore
-    // category. This overwrites any categorization before intentionally.
-    if (preg_match('!(will be|is) removed (before|from) [Dd]rupal[ :](10.\d)!', $error)) {
-      $category = 'ignore';
+    // If the deprecation is already for after the next Drupal major, put it in the
+    // ignore category. This overwrites any categorization before intentionally.
+    if (preg_match('!(will be|is) removed (before|from) [Dd]rupal[ :](\d+)\.!', $error, $version_removed)) {
+      if ($version_removed[3] > ProjectCollector::getDrupalCoreMajorVersion() + 1) {
+        $category = 'ignore';
+      }
     }
 
     return [$error, $category];

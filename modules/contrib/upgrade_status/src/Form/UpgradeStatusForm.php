@@ -96,6 +96,13 @@ class UpgradeStatusForm extends FormBase {
   protected $destination;
 
   /**
+   * The next Drupal core major version.
+   *
+   * @var int
+   */
+  protected $nextMajor;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
@@ -159,6 +166,7 @@ class UpgradeStatusForm extends FormBase {
     $this->state = $state;
     $this->dateFormatter = $date_formatter;
     $this->destination = $destination;
+    $this->nextMajor = ProjectCollector::getDrupalCoreMajorVersion() + 1;
   }
 
   /**
@@ -193,12 +201,14 @@ class UpgradeStatusForm extends FormBase {
 
     $environment = $this->buildEnvironmentChecks();
     $form['summary'] = $this->buildResultSummary($environment['status']);
+    $environment_description = $environment['description'];
     unset($environment['status']);
+    unset($environment['description']);
 
     $form['environment'] = [
       '#type' => 'details',
       '#title' => $this->t('Drupal core and hosting environment'),
-      '#description' => $this->t('<a href=":upgrade">Upgrades to Drupal 9 are supported from Drupal 8.8.x and Drupal 8.9.x</a>. It is suggested to update to the latest Drupal 8 version available. <a href=":platform">Several hosting platform requirements have been raised for Drupal 9</a>.', [':upgrade' => 'https://www.drupal.org/docs/9/how-to-prepare-your-drupal-7-or-8-site-for-drupal-9/upgrading-a-drupal-8-site-to-drupal-9', ':platform' => 'https://www.drupal.org/docs/9/how-drupal-9-is-made-and-what-is-included/environment-requirements-of-drupal-9']),
+      '#description' => $environment_description,
       '#open' => TRUE,
       '#attributes' => ['class' => ['upgrade-status-summary-environment']],
       'data' => $environment,
@@ -270,10 +280,10 @@ class UpgradeStatusForm extends FormBase {
       'type'     => ['data' => $this->t('Type'), 'class' => 'type-label'],
       'status'   => ['data' => $this->t('Status'), 'class' => 'status-label'],
       'version'  => ['data' => $this->t('Local version'), 'class' => 'version-label'],
-      'ready'    => ['data' => $this->t('Local 9-ready'), 'class' => 'ready-label'],
+      'ready'    => ['data' => $this->t('Local ' . $this->nextMajor . '-ready'), 'class' => 'ready-label'],
       'result'   => ['data' => $this->t('Local scan result'), 'class' => 'scan-info'],
       'updatev'  => ['data' => $this->t('Drupal.org version'), 'class' => 'updatev-info'],
-      'update9'  => ['data' => $this->t('Drupal.org 9-ready'), 'class' => 'update9-info'],
+      'update9'  => ['data' => $this->t('Drupal.org ' . $this->nextMajor . '-ready'), 'class' => 'update9-info'],
       'issues'   => ['data' => $this->t('Drupal.org issues'), 'class' => 'issue-info'],
       'plan'     => ['data' => $this->t('Plan'), 'class' => 'plan-info'],
     ];
@@ -327,11 +337,11 @@ class UpgradeStatusForm extends FormBase {
         ]
       ];
       $option['ready'] = [
-        'class' => 'status-info ' . (!empty($extension->info['upgrade_status_9_compatible']) ? 'status-info-compatible' : 'status-info-incompatible'),
+        'class' => 'status-info ' . (!empty($extension->info['upgrade_status_next_major_compatible']) ? 'status-info-compatible' : 'status-info-incompatible'),
         'data' => [
           'label' => [
             '#type' => 'markup',
-            '#markup' => !empty($extension->info['upgrade_status_9_compatible']) ? $this->t('Compatible') : $this->t('Incompatible'),
+            '#markup' => !empty($extension->info['upgrade_status_next_major_compatible']) ? $this->t('Compatible') : $this->t('Incompatible'),
           ],
         ]
       ];
@@ -458,7 +468,7 @@ class UpgradeStatusForm extends FormBase {
               '#type' => 'markup',
               // Use the project name from the info array instead of $key.
               // $key is the local name, not necessarily the project name.
-              '#markup' => '<a href="https://drupal.org/project/issues/' . $extension->info['project'] . '?text=Drupal+9&status=All">' . $this->t('Issues', [], ['context' => 'Drupal.org issues']) . '</a>',
+              '#markup' => '<a href="https://drupal.org/project/issues/' . $extension->info['project'] . '?text=Drupal+' . $this->nextMajor . '&status=All">' . $this->t('Issues', [], ['context' => 'Drupal.org issues']) . '</a>',
             ],
           ]
         ];
@@ -481,8 +491,9 @@ class UpgradeStatusForm extends FormBase {
   /**
    * Build a result summary table for quick overview display to users.
    *
-   * @param bool $environment_status
-   *   The status of the environment. Whether to put it into the Fix or Relax columns.
+   * @param bool|null $environment_status
+   *   The status of the environment. Whether to put it into the Fix or Relax
+   *   columns or omit it.
    *
    * @return array
    *   Render array.
@@ -552,7 +563,7 @@ class UpgradeStatusForm extends FormBase {
         // Add available update info.
         $cell_items[] = $update_time;
       }
-      if (($key == ProjectCollector::SUMMARY_ACT) && !$environment_status) {
+      if (($key == ProjectCollector::SUMMARY_ACT) && !is_null($environment_status) && !$environment_status) {
         $cell_items[] = [
           '#markup' => '<a href="#edit-environment" class="upgrade-status-summary-label">' . $this->t('Environment is incompatible') . '</a>',
         ];
@@ -598,14 +609,11 @@ class UpgradeStatusForm extends FormBase {
       </div>
 MARKUP
         ];
-        if ($environment_status) {
+        if (!empty($environment_status)) {
           $cell_items[] = [
             '#markup' => '<a href="#edit-environment" class="upgrade-status-summary-label">' . $this->t('Environment checks passed') . '</a>',
           ];
         }
-        $cell_items[] = [
-          '#markup' => 'Once entirely compatible, make sure to remove Upgrade Status from the site before updating to Drupal 9',
-        ];
       }
       if (count($cell_items)) {
         $build['#rows'][0]['data'][$key]['data'][] = [
@@ -627,8 +635,9 @@ MARKUP
    * Builds a list of environment checks.
    *
    * @return array
-   *   Build array. The overall environment status (TRUE or FALSE) is indicated
-   *   in the 'status' key.
+   *   Build array. The overall environment status (TRUE, FALSE or NULL) is
+   *   indicated in the 'status' key, while a 'description' key explains the
+   *   environment requirements on a high level.
    */
   protected function buildEnvironmentChecks() {
     $status = TRUE;
@@ -641,6 +650,42 @@ MARKUP
       '#header' => $header,
       '#rows' => [],
     ];
+
+    if ($this->nextMajor == 10) {
+      // @todo update this as the situation develops.
+      $build['description'] = $this->t('<a href=":environment">Drupal 10 environment requirements are still evolving</a>. Upgrades to Drupal 10 are planned to be supported from Drupal 9.3.x and Drupal 9.4.x.', [':environment' => 'https://www.drupal.org/project/drupal/issues/3118147']);
+
+      // Check PHP version.
+      $version = PHP_VERSION;
+      if (version_compare($version, '8.0.0') >= 0) {
+        $class = 'no-known-error';
+      }
+      else {
+        $class = 'known-error';
+        $status = FALSE;
+      }
+      $build['data']['#rows'][] = [
+        'class' => [$class],
+        'data' => [
+          'requirement' => [
+            'class' => 'requirement-label',
+            'data' => $this->t('PHP version should be at least 8.0.0. Before updating to PHP 8, use <code>$ composer why-not php:8</code> to check if any projects need updating for compatibility. Also check custom projects manually.'),
+          ],
+          'status' => [
+            'data' => $this->t('Version @version', ['@version' => $version]),
+            'class' => 'status-info',
+          ],
+        ]
+      ];
+
+      // Save the overall status indicator in the build array. It will be
+      // popped off later to be used in the summary table.
+      $build['status'] = $status;
+
+      return $build;
+    }
+
+    $build['description'] = $this->t('<a href=":upgrade">Upgrades to Drupal 9 are supported from Drupal 8.8.x and Drupal 8.9.x</a>. It is suggested to update to the latest Drupal 8 version available. <a href=":platform">Several hosting platform requirements have been raised for Drupal 9</a>.', [':upgrade' => 'https://www.drupal.org/docs/9/how-to-prepare-your-drupal-7-or-8-site-for-drupal-9/upgrading-a-drupal-8-site-to-drupal-9', ':platform' => 'https://www.drupal.org/docs/9/how-drupal-9-is-made-and-what-is-included/environment-requirements-of-drupal-9']);
 
     // Check Drupal version. Link to update if available.
     $core_version_info = [
@@ -1145,6 +1190,13 @@ MARKUP
     }
 
     return [$error, $message, $data];
+  }
+
+  /**
+   * Dynamic page title for the form to make the status target clear.
+   */
+  public function getTitle() {
+    return $this->t('Drupal @version upgrade status', ['@version' => $this->nextMajor]);
   }
 
 }

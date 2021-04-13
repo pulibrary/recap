@@ -23,6 +23,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Template\Attribute;
+use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * The regex pattern used when checking for insecure file types.
@@ -66,57 +67,6 @@ function file_field_widget_info_alter(array &$info) {
   // as the default widget.
   // @see \Drupal\file\Plugin\Field\FieldType\FileUriItem
   $info['uri']['field_types'][] = 'file_uri';
-}
-
-/**
- * Loads file entities from the database.
- *
- * @param array|null $fids
- *   (optional) An array of entity IDs. If omitted or NULL, all entities are
- *   loaded.
- * @param bool $reset
- *   (optional) Whether to reset the internal file_load_multiple() cache.
- *   Defaults to FALSE.
- *
- * @return array
- *   An array of file entities, indexed by fid.
- *
- * @deprecated in drupal:8.0.0 and is removed from drupal:9.0.0. Use
- *   \Drupal\file\Entity\File::loadMultiple().
- *
- * @see https://www.drupal.org/node/2266845
- */
-function file_load_multiple(array $fids = NULL, $reset = FALSE) {
-  @trigger_error('file_load_multiple() is deprecated in Drupal 8.0.0 and will be removed before Drupal 9.0.0. Use \Drupal\file\Entity\File::loadMultiple(). See https://www.drupal.org/node/2266845', E_USER_DEPRECATED);
-  if ($reset) {
-    \Drupal::entityTypeManager()->getStorage('file')->resetCache($fids);
-  }
-  return File::loadMultiple($fids);
-}
-
-/**
- * Loads a single file entity from the database.
- *
- * @param int $fid
- *   A file ID.
- * @param bool $reset
- *   (optional) Whether to reset the internal file_load_multiple() cache.
- *   Defaults to FALSE.
- *
- * @return \Drupal\file\FileInterface|null
- *   A file entity or NULL if the file was not found.
- *
- * @deprecated in drupal:8.0.0 and is removed from drupal:9.0.0. Use
- *   \Drupal\file\Entity\File::load().
- *
- * @see https://www.drupal.org/node/2266845
- */
-function file_load($fid, $reset = FALSE) {
-  @trigger_error('file_load() is deprecated in Drupal 8.0.0 and will be removed before Drupal 9.0.0. Use \Drupal\file\Entity\File::load(). See https://www.drupal.org/node/2266845', E_USER_DEPRECATED);
-  if ($reset) {
-    \Drupal::entityTypeManager()->getStorage('file')->resetCache([$fid]);
-  }
-  return File::load($fid);
 }
 
 /**
@@ -748,6 +698,7 @@ function file_cron() {
   // is disabled if $age set to 0.
   if ($age) {
     $fids = Drupal::entityQuery('file')
+      ->accessCheck(FALSE)
       ->condition('status', FILE_STATUS_PERMANENT, '<>')
       ->condition('changed', REQUEST_TIME - $age, '<')
       ->range(0, 100)
@@ -1007,7 +958,14 @@ function _file_save_upload_single(\SplFileInfo $file_info, $form_field_name, $va
     'uri' => $file_info->getRealPath(),
     'filesize' => $file_info->getSize(),
   ];
-  $values['filemime'] = \Drupal::service('file.mime_type.guesser')->guess($values['filename']);
+  $guesser = \Drupal::service('file.mime_type.guesser');
+  if ($guesser instanceof MimeTypeGuesserInterface) {
+    $values['filemime'] = $guesser->guessMimeType($values['filename']);
+  }
+  else {
+    $values['filemime'] = $guesser->guess($values['filename']);
+    @trigger_error('\Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Implement \Symfony\Component\Mime\MimeTypeGuesserInterface instead. See https://www.drupal.org/node/3133341', E_USER_DEPRECATED);
+  }
   $file = File::create($values);
 
   $extensions = '';
@@ -1527,9 +1485,7 @@ function template_preprocess_file_link(&$variables) {
   $variables['#cache']['contexts'][] = 'url.site';
 
   $mime_type = $file->getMimeType();
-  // Set options as per anchor format described at
-  // http://microformats.org/wiki/file-format-examples
-  $options['attributes']['type'] = $mime_type . '; length=' . $file->getSize();
+  $options['attributes']['type'] = $mime_type;
 
   // Use the description as the link text if available.
   if (empty($variables['description'])) {

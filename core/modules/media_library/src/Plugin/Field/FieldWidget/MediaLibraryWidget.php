@@ -16,7 +16,6 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -43,7 +42,7 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
  * @internal
  *   Plugin classes are internal.
  */
-class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInterface, TrustedCallbackInterface {
+class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface {
 
   /**
    * Entity type manager service.
@@ -86,18 +85,10 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entity_type_manager, AccountInterface $current_user = NULL, ModuleHandlerInterface $module_handler = NULL) {
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entity_type_manager, AccountInterface $current_user, ModuleHandlerInterface $module_handler) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
     $this->entityTypeManager = $entity_type_manager;
-    if (!$current_user) {
-      @trigger_error('The current_user service must be passed to MediaLibraryWidget::__construct(), it is required before Drupal 9.0.0.', E_USER_DEPRECATED);
-      $current_user = \Drupal::currentUser();
-    }
     $this->currentUser = $current_user;
-    if (!$module_handler) {
-      @trigger_error('The module_handler service must be passed to MediaLibraryWidget::__construct(), it is required before Drupal 9.0.0.', E_USER_DEPRECATED);
-      $module_handler = \Drupal::moduleHandler();
-    }
     $this->moduleHandler = $module_handler;
   }
 
@@ -341,6 +332,7 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
       return $element;
     }
 
+    $multiple_items = FALSE;
     if (empty($referenced_entities)) {
       $element['#field_prefix']['empty_selection'] = [
         '#markup' => $this->t('No media items are selected.'),
@@ -350,10 +342,12 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
       // @todo Use a <button> link here, and delete
       // seven_preprocess_fieldset__media_library_widget(), when
       // https://www.drupal.org/project/drupal/issues/2999549 lands.
+      $multiple_items = count($referenced_entities) > 1;
       $element['#field_prefix']['weight_toggle'] = [
         '#type' => 'html_tag',
         '#tag' => 'button',
         '#value' => $this->t('Show media item weights'),
+        '#access' => $multiple_items,
         '#attributes' => [
           'class' => [
             'link',
@@ -424,6 +418,7 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
           '#type' => 'number',
           '#theme' => 'input__number__media_library_item_weight',
           '#title' => $this->t('Weight'),
+          '#access' => $multiple_items,
           '#default_value' => $delta,
           '#attributes' => [
             'class' => [
@@ -489,9 +484,6 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
         'class' => [
           'js-media-library-open-button',
         ],
-        // The jQuery UI dialog automatically moves focus to the first :tabbable
-        // element of the modal, so we need to disable refocus on the button.
-        'data-disable-refocus' => 'true',
       ],
       '#media_library_state' => $state,
       '#ajax' => [
@@ -500,6 +492,9 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
           'type' => 'throbber',
           'message' => $this->t('Opening media library.'),
         ],
+        // The AJAX system automatically moves focus to the first :tabbable
+        // element of the modal, so we need to disable refocus on the button.
+        'disable-refocus' => TRUE,
       ],
       // Allow the media library to be opened even if there are form errors.
       '#limit_validation_errors' => [],

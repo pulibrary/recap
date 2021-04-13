@@ -36,7 +36,7 @@ class EntityReferenceSelectionAccessTest extends KernelTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'comment',
     'field',
     'file',
@@ -52,7 +52,7 @@ class EntityReferenceSelectionAccessTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installSchema('system', 'sequences');
@@ -98,7 +98,7 @@ class EntityReferenceSelectionAccessTest extends KernelTestBase {
     foreach ($tests as $test) {
       foreach ($test['arguments'] as $arguments) {
         $result = call_user_func_array([$handler, 'getReferenceableEntities'], $arguments);
-        $this->assertEqual($result, $test['result'], new FormattableMarkup('Valid result set returned by @handler.', ['@handler' => $handler_name]));
+        $this->assertEqual($test['result'], $result, new FormattableMarkup('Valid result set returned by @handler.', ['@handler' => $handler_name]));
 
         $result = call_user_func_array([$handler, 'countReferenceableEntities'], $arguments);
         if (!empty($test['result'])) {
@@ -109,7 +109,7 @@ class EntityReferenceSelectionAccessTest extends KernelTestBase {
           $count = 0;
         }
 
-        $this->assertEqual($result, $count, new FormattableMarkup('Valid count returned by @handler.', ['@handler' => $handler_name]));
+        $this->assertEqual($count, $result, new FormattableMarkup('Valid count returned by @handler.', ['@handler' => $handler_name]));
       }
     }
   }
@@ -257,14 +257,14 @@ class EntityReferenceSelectionAccessTest extends KernelTestBase {
         'name' => 'non_admin <&>',
         'mail' => 'non_admin@example.com',
         'roles' => [],
-        'pass' => user_password(),
+        'pass' => \Drupal::service('password_generator')->generate(),
         'status' => 1,
       ],
       'blocked' => [
         'name' => 'blocked <&>',
         'mail' => 'blocked@example.com',
         'roles' => [],
-        'pass' => user_password(),
+        'pass' => \Drupal::service('password_generator')->generate(),
         'status' => 0,
       ],
     ];

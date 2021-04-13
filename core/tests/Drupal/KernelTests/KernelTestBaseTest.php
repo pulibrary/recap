@@ -4,6 +4,7 @@ namespace Drupal\KernelTests;
 
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Core\Database\Database;
+use GuzzleHttp\Exception\GuzzleException;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\visitor\vfsStreamStructureVisitor;
 use PHPUnit\Framework\SkippedTestError;
@@ -165,6 +166,21 @@ class KernelTestBaseTest extends KernelTestBase {
   }
 
   /**
+   * Tests that an outbound HTTP request can be performed inside of a test.
+   */
+  public function testOutboundHttpRequest() {
+    // The middleware test.http_client.middleware calls drupal_generate_test_ua
+    // which checks the DRUPAL_TEST_IN_CHILD_SITE constant, that is not defined
+    // in Kernel tests.
+    try {
+      $this->container->get('http_client')->get('http://example.com');
+    }
+    catch (GuzzleException $e) {
+      // Ignore any HTTP errors.
+    }
+  }
+
+  /**
    * @covers ::render
    */
   public function testRender() {
@@ -285,25 +301,25 @@ class KernelTestBaseTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
 
     // Check that all tables of the test instance have been deleted. At this
     // point the original database connection is restored so we need to prefix
     // the tables.
     $connection = Database::getConnection();
-    if ($connection->databaseType() != 'sqlite') {
-      $tables = $connection->schema()->findTables($this->databasePrefix . '%');
-      $this->assertTrue(empty($tables), 'All test tables have been removed.');
-    }
-    else {
-      $result = $connection->query("SELECT name FROM " . $this->databasePrefix . ".sqlite_master WHERE type = :type AND name LIKE :table_name AND name NOT LIKE :pattern", [
+    if ($connection->databaseType() === 'sqlite') {
+      $result = $connection->query("SELECT name FROM " . $this->databasePrefix .
+        ".sqlite_master WHERE type = :type AND name LIKE :table_name AND name NOT LIKE :pattern", [
         ':type' => 'table',
         ':table_name' => '%',
         ':pattern' => 'sqlite_%',
       ])->fetchAllKeyed(0, 0);
-
       $this->assertTrue(empty($result), 'All test tables have been removed.');
+    }
+    else {
+      $tables = $connection->schema()->findTables($this->databasePrefix . '%');
+      $this->assertTrue(empty($tables), 'All test tables have been removed.');
     }
   }
 
@@ -316,6 +332,38 @@ class KernelTestBaseTest extends KernelTestBase {
       'core/profiles/demo_umami/modules/demo_umami_content/demo_umami_content.info.yml',
       \Drupal::service('extension.list.module')->getPathname('demo_umami_content')
     );
+  }
+
+  /**
+   * Tests the deprecation of AssertLegacyTrait::assert.
+   *
+   * @group legacy
+   */
+  public function testAssert() {
+    $this->expectDeprecation('AssertLegacyTrait::assert() is deprecated in drupal:8.0.0 and is removed from drupal:10.0.0. Use $this->assertTrue() instead. See https://www.drupal.org/node/3129738');
+    $this->assert(TRUE);
+  }
+
+  /**
+   * Tests the deprecation of AssertLegacyTrait::assertIdenticalObject.
+   *
+   * @group legacy
+    */
+  public function testAssertIdenticalObject() {
+    $this->expectDeprecation('AssertLegacyTrait::assertIdenticalObject() is deprecated in drupal:8.0.0 and is removed from drupal:10.0.0. Use $this->assertEquals() instead. See https://www.drupal.org/node/3129738');
+    $this->assertIdenticalObject((object) ['foo' => 'bar'], (object) ['foo' => 'bar']);
+  }
+
+  /**
+   * Tests the deprecation of ::installSchema with the tables key_value(_expire).
+   *
+   * @group legacy
+    */
+  public function testKernelTestBaseInstallSchema() {
+    $this->expectDeprecation('Installing the tables key_value and key_value_expire with the method KernelTestBase::installSchema() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. The tables are now lazy loaded and therefore will be installed automatically when used. See https://www.drupal.org/node/3143286');
+    $this->enableModules(['system']);
+    $this->installSchema('system', ['key_value', 'key_value_expire']);
+    $this->assertFalse(Database::getConnection()->schema()->tableExists('key_value'));
   }
 
 }

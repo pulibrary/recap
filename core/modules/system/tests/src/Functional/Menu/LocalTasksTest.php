@@ -18,7 +18,7 @@ class LocalTasksTest extends BrowserTestBase {
    *
    * @var string[]
    */
-  public static $modules = ['block', 'menu_test', 'entity_test', 'node'];
+  protected static $modules = ['block', 'menu_test', 'entity_test', 'node'];
 
   /**
    * {@inheritdoc}
@@ -35,7 +35,7 @@ class LocalTasksTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->sut = $this->drupalPlaceBlock('local_tasks_block', ['id' => 'tabs_block']);
@@ -78,7 +78,7 @@ class LocalTasksTest extends BrowserTestBase {
     // so use a pattern instead to check the raw content.
     // This behavior is a bug in libxml, see
     // https://bugs.php.net/bug.php?id=49437.
-    return $this->assertPattern('@<a [^>]*>' . preg_quote($title, '@') . '</a>@');
+    return $this->assertSession()->responseMatches('@<a [^>]*>' . preg_quote($title, '@') . '</a>@');
   }
 
   /**
@@ -154,8 +154,8 @@ class LocalTasksTest extends BrowserTestBase {
     $this->assertEqual('Settings(active tab)', $result[0]->getText(), 'The settings tab is active.');
     $this->assertEqual('Dynamic title for TestTasksSettingsSub1(active tab)', $result[1]->getText(), 'The sub1 tab is active.');
 
-    $this->assertCacheTag('kittens:ragdoll');
-    $this->assertCacheTag('kittens:dwarf-cat');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'kittens:ragdoll');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'kittens:dwarf-cat');
 
     $this->drupalGet(Url::fromRoute('menu_test.local_task_test_tasks_settings_derived', ['placeholder' => 'derive1']));
     $this->assertLocalTasks($sub_tasks, 1);
@@ -167,12 +167,12 @@ class LocalTasksTest extends BrowserTestBase {
 
     // Ensures that the local tasks contains the proper 'provider key'
     $definitions = $this->container->get('plugin.manager.menu.local_task')->getDefinitions();
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_view']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_edit']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_settings']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_settings_sub1']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_settings_sub2']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_settings_sub3']['provider'], 'menu_test');
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_view']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_edit']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_settings']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_settings_sub1']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_settings_sub2']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_settings_sub3']['provider']);
 
     // Test that we we correctly apply the active class to tabs where one of the
     // request attributes is upcast to an entity object.
