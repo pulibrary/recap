@@ -1,9 +1,0 @@
-@mixin visually-hidden {
-  clip: rect(1px 1px 1px 1px);
-  position: absolute;
-}
-
-@mixin hidden {
-  display: none;
-  visibility: hidden;
-}

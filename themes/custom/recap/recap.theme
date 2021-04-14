@@ -1,5 +1,0 @@
-<?php
-
-function recap_preprocess_page(&$variables) {
-
-}
