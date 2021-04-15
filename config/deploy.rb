@@ -11,6 +11,7 @@ set :deploy_to, "/var/www/recap_cap"
 set :drush_recap_aliases, "/home/deploy/drush.yml"
 set :drush_recap_site, "/home/deploy/prod.site.yml"
 set :drupal_settings, "/home/deploy/settings.php"
+set :drupal_services, "/home/deploy/services.yml"
 set :drupal_site, "default"
 set :drupal_file_public_path, "sites/default/files"
 set :drupal_file_private_path, "sites/default/files/private"
@@ -63,6 +64,7 @@ namespace :drupal do
   task :link_settings do
     on roles(:app) do |host|
       execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && ln -sf #{fetch(:drupal_settings)} settings.php"
+      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && ln -sf #{fetch(:drupal_services)} services.yml"
       execute "cd #{release_path}/drush && ln -sf #{fetch(:drush_recap_aliases)} drushrc.php"
       execute "cd #{release_path}/drush/sites && ln -sf #{fetch(:drush_recap_site)} drushrc.php"
       info "linked settings into #{release_path}/sites/#{fetch(:drupal_site)} site"
@@ -72,7 +74,7 @@ namespace :drupal do
   desc "Link shared drupal files"
   task :link_files do
     on roles(:app) do |host|
-      execute "cd #{release_path}/themes/custom/recap && ln -sf #{shared_path}/node_modules node_modules"
+      # execute "cd #{release_path}/themes/custom/recap && ln -sf #{shared_path}/node_modules node_modules"
       execute "cd #{release_path}/sites/default && ln -sf #{shared_path}/files files"
       execute "cd #{release_path} && ln -sf #{shared_path}/modules sites/default/modules"
       info "linked node modules, composer modules and files into #{fetch(:drupal_site)} site"
@@ -287,7 +289,7 @@ namespace :deploy do
       if ( ENV["SQL_FILE"] != nil)
         invoke "drupal:database:upload_and_import"
       end
-      invoke "drupal:install_assets"
+      # invoke "drupal:install_assets"
       invoke "drupal:set_permissions_for_runtime"
       invoke "drupal:update_directory_owner"
   end
