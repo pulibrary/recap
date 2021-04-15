@@ -74,7 +74,7 @@ namespace :drupal do
   desc "Link shared drupal files"
   task :link_files do
     on roles(:app) do |host|
-      # execute "cd #{release_path}/themes/custom/recap && ln -sf #{shared_path}/node_modules node_modules"
+      # execute "cd #{release_path}/themes/custom/pinwheel && ln -sf #{shared_path}/node_modules node_modules"
       execute "cd #{release_path}/sites/default && ln -sf #{shared_path}/files files"
       execute "cd #{release_path} && ln -sf #{shared_path}/modules sites/default/modules"
       info "linked node modules, composer modules and files into #{fetch(:drupal_site)} site"
@@ -92,8 +92,8 @@ namespace :drupal do
   desc "Install Assets"
   task :install_assets do
     on roles(:app) do |host|
-      # execute "cd #{release_path}/themes/custom/recap && npm install"
-      # execute "cd #{release_path}/themes/custom/recap && gulp deploy"
+      # execute "cd #{release_path}/themes/custom/pinwheel && npm install"
+      # execute "cd #{release_path}/themes/custom/pinwheel && gulp deploy"
       # info "Installed Assets"
     end
   end
