@@ -15,7 +15,7 @@ class CacheabilityMetadataConfigOverrideTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'block_content',
     'config',
@@ -28,7 +28,7 @@ class CacheabilityMetadataConfigOverrideTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('block_content');
     $this->installConfig(['config_override_test']);
@@ -69,7 +69,7 @@ class CacheabilityMetadataConfigOverrideTest extends KernelTestBase {
     $block = $entity_type_manager->getStorage('block')->load('call_to_action');
 
     // Check that our call to action message is appealing to filibusters.
-    $this->assertEqual($block->label(), 'Draw yer cutlasses!');
+    $this->assertEqual('Draw yer cutlasses!', $block->label());
 
     // Check that the cacheability metadata is correct.
     $this->assertEqual(['pirate_day'], $block->getCacheContexts());

@@ -1,13 +1,11 @@
 <?php
 
-
 /**
  * @file
  * Theme and template functions for the Juicebox module.
  */
 
-use Drupal\Component\Utility\SafeMarkup;
-
+use Drupal\Component\Render\FormattableMarkup;
 
 /**
  * Preprocessor for juicebox_embed_markup theme definition.
@@ -29,7 +27,7 @@ function juicebox_preprocess_juicebox_embed_markup(&$vars) {
   // needed (e.g. inside noscript containers).
   foreach ($vars['gallery_images'] as &$image) {
     // Use the standard "image" template.
-    $img_vars = array('#theme' => 'image');
+    $img_vars = ['#theme' => 'image'];
     $img_vars['#uri'] = $image['src_data']['imageURL'];
     if (!empty($image['title'])) {
       // Our image title should already be sanatized by this point, and
@@ -37,12 +35,12 @@ function juicebox_preprocess_juicebox_embed_markup(&$vars) {
       // further escapting. However, some additional markup stripping may have
       // happened in Drupal\juicebox\JuieboxGallery, so we need to re-mark the
       // current form as "safe".
-      $image['title'] = SafeMarkup::format($image['title'], array());
+      $image['title'] = new FormattableMarkup($image['title'], []);
       $img_vars['#title'] = $image['title'];
     }
     if (!empty($image['caption'])) {
       // Re-mark caption markup as "safe" as well.
-      $image['caption'] = SafeMarkup::format($image['caption'], array());
+      $image['caption'] = new FormattableMarkup($image['caption'], []);
       $img_vars['#alt'] = $image['caption'];
     }
     $image['image_plain'] = $img_vars;

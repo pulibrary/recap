@@ -6,7 +6,7 @@ use Drupal\Core\Config\Schema\SchemaIncompleteException;
 use Drupal\Tests\BrowserTestBase;
 
 /**
- * Tests the functionality of ConfigSchemaChecker in WebTestBase tests.
+ * Tests the functionality of ConfigSchemaChecker in BrowserTestBase tests.
  *
  * @group config
  */
@@ -15,7 +15,7 @@ class SchemaConfigListenerWebTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['config_test'];
+  protected static $modules = ['config_test'];
 
   /**
    * {@inheritdoc}

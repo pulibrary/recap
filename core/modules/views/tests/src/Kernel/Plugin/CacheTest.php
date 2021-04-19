@@ -29,12 +29,12 @@ class CacheTest extends ViewsKernelTestBase {
    *
    * @var array
    */
-  public static $modules = ['taxonomy', 'text', 'user', 'node'];
+  protected static $modules = ['taxonomy', 'text', 'user', 'node'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp($import_test_views = TRUE) {
+  protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
 
     $this->installEntitySchema('node');
@@ -166,7 +166,7 @@ class CacheTest extends ViewsKernelTestBase {
 
     // Get the cache item.
     $cid2 = $view->display_handler->getPlugin('cache')->generateResultsKey();
-    $this->assertNotEqual($cid1, $cid2, "Results keys are different.");
+    $this->assertNotEquals($cid1, $cid2, "Results keys are different.");
 
     // Build the expected result.
     $dataset = [['name' => 'Ringo']];
@@ -346,8 +346,8 @@ class CacheTest extends ViewsKernelTestBase {
     // Assert each row doesn't contain '_entity' or '_relationship_entities'
     // items.
     foreach ($cache->data['result'] as $row) {
-      $this->assertIdentical($row->_entity, NULL, 'Cached row "_entity" property is NULL');
-      $this->assertIdentical($row->_relationship_entities, [], 'Cached row "_relationship_entities" property is empty');
+      $this->assertNull($row->_entity, 'Cached row "_entity" property is NULL');
+      $this->assertSame([], $row->_relationship_entities, 'Cached row "_relationship_entities" property is empty');
     }
   }
 

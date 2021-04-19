@@ -19,7 +19,7 @@ class EntityReferenceAutoCreateTest extends BrowserTestBase {
 
   use EntityReferenceTestTrait;
 
-  public static $modules = ['node', 'taxonomy', 'entity_test'];
+  protected static $modules = ['node', 'taxonomy', 'entity_test'];
 
   /**
    * {@inheritdoc}
@@ -40,7 +40,7 @@ class EntityReferenceAutoCreateTest extends BrowserTestBase {
    */
   protected $referencedType;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create "referencing" and "referenced" node types.
@@ -105,12 +105,13 @@ class EntityReferenceAutoCreateTest extends BrowserTestBase {
    */
   public function testAutoCreate() {
     $this->drupalGet('node/add/' . $this->referencingType);
-    $this->assertFieldByXPath('//input[@id="edit-test-field-0-target-id" and contains(@class, "form-autocomplete")]', NULL, 'The autocomplete input element appears.');
+    $target = $this->assertSession()->fieldExists("edit-test-field-0-target-id");
+    $this->assertTrue($target->hasClass("form-autocomplete"));
 
     $new_title = $this->randomMachineName();
 
     // Assert referenced node does not exist.
-    $base_query = \Drupal::entityQuery('node');
+    $base_query = \Drupal::entityQuery('node')->accessCheck(FALSE);
     $base_query
       ->condition('type', $this->referencedType)
       ->condition('title', $new_title);
@@ -134,6 +135,7 @@ class EntityReferenceAutoCreateTest extends BrowserTestBase {
 
     // Assert the referenced node is associated with referencing node.
     $result = \Drupal::entityQuery('node')
+      ->accessCheck(FALSE)
       ->condition('type', $this->referencingType)
       ->execute();
 
@@ -143,8 +145,8 @@ class EntityReferenceAutoCreateTest extends BrowserTestBase {
 
     // Now try to view the node and check that the referenced node is shown.
     $this->drupalGet('node/' . $referencing_node->id());
-    $this->assertText($referencing_node->label(), 'Referencing node label found.');
-    $this->assertText($referenced_node->label(), 'Referenced node label found.');
+    $this->assertText($referencing_node->label());
+    $this->assertText($referenced_node->label());
   }
 
   /**
@@ -269,6 +271,7 @@ class EntityReferenceAutoCreateTest extends BrowserTestBase {
 
     // Assert referenced entity was created.
     $result = \Drupal::entityQuery('entity_test_no_bundle_with_label')
+      ->accessCheck(FALSE)
       ->condition('name', $name)
       ->execute();
     $this->assertNotEmpty($result, 'Referenced entity was created.');
@@ -276,6 +279,7 @@ class EntityReferenceAutoCreateTest extends BrowserTestBase {
 
     // Assert the referenced entity is associated with referencing node.
     $result = \Drupal::entityQuery('node')
+      ->accessCheck(FALSE)
       ->condition('type', $this->referencingType)
       ->execute();
     $this->assertCount(1, $result);

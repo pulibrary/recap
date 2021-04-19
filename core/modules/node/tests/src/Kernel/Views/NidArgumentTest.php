@@ -18,7 +18,7 @@ class NidArgumentTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'field',
     'text',
@@ -37,14 +37,14 @@ class NidArgumentTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp($import_test_views = TRUE) {
+  protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
 
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
     $this->installConfig(['node', 'field']);
 
-    ViewTestData::createTestViews(get_class($this), ['node_test_views']);
+    ViewTestData::createTestViews(static::class, ['node_test_views']);
   }
 
   /**
@@ -68,11 +68,11 @@ class NidArgumentTest extends ViewsKernelTestBase {
     $view->preview();
     $this->assertCount(2, $view->result, 'Found the expected number of results.');
 
-    // Set an the second node id as an argument.
+    // Set the second node id as an argument.
     $view->destroy();
     $view->preview('default', [$node2->id()]);
     // Verify that the title is overridden.
-    $this->assertEqual($view->getTitle(), $node2->getTitle());
+    $this->assertEqual($node2->getTitle(), $view->getTitle());
     // Verify that the argument filtering works.
     $this->assertCount(1, $view->result, 'Found the expected number of results.');
     $this->assertEqual($node2->id(), (string) $view->style_plugin->getField(0, 'nid'), 'Found the correct nid.');

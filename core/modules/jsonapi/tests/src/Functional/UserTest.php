@@ -22,7 +22,7 @@ class UserTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['user', 'jsonapi_test_user'];
+  protected static $modules = ['user', 'jsonapi_test_user'];
 
   /**
    * {@inheritdoc}
@@ -364,7 +364,7 @@ class UserTest extends ResourceTestBase {
   public function testGetMailFieldOnlyVisibleToOwner() {
     // Create user B, with the same roles (and hence permissions) as user A.
     $user_a = $this->account;
-    $pass = user_password();
+    $pass = \Drupal::service('password_generator')->generate();
     $user_b = User::create([
       'name' => 'sibling-of-' . $user_a->getAccountName(),
       'mail' => 'sibling-of-' . $user_a->getAccountName() . '@example.com',

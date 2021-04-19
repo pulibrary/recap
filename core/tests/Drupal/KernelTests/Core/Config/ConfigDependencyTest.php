@@ -21,7 +21,7 @@ class ConfigDependencyTest extends EntityKernelTestBase {
    *
    * @var array
    */
-  public static $modules = ['config_test', 'entity_test', 'user'];
+  protected static $modules = ['config_test', 'entity_test', 'user'];
 
   /**
    * Tests that calculating dependencies for system module.
@@ -343,7 +343,7 @@ class ConfigDependencyTest extends EntityKernelTestBase {
     // is called as expected and with the correct dependencies.
     $called = \Drupal::state()->get('config_test.on_dependency_removal_called', []);
     $this->assertArrayNotHasKey($entity_3->id(), $called, 'ConfigEntityInterface::onDependencyRemoval() is not called for entity 3.');
-    $this->assertSame([$entity_1->id(), $entity_4->id(), $entity_2->id(), $entity_5->id()], array_keys($called), 'The most dependent entites have ConfigEntityInterface::onDependencyRemoval() called first.');
+    $this->assertSame([$entity_1->id(), $entity_4->id(), $entity_2->id(), $entity_5->id()], array_keys($called), 'The most dependent entities have ConfigEntityInterface::onDependencyRemoval() called first.');
     $this->assertSame(['config' => [], 'content' => [], 'module' => ['node'], 'theme' => []], $called[$entity_1->id()]);
     $this->assertSame(['config' => [$entity_1->getConfigDependencyName()], 'content' => [], 'module' => [], 'theme' => []], $called[$entity_2->id()]);
     $this->assertSame(['config' => [$entity_1->getConfigDependencyName()], 'content' => [], 'module' => ['node'], 'theme' => []], $called[$entity_4->id()]);
@@ -362,10 +362,10 @@ class ConfigDependencyTest extends EntityKernelTestBase {
     $this->assertNull($storage->load($entity_1->id()), 'Entity 1 deleted');
     $entity_2 = $storage->load($entity_2->id());
     $this->assertNotEmpty($entity_2, 'Entity 2 not deleted');
-    $this->assertEqual($entity_2->calculateDependencies()->getDependencies()['config'], [], 'Entity 2 dependencies updated to remove dependency on entity 1.');
+    $this->assertEqual([], $entity_2->calculateDependencies()->getDependencies()['config'], 'Entity 2 dependencies updated to remove dependency on entity 1.');
     $entity_3 = $storage->load($entity_3->id());
     $this->assertNotEmpty($entity_3, 'Entity 3 not deleted');
-    $this->assertEqual($entity_3->calculateDependencies()->getDependencies()['config'], [$entity_2->getConfigDependencyName()], 'Entity 3 still depends on entity 2.');
+    $this->assertEqual([$entity_2->getConfigDependencyName()], $entity_3->calculateDependencies()->getDependencies()['config'], 'Entity 3 still depends on entity 2.');
     $this->assertNull($storage->load($entity_4->id()), 'Entity 4 deleted');
   }
 
@@ -579,7 +579,7 @@ class ConfigDependencyTest extends EntityKernelTestBase {
     $this->assertNull($storage->load('entity1'), 'Entity 1 deleted');
     $entity2 = $storage->load('entity2');
     $this->assertNotEmpty($entity2, 'Entity 2 not deleted');
-    $this->assertEqual($entity2->calculateDependencies()->getDependencies()['config'], [], 'Entity 2 dependencies updated to remove dependency on Entity1.');
+    $this->assertEqual([], $entity2->calculateDependencies()->getDependencies()['config'], 'Entity 2 dependencies updated to remove dependency on Entity1.');
     $entity3 = $storage->load('entity3');
     $this->assertNotEmpty($entity3, 'Entity 3 not deleted');
     $this->assertEqual($entity3->calculateDependencies()->getDependencies()['config'], [$entity2->getConfigDependencyName()], 'Entity 3 still depends on Entity 2.');

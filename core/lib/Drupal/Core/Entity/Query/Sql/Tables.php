@@ -3,7 +3,6 @@
 namespace Drupal\Core\Entity\Query\Sql;
 
 use Drupal\Core\Database\Query\SelectInterface;
-use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
 use Drupal\Core\Entity\EntityType;
 use Drupal\Core\Entity\Query\QueryException;
 use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
@@ -16,13 +15,6 @@ use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
  * Adds tables and fields to the SQL entity query.
  */
 class Tables implements TablesInterface {
-
-  use DeprecatedServicePropertyTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $deprecatedProperties = ['entityManager' => 'entity.manager'];
 
   /**
    * @var \Drupal\Core\Database\Query\SelectInterface
@@ -258,6 +250,14 @@ class Tables implements TablesInterface {
             $key++;
           }
         }
+        // If there are no additional specifiers but the field has a main
+        // property, use that to look up the column name.
+        elseif ($field_storage && $column) {
+          $columns = $field_storage->getColumns();
+          if (isset($columns[$column])) {
+            $sql_column = $table_mapping->getFieldColumnName($field_storage, $column);
+          }
+        }
 
         $table = $this->ensureEntityTable($index_prefix, $sql_column, $type, $langcode, $base_table, $entity_id_field, $entity_tables);
       }
@@ -360,7 +360,7 @@ class Tables implements TablesInterface {
         // each join gets a separate alias.
         $key = $index_prefix . ($base_table === 'base_table' ? $table : $base_table);
         if (!isset($this->entityTables[$key])) {
-          $this->entityTables[$key] = $this->addJoin($type, $table, "%alias.$id_field = $base_table.$id_field", $langcode);
+          $this->entityTables[$key] = $this->addJoin($type, $table, "[%alias].[$id_field] = [$base_table].[$id_field]", $langcode);
         }
         return $this->entityTables[$key];
       }
@@ -388,7 +388,7 @@ class Tables implements TablesInterface {
       if ($field->getCardinality() != 1) {
         $this->sqlQuery->addMetaData('simple_query', FALSE);
       }
-      $this->fieldTables[$index_prefix . $field_name] = $this->addJoin($type, $table, "%alias.$field_id_field = $base_table.$entity_id_field", $langcode, $delta);
+      $this->fieldTables[$index_prefix . $field_name] = $this->addJoin($type, $table, "[%alias].[$field_id_field] = [$base_table].[$entity_id_field]", $langcode, $delta);
     }
     return $this->fieldTables[$index_prefix . $field_name];
   }
@@ -416,15 +416,15 @@ class Tables implements TablesInterface {
       $entity_type_id = $this->sqlQuery->getMetaData('entity_type');
       $entity_type = $this->entityTypeManager->getActiveDefinition($entity_type_id);
       // Only the data table follows the entity language key, dedicated field
-      // tables have an hard-coded 'langcode' column.
+      // tables have a hard-coded 'langcode' column.
       $langcode_key = $entity_type->getDataTable() == $table ? $entity_type->getKey('langcode') : 'langcode';
       $placeholder = ':langcode' . $this->sqlQuery->nextPlaceholder();
-      $join_condition .= ' AND %alias.' . $langcode_key . ' = ' . $placeholder;
+      $join_condition .= ' AND [%alias].[' . $langcode_key . '] = ' . $placeholder;
       $arguments[$placeholder] = $langcode;
     }
     if (isset($delta)) {
       $placeholder = ':delta' . $this->sqlQuery->nextPlaceholder();
-      $join_condition .= ' AND %alias.delta = ' . $placeholder;
+      $join_condition .= ' AND [%alias].[delta] = ' . $placeholder;
       $arguments[$placeholder] = $delta;
     }
     return $this->sqlQuery->addJoin($type, $table, NULL, $join_condition, $arguments);

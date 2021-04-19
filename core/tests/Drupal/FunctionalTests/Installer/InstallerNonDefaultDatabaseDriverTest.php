@@ -34,9 +34,9 @@ class InstallerNonDefaultDatabaseDriverTest extends InstallerTestBase {
 
     // Assert that we are using the database drivers from the driver_test module.
     $elements = $this->xpath('//label[@for="edit-driver-drivertestmysql"]');
-    $this->assertEqual(current($elements)->getText(), 'MySQL by the driver_test module');
+    $this->assertEqual('MySQL by the driver_test module', current($elements)->getText());
     $elements = $this->xpath('//label[@for="edit-driver-drivertestpgsql"]');
-    $this->assertEqual(current($elements)->getText(), 'PostgreSQL by the driver_test module');
+    $this->assertEqual('PostgreSQL by the driver_test module', current($elements)->getText());
 
     $settings = $this->parameters['forms']['install_settings_form'];
 
@@ -44,19 +44,19 @@ class InstallerNonDefaultDatabaseDriverTest extends InstallerTestBase {
     $settings[$this->testDriverName] = $settings[$driver];
     unset($settings[$driver]);
     $edit = $this->translatePostValues($settings);
-    $this->drupalPostForm(NULL, $edit, $this->translations['Save and continue']);
+    $this->submitForm($edit, $this->translations['Save and continue']);
   }
 
   /**
    * Confirms that the installation succeeded.
    */
   public function testInstalled() {
-    $this->assertUrl('user/1');
+    $this->assertSession()->addressEquals('user/1');
     $this->assertSession()->statusCodeEquals(200);
 
     // Assert that in the settings.php the database connection array has the
     // correct values set.
-    $contents = file_get_contents($this->root . '/' . $this->siteDirectory . '/settings.php');
+    $contents = file_get_contents($this->container->getParameter('app.root') . '/' . $this->siteDirectory . '/settings.php');
     $this->assertStringContainsString("'namespace' => 'Drupal\\\\driver_test\\\\Driver\\\\Database\\\\{$this->testDriverName}',", $contents);
     $this->assertStringContainsString("'driver' => '{$this->testDriverName}',", $contents);
     $this->assertStringContainsString("'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/{$this->testDriverName}/',", $contents);

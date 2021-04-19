@@ -1002,8 +1002,8 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
     $route_names = [];
     foreach (array_keys($tree) as $id) {
       $definitions[$id] = $this->definitions[$id];
-      if (!empty($definition['route_name'])) {
-        $route_names[$definition['route_name']] = $definition['route_name'];
+      if (!empty($definitions[$id]['route_name'])) {
+        $route_names[$definitions[$id]['route_name']] = $definitions[$id]['route_name'];
       }
       if ($tree[$id]['subtree']) {
         $route_names += $this->doCollectRoutesAndDefinitions($tree[$id]['subtree'], $definitions);
@@ -1247,7 +1247,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
           'default' => '',
         ],
         'route_name' => [
-          'description' => 'The machine name of a defined Symfony Route this menu item represents.',
+          'description' => 'The machine name of a defined Symfony Route this menu link represents.',
           'type' => 'varchar_ascii',
           'length' => 255,
         ],
@@ -1304,7 +1304,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
           'default' => 'system',
         ],
         'enabled' => [
-          'description' => 'A flag for whether the link should be rendered in menus. (0 = a disabled menu item that may be shown on admin screens, 1 = a normal, visible link)',
+          'description' => 'A flag for whether the link should be rendered in menus. (0 = a disabled menu link that may be shown on admin screens, 1 = a normal, visible link)',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 1,

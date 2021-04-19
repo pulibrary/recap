@@ -1,16 +1,10 @@
 <?php
 
-/**
- * @file
- * Controller routines for views-based XML.
- */
-
 namespace Drupal\juicebox\Controller;
 
 use Drupal\juicebox\JuiceboxGalleryInterface;
 use Drupal\views\Views;
 use Drupal\views\ViewExecutable;
-
 
 /**
  * Controller routines for field-based XML.
@@ -39,13 +33,11 @@ class JuiceboxXmlControllerViewsStyle extends JuiceboxXmlControllerBase {
   protected $view;
 
   /**
-   * An indexed array of view args that apply to the view used in this XML
-   * request.
+   * An indexed array of view args that apply to view used in this XML request.
    *
    * @var array
    */
-  protected $viewArgs = array();
-
+  protected $viewArgs = [];
 
   /**
    * {@inheritdoc}
@@ -62,7 +54,7 @@ class JuiceboxXmlControllerViewsStyle extends JuiceboxXmlControllerBase {
       // All looks good.
       return;
     }
-    throw new \Exception(t('Cannot instantiate view-based Juicebox gallery as no view can be loaded.'));
+    throw new \Exception('Cannot instantiate view-based Juicebox gallery as no view can be loaded.');
   }
 
   /**
@@ -83,7 +75,7 @@ class JuiceboxXmlControllerViewsStyle extends JuiceboxXmlControllerBase {
     if (!empty($rendered_view['#rows']['#gallery']) && $rendered_view['#rows']['#gallery'] instanceof JuiceboxGalleryInterface && $rendered_view['#rows']['#gallery']->getId()) {
       return $rendered_view['#rows']['#gallery'];
     }
-    throw new \Exception(t('Cannot build Juicebox XML for view-based gallery.'));
+    throw new \Exception('Cannot build Juicebox XML for view-based gallery.');
   }
 
   /**
@@ -101,12 +93,12 @@ class JuiceboxXmlControllerViewsStyle extends JuiceboxXmlControllerBase {
    *   A indexed array of the view args.
    */
   protected function queryToArgs() {
-    $args = array();
+    $args = [];
     // Get the args from the query params.
     $query_args = $this->request->query->all();
-    foreach($query_args as $param => $value) {
+    foreach ($query_args as $param => $value) {
       if (preg_match('/^arg_[0-9]+$/', $param)) {
-        list($prefix, $key) = explode('_', $param);
+        list(, $key) = explode('_', $param);
         $args[$key] = $value;
       }
     }

@@ -728,7 +728,7 @@ class FormBuilder implements FormBuilderInterface, FormValidatorInterface, FormS
       '#value' => $form['#build_id'],
       '#id' => $form['#build_id'],
       '#name' => 'form_build_id',
-      // Form processing and validation requires this value. Ensure the
+      // Form processing and validation require this value. Ensure the
       // submitted form value appears literally, regardless of custom #tree
       // and #parents being set elsewhere.
       '#parents' => ['form_build_id'],
@@ -769,7 +769,7 @@ class FormBuilder implements FormBuilderInterface, FormValidatorInterface, FormS
           '#id' => Html::getUniqueId('edit-' . $form_id . '-form-token'),
           '#type' => 'token',
           '#default_value' => $placeholder,
-          // Form processing and validation requires this value. Ensure the
+          // Form processing and validation require this value. Ensure the
           // submitted form value appears literally, regardless of custom #tree
           // and #parents being set elsewhere.
           '#parents' => ['form_token'],

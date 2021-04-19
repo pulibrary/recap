@@ -16,14 +16,14 @@ class ShutdownFunctionsTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['system_test'];
+  protected static $modules = ['system_test'];
 
   /**
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     // This test intentionally throws an exception in a PHP shutdown function.
     // Prevent it from being interpreted as an actual test failure.
     // Not using File API; a potential error must trigger a PHP warning.
@@ -47,8 +47,8 @@ class ShutdownFunctionsTest extends BrowserTestBase {
       // We need to wait to ensure that the shutdown functions have fired.
       sleep(1);
     }
-    $this->assertEqual(\Drupal::state()->get('_system_test_first_shutdown_function'), [$arg1, $arg2]);
-    $this->assertEqual(\Drupal::state()->get('_system_test_second_shutdown_function'), [$arg1, $arg2]);
+    $this->assertEqual([$arg1, $arg2], \Drupal::state()->get('_system_test_first_shutdown_function'));
+    $this->assertEqual([$arg1, $arg2], \Drupal::state()->get('_system_test_second_shutdown_function'));
 
     if (!$server_using_fastcgi) {
       // Make sure exceptions displayed through

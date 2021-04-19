@@ -12,7 +12,7 @@ use Drupal\Tests\quickedit\Kernel\QuickEditTestBase;
 use Drupal\quickedit_test\MockQuickEditEntityFieldAccessCheck;
 use Drupal\editor\EditorController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Drupal\filter\Entity\FilterFormat;
 
@@ -26,7 +26,7 @@ class QuickEditIntegrationTest extends QuickEditTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['editor', 'editor_test'];
+  protected static $modules = ['editor', 'editor_test'];
 
   /**
    * The manager for editor plug-ins.
@@ -63,7 +63,7 @@ class QuickEditIntegrationTest extends QuickEditTestBase {
    */
   protected $fieldName;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Install the Filter module.
@@ -201,7 +201,7 @@ class QuickEditIntegrationTest extends QuickEditTestBase {
 
     $editors = ['editor'];
     $attachments = $this->editorSelector->getEditorAttachments($editors);
-    $this->assertIdentical($attachments, ['library' => ['editor/quickedit.inPlaceEditor.formattedText']], "Expected attachments for Editor module's in-place editor found.");
+    $this->assertSame(['library' => ['editor/quickedit.inPlaceEditor.formattedText']], $attachments, "Expected attachments for Editor module's in-place editor found.");
   }
 
   /**
@@ -228,7 +228,7 @@ class QuickEditIntegrationTest extends QuickEditTestBase {
 
     $ajax_response_attachments_processor = \Drupal::service('ajax_response.attachments_processor');
     $subscriber = new AjaxResponseSubscriber($ajax_response_attachments_processor);
-    $event = new FilterResponseEvent(
+    $event = new ResponseEvent(
       \Drupal::service('http_kernel'),
       $request,
       HttpKernelInterface::MASTER_REQUEST,

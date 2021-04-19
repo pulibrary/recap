@@ -95,13 +95,16 @@ class TwitterBlock extends BlockBase {
       '#type' => 'select',
       '#title' => $this->t('Tweet limit'),
       '#default_value' => $config['tweet_limit'],
-      '#options' => ['' => $this->t('Auto')] + [array_combine(range(1, 20), range(1, 20))],
+      '#options' => ['' => $this->t('Auto')],
       '#description' => $this->t('Fix the size of a timeline to a preset number
         of Tweets between 1 and 20. The timeline will render the specified number
         of Tweets from the timeline, expanding the height of the widget to
         display all Tweets without scrolling. Since the widget is of a fixed
         size, it will not poll for updates when using this option.'),
     ];
+    $form['functionality']['tweet_limit']['#options'] +=
+      array_combine(range(1, 20), range(1, 20));
+
     $form['size'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Size'),

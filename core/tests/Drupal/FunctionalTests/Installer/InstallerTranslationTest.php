@@ -36,13 +36,12 @@ class InstallerTranslationTest extends InstallerTestBase {
 
     // After selecting a different language than English, all following screens
     // should be translated already.
-    $elements = $this->xpath('//input[@type="submit"]/@value');
-    $this->assertEqual(current($elements)->getText(), 'Save and continue de');
+    $this->assertSession()->buttonExists('Save and continue de');
     $this->translations['Save and continue'] = 'Save and continue de';
 
     // Check the language direction.
     $direction = current($this->xpath('/@dir'))->getText();
-    $this->assertEqual($direction, 'ltr');
+    $this->assertEqual('ltr', $direction);
   }
 
   /**
@@ -53,15 +52,27 @@ class InstallerTranslationTest extends InstallerTestBase {
     // it will try and create the drupal_install_test table as this is part of
     // the standard database tests performed by the installer in
     // Drupal\Core\Database\Install\Tasks.
-    Database::getConnection('default')->query('CREATE TABLE {drupal_install_test} (id int NOT NULL PRIMARY KEY)');
+    $spec = [
+      'fields' => [
+        'id' => [
+          'type' => 'int',
+          'not null' => TRUE,
+        ],
+      ],
+      'primary key' => ['id'],
+    ];
+
+    Database::getConnection('default')->schema()->createTable('drupal_install_test', $spec);
     parent::setUpSettings();
 
     // Ensure that the error message translation is working.
+    // cSpell:disable
     $this->assertRaw('Beheben Sie alle Probleme unten, um die Installation fortzusetzen. Informationen zur Konfiguration der Datenbankserver finden Sie in der <a href="https://www.drupal.org/docs/8/install">Installationshandbuch</a>, oder kontaktieren Sie Ihren Hosting-Anbieter.');
     $this->assertRaw('<strong>CREATE</strong> ein Test-Tabelle auf Ihrem Datenbankserver mit dem Befehl <em class="placeholder">CREATE TABLE {drupal_install_test} (id int NOT NULL PRIMARY KEY)</em> fehlgeschlagen.');
+    // cSpell:enable
 
     // Now do it successfully.
-    Database::getConnection('default')->query('DROP TABLE {drupal_install_test}');
+    Database::getConnection('default')->schema()->dropTable('drupal_install_test');
     parent::setUpSettings();
   }
 
@@ -69,7 +80,7 @@ class InstallerTranslationTest extends InstallerTestBase {
    * Verifies the expected behaviors of the installation result.
    */
   public function testInstaller() {
-    $this->assertUrl('user/1');
+    $this->assertSession()->addressEquals('user/1');
     $this->assertSession()->statusCodeEquals(200);
 
     // Verify German was configured but not English.
@@ -81,19 +92,19 @@ class InstallerTranslationTest extends InstallerTestBase {
     $this->rebuildContainer();
     /** @var \Drupal\user\Entity\User $account */
     $account = User::load(0);
-    $this->assertEqual($account->language()->getId(), 'en', 'Anonymous user is English.');
+    $this->assertEqual('en', $account->language()->getId(), 'Anonymous user is English.');
     $account = User::load(1);
-    $this->assertEqual($account->language()->getId(), 'en', 'Administrator user is English.');
+    $this->assertEqual('en', $account->language()->getId(), 'Administrator user is English.');
     $account = $this->drupalCreateUser();
-    $this->assertEqual($account->language()->getId(), 'de', 'New user is German.');
+    $this->assertEqual('de', $account->language()->getId(), 'New user is German.');
 
     // Ensure that we can enable basic_auth on a non-english site.
-    $this->drupalPostForm('admin/modules', ['modules[basic_auth][enable]' => TRUE], t('Install'));
+    $this->drupalPostForm('admin/modules', ['modules[basic_auth][enable]' => TRUE], 'Install');
     $this->assertSession()->statusCodeEquals(200);
 
     // Assert that the theme CSS was added to the page.
     $edit = ['preprocess_css' => FALSE];
-    $this->drupalPostForm('admin/config/development/performance', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/development/performance', $edit, 'Save configuration');
     $this->drupalGet('<front>');
     $this->assertRaw('classy/css/components/action-links.css');
 
@@ -104,7 +115,7 @@ class InstallerTranslationTest extends InstallerTestBase {
       $edit['langcode'] = 'de';
       $edit['translation'] = 'translated';
       $edit['string'] = $sample;
-      $this->drupalPostForm('admin/config/regional/translate', $edit, t('Filter'));
+      $this->drupalPostForm('admin/config/regional/translate', $edit, 'Filter');
       $this->assertText($sample . ' de');
     }
 
@@ -116,17 +127,17 @@ class InstallerTranslationTest extends InstallerTestBase {
     $config = \Drupal::config('user.settings');
     $override_de = $language_manager->getLanguageConfigOverride('de', 'user.settings');
     $override_en = $language_manager->getLanguageConfigOverride('en', 'user.settings');
-    $this->assertEqual($config->get('anonymous'), 'Anonymous de');
-    $this->assertEqual($config->get('langcode'), 'de');
+    $this->assertEqual('Anonymous de', $config->get('anonymous'));
+    $this->assertEqual('de', $config->get('langcode'));
     $this->assertTrue($override_de->isNew());
     $this->assertTrue($override_en->isNew());
 
     // Assert that adding English makes the English override available.
     $edit = ['predefined_langcode' => 'en'];
-    $this->drupalPostForm('admin/config/regional/language/add', $edit, t('Add language'));
+    $this->drupalPostForm('admin/config/regional/language/add', $edit, 'Add language');
     $override_en = $language_manager->getLanguageConfigOverride('en', 'user.settings');
     $this->assertFalse($override_en->isNew());
-    $this->assertEqual($override_en->get('anonymous'), 'Anonymous');
+    $this->assertEqual('Anonymous', $override_en->get('anonymous'));
   }
 
   /**

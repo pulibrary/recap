@@ -28,7 +28,7 @@ class AliasTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // The alias whitelist expects that the menu path roots are set by a
@@ -153,7 +153,7 @@ class AliasTest extends KernelTestBase {
 
     // Destruct the whitelist so that the caches are written.
     $whitelist->destruct();
-    $this->assertEqual($memoryCounterBackend->getCounter('set', 'path_alias_whitelist'), 1);
+    $this->assertEqual(1, $memoryCounterBackend->getCounter('set', 'path_alias_whitelist'));
     $memoryCounterBackend->resetCounter();
 
     // Re-initialize the whitelist using the same cache backend, should load
@@ -162,13 +162,13 @@ class AliasTest extends KernelTestBase {
     $this->assertNull($whitelist->get('user'));
     $this->assertTrue($whitelist->get('admin'));
     $this->assertNull($whitelist->get($this->randomMachineName()));
-    $this->assertEqual($memoryCounterBackend->getCounter('get', 'path_alias_whitelist'), 1);
-    $this->assertEqual($memoryCounterBackend->getCounter('set', 'path_alias_whitelist'), 0);
+    $this->assertEqual(1, $memoryCounterBackend->getCounter('get', 'path_alias_whitelist'));
+    $this->assertEqual(0, $memoryCounterBackend->getCounter('set', 'path_alias_whitelist'));
 
     // Destruct the whitelist, should not attempt to write the cache again.
     $whitelist->destruct();
-    $this->assertEqual($memoryCounterBackend->getCounter('get', 'path_alias_whitelist'), 1);
-    $this->assertEqual($memoryCounterBackend->getCounter('set', 'path_alias_whitelist'), 0);
+    $this->assertEqual(1, $memoryCounterBackend->getCounter('get', 'path_alias_whitelist'));
+    $this->assertEqual(0, $memoryCounterBackend->getCounter('set', 'path_alias_whitelist'));
   }
 
   /**

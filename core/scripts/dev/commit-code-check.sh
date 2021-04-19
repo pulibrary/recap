@@ -7,6 +7,7 @@
 #   It exists only for core development purposes.
 #
 # The script makes the following checks:
+# - Spell checking.
 # - File modes.
 # - No changes to core/node_modules directory.
 # - PHPCS checks PHP and YAML files.
@@ -14,6 +15,8 @@
 # - Checks .es6.js and .js files are equivalent.
 # - Stylelint checks CSS files.
 # - Checks .pcss.css and .css files are equivalent.
+
+# cSpell:disable
 
 # Searches an array.
 contains_element() {
@@ -120,6 +123,16 @@ fi;
 # run and all dependencies are updated.
 FINAL_STATUS=0
 
+# Check all files for spelling in one go for better performance.
+cd "$TOP_LEVEL/core"
+yarn run -s spellcheck -c $TOP_LEVEL/core/.cspell.json $ABS_FILES
+if [ "$?" -ne "0" ]; then
+  # If there are failures set the status to a number other than 0.
+  FINAL_STATUS=1
+  printf "\nCSpell: ${red}failed${reset}\n"
+else
+  printf "\nCSpell: ${green}passed${reset}\n"
+fi
 cd "$TOP_LEVEL"
 
 # Add a separator line to make the output easier to read.
@@ -129,7 +142,7 @@ printf "\n"
 
 for FILE in $FILES; do
   STATUS=0;
-  # Print a line to separate output.
+  # Print a line to separate spellcheck output from per file output.
   printf "Checking %s\n" "$FILE"
   printf "\n"
 

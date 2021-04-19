@@ -16,7 +16,7 @@ class DownloadTest extends FileManagedTestBase {
    */
   protected $defaultTheme = 'stark';
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     // Clear out any hook calls.
     file_test_reset();
@@ -75,8 +75,10 @@ class DownloadTest extends FileManagedTestBase {
     file_test_reset();
     file_test_set_return('download', ['x-foo' => 'Bar']);
     $this->drupalGet($url);
-    $this->assertEqual($this->drupalGetHeader('x-foo'), 'Bar', 'Found header set by file_test module on private download.');
-    $this->assertNull($this->drupalGetHeader('x-drupal-cache'), 'Page cache is disabled on private file download.');
+    // Verify that header is set by file_test module on private download.
+    $this->assertSession()->responseHeaderEquals('x-foo', 'Bar');
+    // Verify that page cache is disabled on private file download.
+    $this->assertSession()->responseHeaderDoesNotExist('x-drupal-cache');
     $this->assertSession()->statusCodeEquals(200);
     // Ensure hook_file_download is fired correctly.
     $this->assertEquals($file->getFileUri(), \Drupal::state()->get('file_test.results')['download'][0][0]);
@@ -115,6 +117,7 @@ class DownloadTest extends FileManagedTestBase {
       // Characters that look like a percent-escaped string.
       "%23%25%26%2B%2F%3F" .
       // Characters from various non-ASCII alphabets.
+      // cSpell:disable-next-line
       "éøïвβ中國書۞";
     $basename_encoded = '%20-._~%21%24%27%22%28%29%2A%40%5B%5D%3F%26%2B%25%23%2C%3B%3D%3A__' .
       '%2523%2525%2526%252B%252F%253F' .
@@ -136,7 +139,7 @@ class DownloadTest extends FileManagedTestBase {
       $this->checkUrl('public', '', $basename, $base_path . '/' . $public_directory_path . '/' . $basename_encoded);
       $this->checkUrl('private', '', $basename, $base_path . '/' . $script_path . 'system/files/' . $basename_encoded);
     }
-    $this->assertEqual(file_create_url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=='), 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==', t('Generated URL matches expected URL.'));
+    $this->assertEqual('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==', file_create_url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=='), t('Generated URL matches expected URL.'));
   }
 
   /**
@@ -165,7 +168,7 @@ class DownloadTest extends FileManagedTestBase {
     $file = $this->createFile($filepath, NULL, $scheme);
 
     $url = file_create_url($file->getFileUri());
-    $this->assertEqual($url, $expected_url);
+    $this->assertEqual($expected_url, $url);
 
     if ($scheme == 'private') {
       // Tell the implementation of hook_file_download() in file_test.module

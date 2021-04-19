@@ -24,7 +24,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'field',
     'entity_test',
     'user',
@@ -68,7 +68,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp($import_test_views = TRUE) {
+  protected function setUp($import_test_views = TRUE): void {
     // First setup the needed entity types before installing the views.
     parent::setUp(FALSE);
 
@@ -76,7 +76,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
     $this->installEntitySchema('entity_test');
     $this->installEntitySchema('entity_test_rev');
 
-    ViewTestData::createTestViews(get_class($this), ['views_test_config']);
+    ViewTestData::createTestViews(static::class, ['views_test_config']);
 
     // Bypass any field access.
     $this->adminUser = User::create(['name' => $this->randomString()]);
@@ -260,7 +260,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
     $this->assertEqual('1', $executable->getStyle()->getField(0, 'id'));
     $this->assertEqual('3', $executable->getStyle()->getField(0, 'field_test'));
     $this->assertEqual('2', $executable->getStyle()->getField(1, 'id'));
-    // @todo Switch this assertion to assertIdentical('', ...) when
+    // @todo Switch this assertion to assertSame('', ...) when
     //   https://www.drupal.org/node/2488006 gets fixed.
     $this->assertEqual('0', $executable->getStyle()->getField(1, 'field_test'));
     $this->assertEqual('3', $executable->getStyle()->getField(2, 'id'));
@@ -557,7 +557,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
   }
 
   /**
-   * Tests \Drupal\views\Plugin\views\field\EntityField::getValue
+   * Tests \Drupal\views\Plugin\views\field\EntityField::getValue.
    */
   public function testGetValueMethod() {
     $bundle = 'test_bundle';

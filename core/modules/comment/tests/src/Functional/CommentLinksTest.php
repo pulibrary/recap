@@ -36,7 +36,7 @@ class CommentLinksTest extends CommentTestBase {
    *
    * @todo Remove this dependency.
    */
-  public static $modules = ['views'];
+  protected static $modules = ['views'];
 
   /**
    * {@inheritdoc}
@@ -101,7 +101,7 @@ class CommentLinksTest extends CommentTestBase {
       // In teaser view, a link containing the comment count is always
       // expected.
       if ($path == 'node') {
-        $this->assertSession()->linkExists(t('1 comment'));
+        $this->assertSession()->linkExists('1 comment');
       }
       $this->assertSession()->linkExists('Add new comment');
     }
@@ -116,7 +116,7 @@ class CommentLinksTest extends CommentTestBase {
     $element = $this->cssSelect('article.js-comment > div');
     // Get last child element.
     $element = end($element);
-    $this->assertIdentical($element->getTagName(), 'div', 'Last element is comment body.');
+    $this->assertSame('div', $element->getTagName(), 'Last element is comment body.');
 
     // Change weight to make links go after comment body.
     $display_repository->getViewDisplay('comment', 'comment')

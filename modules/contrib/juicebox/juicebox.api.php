@@ -1,15 +1,15 @@
 <?php
 
-
 /**
  * @file
  * Hooks provided by the Juicebox module.
  */
 
-
 /**
- * Allow modules to alter the Juicebox gallery object used to build gallery
- * embed code and XML before rendering.
+ * Allow modules to alter the Juicebox gallery object.
+ *
+ * Juicebox gallery object is used to build gallery embed code and
+ * XML before rendering.
  *
  * @param object $gallery
  *   A Juicebox gallery object that contains the gallery which is going to be
@@ -20,7 +20,7 @@
  *   context.
  */
 function hook_juicebox_gallery_alter($gallery, $data) {
-  // Only make changes to galleries that use the field formatter
+  // Only make changes to galleries that use the field formatter.
   if (strpos($gallery->getId(), 'field') === 0) {
     foreach ($gallery->getImages() as $key => $image) {
       // Add some static text to all title values and write changes back.
@@ -29,7 +29,6 @@ function hook_juicebox_gallery_alter($gallery, $data) {
     }
   }
 }
-
 
 /**
  * Allow modules to alter the class used to instantiate a Juicebox gallery.
@@ -41,7 +40,7 @@ function hook_juicebox_gallery_alter($gallery, $data) {
  *   Juicebox javascript library data as provided through Libraries API.
  *   Provided for context.
  */
-function hook_juicebox_classes_alter(&$class, $library) {
+function hook_juicebox_classes_alter(&$class, array $library) {
   // Swap out the gallery dependency object because some future Juicebox
   // javascript library requires different embed or XML output.
   if (!empty($library['version']) && $library['version'] == 'Pro 12.3') {

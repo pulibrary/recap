@@ -25,7 +25,13 @@ class CommentAttributesTest extends CommentTestBase {
    *
    * @var array
    */
-  public static $modules = ['views', 'node', 'comment', 'rdf', 'user_hooks_test'];
+  protected static $modules = [
+    'views',
+    'node',
+    'comment',
+    'rdf',
+    'user_hooks_test',
+  ];
 
   /**
    * {@inheritdoc}
@@ -46,7 +52,7 @@ class CommentAttributesTest extends CommentTestBase {
    */
   protected $nodeUri;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Enables anonymous user comments.
@@ -163,7 +169,7 @@ class CommentAttributesTest extends CommentTestBase {
     // is modified by the RDF module.
     $this->drupalGet('node/' . $this->node->id());
     $this->assertSession()->linkExistsExact($this->webUser->getDisplayName());
-    $this->assertLinkByHref('user/' . $this->webUser->id());
+    $this->assertSession()->linkByHrefExists('user/' . $this->webUser->id());
   }
 
   /**

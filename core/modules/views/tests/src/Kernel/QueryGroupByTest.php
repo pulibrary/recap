@@ -28,7 +28,7 @@ class QueryGroupByTest extends ViewsKernelTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'entity_test',
     'system',
     'field',
@@ -46,7 +46,7 @@ class QueryGroupByTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp($import_test_views = TRUE) {
+  protected function setUp($import_test_views = TRUE): void {
     parent::setUp();
 
     $this->installEntitySchema('user');
@@ -71,12 +71,12 @@ class QueryGroupByTest extends ViewsKernelTestBase {
 
     $types = [];
     foreach ($view->result as $item) {
-      // num_records is a alias for id.
+      // num_records is an alias for id.
       $types[$item->entity_test_name] = $item->num_records;
     }
 
-    $this->assertEqual($types['name1'], 4, 'Groupby the name: name1 returned the expected amount of results.');
-    $this->assertEqual($types['name2'], 3, 'Groupby the name: name2 returned the expected amount of results.');
+    $this->assertEquals(4, $types['name1']);
+    $this->assertEquals(3, $types['name2']);
   }
 
   /**
@@ -111,8 +111,8 @@ class QueryGroupByTest extends ViewsKernelTestBase {
     foreach ($view->result as $item) {
       $results[$item->entity_test_name] = $item->id;
     }
-    $this->assertEqual($results['name1'], $values[0], new FormattableMarkup('Aggregation with @aggregation_function and groupby name: name1 returned the expected amount of results', ['@aggregation_function' => $aggregation_function]));
-    $this->assertEqual($results['name2'], $values[1], new FormattableMarkup('Aggregation with @aggregation_function and groupby name: name2 returned the expected amount of results', ['@aggregation_function' => $aggregation_function]));
+    $this->assertEqual($values[0], $results['name1'], new FormattableMarkup('Aggregation with @aggregation_function and groupby name: name1 returned the expected amount of results', ['@aggregation_function' => $aggregation_function]));
+    $this->assertEqual($values[1], $results['name2'], new FormattableMarkup('Aggregation with @aggregation_function and groupby name: name2 returned the expected amount of results', ['@aggregation_function' => $aggregation_function]));
   }
 
   /**
@@ -294,7 +294,7 @@ class QueryGroupByTest extends ViewsKernelTestBase {
   }
 
   /**
-   * Tests groupby with a field not existing on some bundle.
+   * Tests groupby with a non-existent field on some bundle.
    */
   public function testGroupByWithFieldsNotExistingOnBundle() {
     $field_storage = FieldStorageConfig::create([

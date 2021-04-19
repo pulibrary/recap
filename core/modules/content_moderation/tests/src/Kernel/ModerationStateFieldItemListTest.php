@@ -7,6 +7,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\workflows\Entity\Workflow;
 
 /**
@@ -17,11 +18,12 @@ use Drupal\workflows\Entity\Workflow;
 class ModerationStateFieldItemListTest extends KernelTestBase {
 
   use ContentModerationTestTrait;
+  use UserCreationTrait;
 
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'content_moderation',
     'user',
@@ -38,10 +40,11 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installSchema('node', 'node_access');
+    $this->installSchema('system', 'sequences');
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
     $this->installEntitySchema('content_moderation_state');
@@ -205,7 +208,7 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
   }
 
   /**
-   * Data provider for ::testModerationStateChanges
+   * Data provider for ::testModerationStateChanges.
    */
   public function moderationStateChangesTestCases() {
     return [
@@ -399,6 +402,23 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
     $translation = $node->getTranslation('de');
     $this->assertEquals('published', $node->moderation_state->value);
     $this->assertEquals('published', $translation->moderation_state->value);
+  }
+
+  /**
+   * Test generating sample values for entities with a moderation state.
+   */
+  public function testModerationStateSampleValues() {
+    $this->container->get('current_user')->setAccount(
+      $this->createUser([
+        'use editorial transition create_new_draft',
+        'use editorial transition publish',
+      ])
+    );
+    $sample = $this->container->get('entity_type.manager')
+      ->getStorage('node')
+      ->createWithSampleValues('example');
+    $this->assertCount(0, $sample->validate());
+    $this->assertEquals('draft', $sample->moderation_state->value);
   }
 
   /**

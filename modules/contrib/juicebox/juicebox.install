@@ -9,7 +9,7 @@
  * Implements hook_requirements().
  */
 function juicebox_requirements($phase) {
-  $requirements = array();
+  $requirements = [];
   // Check on the installation status of the Juicebox library. Note that
   // we do not do this check during the 'install' phase as the libraries API
   // functions will not always be available then (if installing Drupal via an
@@ -17,9 +17,9 @@ function juicebox_requirements($phase) {
   if ($phase == 'runtime') {
     // Get locally installed library details.
     $library = \Drupal::service('juicebox.formatter')->getLibrary(TRUE, TRUE);
-    $requirements['juicebox'] = array(
+    $requirements['juicebox'] = [
       'title' => t('Juicebox Javascript Library'),
-    );
+    ];
     if ($library['installed']) {
       $requirements['juicebox']['value'] = $library['version'];
       $requirements['juicebox']['severity'] = REQUIREMENT_INFO;

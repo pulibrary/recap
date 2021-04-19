@@ -25,12 +25,12 @@ class SearchMatchTest extends KernelTestBase {
    *
    * @var array
    */
-  public static $modules = ['search'];
+  protected static $modules = ['search'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->installSchema('search', ['search_index', 'search_dataset', 'search_total']);
     $this->installConfig(['search']);
@@ -253,7 +253,7 @@ class SearchMatchTest extends KernelTestBase {
     $this->assertEqual($scores, array_reverse($sorted), "Query order '$query'");
 
     // Check range.
-    $this->assertEqual(!count($scores) || (min($scores) > 0.0 && max($scores) <= 1.0001), TRUE, "Query scoring '$query'");
+    $this->assertTrue(!count($scores) || (min($scores) > 0.0 && max($scores) <= 1.0001), "Query scoring '$query'");
   }
 
 }

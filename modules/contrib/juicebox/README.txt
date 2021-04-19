@@ -1,10 +1,18 @@
+CONTENTS OF THIS FILE
+---------------------
 
-General Information
--------------------
+ * Introduction
+ * Requirements
+ * Installation
+ * Configuration
+ * Maintainers
 
-This module provides an integration between the Juicebox HTML5 responsive 
+
+INTRODUCTION
+------------
+This module provides an integration between the Juicebox HTML5 responsive
 gallery library (http://juicebox.net/) and Drupal. Juicebox is in many ways the
-successor of Simpleviewer and offers a powerful and flexible image gallery 
+successor of Simpleviewer and offers a powerful and flexible image gallery
 front-end.
 
 The Juicebox library is downloaded, maintained and supported totally
@@ -16,18 +24,28 @@ Please see the Drupal project page for a detailed feature overview:
 http://drupal.org/project/juicebox
 
 
-
-Installation and Usage
-----------------------
-
-Please see the module documentation for full installation and usage details:
-http://drupal.org/node/2000300
+REQUIREMENTS
+------------
+This module has dependency on file,image and libraries module.
 
 
+INSTALLATION
+------------
+Install as normal (see http://drupal.org/documentation/install/modules-themes).
 
-Drupal Module Author
---------------------
+Installing Library
+1. Download the Library from https://juicebox.net/download/ and paste it inside
+   your drupal sites /libraries folder
+2. Go inside /libraries/juicebox/web/jbcore and copy the juicebox.js file and
+   classic folder and paste it under /libraries/juicebox/
 
-Ryan Jacobs (rjacobs)
-http://drupal.org/user/422459
-http://www.ryan-jacobs.net
+
+CONFIGURATION
+============
+The module has configuration in '/admin/config/media/juicebox'
+
+
+MAINTAINERS
+-----------
+Neslee Canil Pinto: https://www.drupal.org/u/neslee-canil-pinto
+Ryan Jacobs: https://www.drupal.org/u/rjacobs
