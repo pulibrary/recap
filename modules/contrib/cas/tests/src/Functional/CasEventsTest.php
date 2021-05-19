@@ -17,7 +17,7 @@ class CasEventsTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'cas', 'cas_mock_server', 'cas_test'];
+  protected static $modules = ['block', 'cas', 'cas_mock_server', 'cas_test'];
 
   /**
    * Tests we can use the CasPreRegisterEvent to alter user properties.

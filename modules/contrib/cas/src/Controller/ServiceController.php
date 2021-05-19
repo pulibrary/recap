@@ -187,13 +187,6 @@ class ServiceController implements ContainerInjectionInterface {
       return Response::create('', 200);
     }
 
-    // We will be redirecting the user below. To prevent the CasSubscriber from
-    // initiating an automatic authentiation on that request (like forced
-    // auth or gateway auth) and potentially creating an authentication loop,
-    // we set a session variable instructing the CasSubscriber skip auto auth
-    // for that request.
-    $request->getSession()->set('cas_temp_disable_auto_auth', TRUE);
-
     /* If there is no ticket parameter on the request, the browser either:
      * (a) is returning from a gateway request to the CAS server in which
      *     the user was not already authenticated to CAS, so there is no
@@ -290,8 +283,12 @@ class ServiceController implements ContainerInjectionInterface {
       }
 
       $this->casHelper->log($error_level, $e->getMessage());
+
+      // Display error message to the user, unless this login failure originated
+      // from a gateway login. No sense in showing them an error when the login
+      // is optional.
       $login_error_message = $this->getLoginErrorMessage($e);
-      if ($login_error_message) {
+      if ($login_error_message && !$request->query->has('from_gateway')) {
         $this->messenger->addError($login_error_message, 'error');
       }
 
@@ -313,8 +310,10 @@ class ServiceController implements ContainerInjectionInterface {
    *   The redirect response.
    */
   private function createRedirectResponse(Request $request, $login_failed = FALSE) {
-    // If login failed, we may have a failure page to send them to.
-    if ($login_failed && $this->settings->get('error_handling.login_failure_page')) {
+    // If login failed, we may have a failure page to send them to. Don't do it
+    // if the request was from a gateway auth attempt though, as the login was
+    // optional.
+    if ($login_failed && $this->settings->get('error_handling.login_failure_page') && !$request->query->has('from_gateway')) {
       // Remove 'destination' parameter, otherwise Drupal's
       // RedirectResponseSubscriber will send users to that location instead of
       // the failure page.

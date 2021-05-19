@@ -12,7 +12,7 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
+  protected static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
 
   /**
    * Tests that the CAS username field works as expected.
@@ -79,14 +79,14 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
     $output = $this->getSession()->getPage()->getContent();
 
     $validation_error_message = 'The specified CAS username is already in use by another user.';
-    $this->assertContains($validation_error_message, $output, 'Expected validation error not found on page.');
+    $this->assertStringContainsString($validation_error_message, $output, 'Expected validation error not found on page.');
 
     // Submit with proper CAS username, and verify user was created and has the
     // proper CAS username associated.
     $new_user_data['cas_username'] = 'test_user_2_cas';
     $this->drupalPostForm('/admin/people/create', $new_user_data, 'Create new account');
     $output = $this->getSession()->getPage()->getContent();
-    $this->assertNotContains($validation_error_message, $output, 'Validation error should not be found.');
+    $this->assertStringNotContainsString($validation_error_message, $output, 'Validation error should not be found.');
 
     $test_user_2 = $this->container->get('entity_type.manager')->getStorage('user')->loadByProperties(['name' => 'test_user_2']);
     $test_user_2 = reset($test_user_2);

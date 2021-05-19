@@ -59,7 +59,7 @@ class CasRedirectorTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp() : void {
     parent::setUp();
 
     $this->configFactory = $this->getConfigFactoryStub([

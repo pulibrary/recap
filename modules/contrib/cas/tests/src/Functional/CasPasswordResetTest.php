@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\cas\Functional;
 
+use Composer\Semver\Comparator;
+
 /**
  * Tests the user's ability to reset their password.
  *
@@ -33,7 +35,7 @@ class CasPasswordResetTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->settings = $this->config('cas.settings');
@@ -52,13 +54,11 @@ class CasPasswordResetTest extends CasBrowserTestBase {
 
     // Check that a CAS user is able to reset their password.
     $this->drupalPostForm('/user/password', ['name' => 'user_with_cas'], 'Submit');
-    $this->assertSession()->addressEquals('user/login');
-    $this->assertSession()->pageTextContains('Further instructions have been sent to your email address.');
+    $this->assertStatusMessage('user_with_cas');
 
     // Check that a non-CAS user is able to reset their password.
     $this->drupalPostForm('/user/password', ['name' => 'user_without_cas'], 'Submit');
-    $this->assertSession()->addressEquals('user/login');
-    $this->assertSession()->pageTextContains('Further instructions have been sent to your email address.');
+    $this->assertStatusMessage('user_without_cas');
 
     // Test with the 'user_accounts.restrict_password_management' setting on.
     $this->settings->set('user_accounts.restrict_password_management', TRUE)->save();
@@ -77,8 +77,7 @@ class CasPasswordResetTest extends CasBrowserTestBase {
 
     // Check that a non-CAS user is able to reset their password.
     $this->drupalPostForm('/user/password', ['name' => 'user_without_cas'], 'Submit');
-    $this->assertSession()->addressEquals('user/login');
-    $this->assertSession()->pageTextContains('Further instructions have been sent to your email address.');
+    $this->assertStatusMessage('user_without_cas');
   }
 
   /**
@@ -96,13 +95,13 @@ class CasPasswordResetTest extends CasBrowserTestBase {
     $this->drupalLogin($this->nonCasUser);
     $this->drupalPostForm('/user/password', [], 'Submit');
     $this->assertSession()->addressEquals($this->nonCasUser->toUrl());
-    $this->assertSession()->pageTextContains('Further instructions have been sent to your email address.');
+    $this->assertStatusMessage('user_without_cas@example.com');
 
     // Check that a CAS user is able to reset their password.
     $this->drupalLogin($this->casUser);
     $this->drupalPostForm('/user/password', [], 'Submit');
     $this->assertSession()->addressEquals($this->casUser->toUrl());
-    $this->assertSession()->pageTextContains('Further instructions have been sent to your email address.');
+    $this->assertStatusMessage('user_with_cas@example.com');
 
     // Test with the 'user_accounts.restrict_password_management' setting on.
     $this->settings->set('user_accounts.restrict_password_management', TRUE)->save();
@@ -115,7 +114,27 @@ class CasPasswordResetTest extends CasBrowserTestBase {
     $this->drupalLogin($this->nonCasUser);
     $this->drupalPostForm('/user/password', [], 'Submit');
     $this->assertSession()->addressEquals($this->nonCasUser->toUrl());
-    $this->assertSession()->pageTextContains('Further instructions have been sent to your email address.');
+    $this->assertStatusMessage('user_without_cas@example.com');
+  }
+
+  /**
+   * Asserts that a password reset status message has been displayed.
+   *
+   * @param string $username_or_email
+   *   The account user name or email.
+   *
+   * @throws \Behat\Mink\Exception\ResponseTextException
+   *   Thrown when an expectation on the response text fails.
+   */
+  protected function assertStatusMessage(string $username_or_email): void {
+    if (Comparator::greaterThanOrEqualTo(\Drupal::VERSION, '9.2')) {
+      $message = "If {$username_or_email} is a valid account, an email will be sent with instructions to reset your password.";
+    }
+    else {
+      // @todo Remove when support for Drupal < 9.2.x is dropped.
+      $message = 'Further instructions have been sent to your email address.';
+    }
+    $this->assertSession()->pageTextContains($message);
   }
 
 }

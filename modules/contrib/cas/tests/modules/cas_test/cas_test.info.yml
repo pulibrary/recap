@@ -1,13 +1,11 @@
 name: 'CAS test'
 type: module
 description: 'Used by the automated tests for the CAS module.'
-core: 8.x
-core_version_requirement: ^8 || ^9
 package: Testing
 dependencies:
   - cas:cas
 
-# Information added by Drupal.org packaging script on 2020-06-15
-version: '8.x-1.7'
+# Information added by Drupal.org packaging script on 2021-04-07
+version: '2.0.0-beta2'
 project: 'cas'
-datestamp: 1592250924
+datestamp: 1617757374

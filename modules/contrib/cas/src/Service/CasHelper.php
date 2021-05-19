@@ -37,27 +37,6 @@ class CasHelper {
   const CA_NONE = 2;
 
   /**
-   * Gateway config: never check preemptively to see if the user is logged in.
-   *
-   * @var int
-   */
-  const CHECK_NEVER = -2;
-
-  /**
-   * Gateway config: check once per session to see if the user is logged in.
-   *
-   * @var int
-   */
-  const CHECK_ONCE = -1;
-
-  /**
-   * Gateway config: check on every page load to see if the user is logged in.
-   *
-   * @var int
-   */
-  const CHECK_ALWAYS = 0;
-
-  /**
    * Event type identifier for the CasPreUserLoadEvent.
    *
    * @var string
@@ -115,6 +94,30 @@ class CasHelper {
    * Event type identifier for events fired after login has completed.
    */
   const EVENT_POST_LOGIN = 'cas.post_login';
+
+  /**
+   * Indicates gateway redirect performed server-side.
+   */
+  const GATEWAY_SERVER_SIDE = 'server_side';
+
+  /**
+   * Indicates gateway redirect performed client-side.
+   */
+  const GATEWAY_CLIENT_SIDE = 'client_side';
+
+  /**
+   * A list of routes we should never trigger CAS login redirect on.
+   */
+  const IGNOREABLE_AUTO_LOGIN_ROUTES = [
+    'cas.service',
+    'cas.proxyCallback',
+    'cas.login',
+    'cas.legacy_login',
+    'cas.logout',
+    'system.cron',
+    'user.logout',
+    'user.logout.http',
+  ];
 
   /**
    * Stores settings object.

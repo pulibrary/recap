@@ -129,7 +129,7 @@ class ServiceControllerTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp() : void {
     parent::setUp();
 
     $this->casValidator = $this->getMockBuilder('\Drupal\cas\Service\CasValidator')

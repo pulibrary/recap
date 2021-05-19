@@ -51,7 +51,7 @@ class CasHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp() : void {
     parent::setUp();
 
     $this->loggerFactory = $this->createMock('\Drupal\Core\Logger\LoggerChannelFactory');

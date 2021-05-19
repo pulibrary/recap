@@ -19,7 +19,7 @@ use Drupal\cas\CasPropertyBag;
 use Drupal\Component\Utility\Crypt;
 
 /**
- * Class CasUserManager.
+ * Provides the 'cas.user_manager' service default implementation.
  */
 class CasUserManager {
 
@@ -120,7 +120,7 @@ class CasUserManager {
    * @param \Drupal\cas\Service\CasProxyHelper $cas_proxy_helper
    *   The CAS Proxy helper.
    */
-  public function __construct(ExternalAuthInterface $external_auth, AuthmapInterface $authmap, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher, CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper = NULL) {
+  public function __construct(ExternalAuthInterface $external_auth, AuthmapInterface $authmap, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher, CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper) {
     $this->externalAuth = $external_auth;
     $this->authmap = $authmap;
     $this->settings = $settings;
@@ -128,10 +128,6 @@ class CasUserManager {
     $this->connection = $database_connection;
     $this->eventDispatcher = $event_dispatcher;
     $this->casHelper = $cas_helper;
-    if (!$cas_proxy_helper) {
-      @trigger_error('Calling CasUserManager::__construct() without the $cas_proxy_helper argument is deprecated in cas:8.x-1.6 and the $cas_proxy_helper argument will be required in cas:8.x-1.10.', E_USER_DEPRECATED);
-      $cas_proxy_helper = \Drupal::service('cas.proxy_helper');
-    }
     $this->casProxyHelper = $cas_proxy_helper;
   }
 
@@ -140,10 +136,10 @@ class CasUserManager {
    *
    * @param string $authname
    *   The CAS username.
-   * @param array $property_values
-   *   Property values to assign to the user on registration.
    * @param string $local_username
    *   The local Drupal username to be created.
+   * @param array $property_values
+   *   (optional) Property values to assign to the user on registration.
    *
    * @return \Drupal\user\UserInterface
    *   The user entity of the newly registered user.
@@ -151,12 +147,7 @@ class CasUserManager {
    * @throws \Drupal\cas\Exception\CasLoginException
    *   When the user account could not be registered.
    */
-  public function register($authname, array $property_values = [], $local_username = NULL) {
-    if (!$local_username) {
-      @trigger_error('Calling CasUserManager::register() without the $local_username argument is deprecated in cas:8.x-1.6 and the $local_username argument will be required in cas:8.x-2.0.', E_USER_DEPRECATED);
-      $local_username = $authname;
-    }
-
+  public function register($authname, $local_username, array $property_values = []) {
     $property_values['name'] = $local_username;
     $property_values['pass'] = $this->randomPassword();
 
@@ -199,7 +190,7 @@ class CasUserManager {
         $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_REGISTER.');
         $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_REGISTER, $cas_pre_register_event);
         if ($cas_pre_register_event->getAllowAutomaticRegistration()) {
-          $account = $this->register($property_bag->getUsername(), $cas_pre_register_event->getPropertyValues(), $cas_pre_register_event->getDrupalUsername());
+          $account = $this->register($property_bag->getUsername(), $cas_pre_register_event->getDrupalUsername(), $cas_pre_register_event->getPropertyValues());
         }
         else {
           throw new CasLoginException("Cannot register user, an event listener denied access.", CasLoginException::SUBSCRIBER_DENIED_REG);
@@ -311,7 +302,7 @@ class CasUserManager {
    *   The user account entity.
    */
   public function removeCasUsernameForAccount(UserInterface $account) {
-    $this->authmap->delete($account->id());
+    $this->authmap->delete($account->id(), $this->provider);
   }
 
   /**

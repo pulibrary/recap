@@ -5,6 +5,8 @@
  * Provides CAS authentication for Drupal.
  */
 
+use Drupal\cas\CasRedirectData;
+use Drupal\cas\Service\CasHelper;
 use Drupal\user\RoleInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -204,7 +206,7 @@ function _cas_user_form_submit(array $form, FormStateInterface $form_state) {
   if ($form_state->getValue('cas_username') && $form_state->getValue('cas_enabled')) {
     $cas_user_manager->setCasUsernameForAccount($account, $form_state->getValue('cas_username'));
   }
-  else {
+  elseif ($cas_user_manager->getCasUsernameForAccount($account->id())) {
     $cas_user_manager->removeCasUsernameForAccount($account);
   }
 }

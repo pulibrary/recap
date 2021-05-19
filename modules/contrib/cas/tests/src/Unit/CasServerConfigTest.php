@@ -67,15 +67,15 @@ class CasServerConfigTest extends UnitTestCase {
 
     switch ($sslVerifyMethod) {
       case CasHelper::CA_CUSTOM:
-        $this->assertArrayEquals(['verify' => 'foo', 'timeout' => 30], $serverConfig->getCasServerGuzzleConnectionOptions());
+        $this->assertEquals(['verify' => 'foo', 'timeout' => 30], $serverConfig->getCasServerGuzzleConnectionOptions());
         break;
 
       case CasHelper::CA_NONE:
-        $this->assertArrayEquals(['verify' => FALSE, 'timeout' => 30], $serverConfig->getCasServerGuzzleConnectionOptions());
+        $this->assertEquals(['verify' => FALSE, 'timeout' => 30], $serverConfig->getCasServerGuzzleConnectionOptions());
         break;
 
       default:
-        $this->assertArrayEquals(['verify' => TRUE, 'timeout' => 30], $serverConfig->getCasServerGuzzleConnectionOptions());
+        $this->assertEquals(['verify' => TRUE, 'timeout' => 30], $serverConfig->getCasServerGuzzleConnectionOptions());
         break;
     }
   }

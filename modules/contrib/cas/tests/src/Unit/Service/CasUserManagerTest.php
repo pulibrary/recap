@@ -93,7 +93,7 @@ class CasUserManagerTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp() : void {
     parent::setUp();
     $this->externalAuth = $this->getMockBuilder('\Drupal\externalauth\ExternalAuth')
       ->disableOriginalConstructor()
@@ -156,7 +156,7 @@ class CasUserManagerTest extends UnitTestCase {
       ])
       ->getMock();
 
-    $this->assertNotEmpty($cas_user_manager->register('test', [], 'test'), 'Successfully registered user.');
+    $this->assertNotEmpty($cas_user_manager->register('test', 'test', []), 'Successfully registered user.');
   }
 
   /**

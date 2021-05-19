@@ -393,39 +393,77 @@ class CasSettings extends ConfigFormBase {
       '#title' => $this->t('Gateway Feature (Auto Login)'),
       '#open' => FALSE,
       '#tree' => TRUE,
+    ];
+    $form['gateway']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Gateway login enabled'),
+      '#default_value' => $config->get('gateway.enabled'),
       '#description' => $this->t(
-        'This implements the <a href="@cas-gateway">Gateway feature</a> of the CAS Protocol. When enabled, Drupal will check if a visitor is already logged into your CAS server before serving a page request. If they have an active CAS session, they will be automatically logged into the Drupal site. This is done by quickly redirecting them to the CAS server to perform the active session check, and then redirecting them back to page they initially requested.<br/><br/>If enabled, all pages on your site will trigger this feature by default. It is strongly recommended that you specify specific pages to trigger this feature below.<br/><br/><strong>WARNING:</strong> This feature will disable page caching on pages it is active on.',
+        'This implements the <a href="@cas-gateway">Gateway feature</a> of the CAS Protocol. When enabled, Drupal will check if a visitor has an active CAS session, and if so, will be automatically log them into Drupal. This is done by quickly redirecting them to the CAS server to perform the active session check, and then redirecting them back to page they initially requested.<br/><br/>If enabled, all pages on your site will trigger this feature by default unless you specify specific pages below.<br/><br/><strong>WARNING:</strong> This feature may disable page caching on pages it is active on. See "Method" below.',
         ['@cas-gateway' => 'https://wiki.jasig.org/display/CAS/gateway']
       ),
     ];
-    $form['gateway']['check_frequency'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('Check frequency'),
-      '#default_value' => $config->get('gateway.check_frequency'),
-      '#options' => [
-        CasHelper::CHECK_NEVER => 'Disable gateway feature',
-        CasHelper::CHECK_ONCE => 'Once per browser session',
-        CasHelper::CHECK_ALWAYS => 'Every page load (not recommended)',
+    $gatewayEnabledStates = [
+      'visible' => [
+        'input[name="gateway[enabled]"]' => ['checked' => TRUE],
       ],
+    ];
+    $form['gateway']['recheck_time'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Recheck time'),
+      '#description' => $this->t('After initially checking if the visitor has an active CAS session, this is the amount of time to wait before checking again. Every check redirects the user to the CAS server and then back to the page they were on.'),
+      '#default_value' => $config->get('gateway.recheck_time'),
+      '#options' => [
+        -1 => $this->t('Every page request (not recommended)'),
+        30 => $this->t('30 minutes'),
+        60 => $this->t('1 hour'),
+        120 => $this->t('2 hours'),
+        180 => $this->t('3 hours'),
+        360 => $this->t('6 hours'),
+        540 => $this->t('9 hours'),
+        720 => $this->t('12 hours'),
+        1440 => $this->t('24 hours'),
+      ],
+      '#states' => $gatewayEnabledStates,
     ];
     $this->gatewayPaths->setConfiguration($config->get('gateway.paths'));
     $form['gateway']['paths'] = $this->gatewayPaths->buildConfigurationForm([], $form_state);
+    $form['gateway']['paths']['pages']['#states'] = $gatewayEnabledStates;
+    $form['gateway']['paths']['negate']['#states'] = $gatewayEnabledStates;
+
+    $form['gateway']['method'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Method'),
+      '#default_value' => $config->get('gateway.method'),
+      '#options' => [
+        CasHelper::GATEWAY_SERVER_SIDE => $this->t('Server-side redirect. Faster, but disables page caching on configured paths.'),
+        CasHelper::GATEWAY_CLIENT_SIDE => $this->t('Client-side redirect (using JavaScript). Slower, but works with all page caching. Not compatible with "Every page request" option above.'),
+      ],
+      '#description' => $this->t('Configure how the redirect to the CAS server is performed.'),
+      '#states' => $gatewayEnabledStates,
+    ];
 
     $form['forced_login'] = [
       '#type' => 'details',
       '#title' => $this->t('Forced login'),
       '#open' => FALSE,
       '#tree' => TRUE,
-      '#description' => $this->t('Anonymous users will be forced to login through CAS when enabled. This differs from the "gateway feature" in that it will force a user to log in if they are not.'),
     ];
     $form['forced_login']['enabled'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Enable'),
-      '#description' => $this->t('If enabled, all pages on your site will trigger this feature. It is strongly recommended that you specify specific pages to trigger this feature below.'),
+      '#title' => $this->t('Forced login enabled'),
+      '#description' => $this->t('When enabled, anonymous users will be forced to login through CAS on the pages you specify. <strong>If enabled and no specific pages are specified below, it will trigger on every page.</strong>'),
       '#default_value' => $config->get('forced_login.enabled'),
+    ];
+    $forcedLoginEnabledStates = [
+      'visible' => [
+        'input[name="forced_login[enabled]"]' => ['checked' => TRUE],
+      ],
     ];
     $this->forcedLoginPaths->setConfiguration($config->get('forced_login.paths'));
     $form['forced_login']['paths'] = $this->forcedLoginPaths->buildConfigurationForm([], $form_state);
+    $form['forced_login']['paths']['pages']['#states'] = $forcedLoginEnabledStates;
+    $form['forced_login']['paths']['negate']['#states'] = $forcedLoginEnabledStates;
 
     $form['logout'] = [
       '#type' => 'details',
@@ -555,6 +593,12 @@ class CasSettings extends ConfigFormBase {
       }
     }
 
+    $method = $form_state->getValue(['gateway', 'method']);
+    $recheck_time = $form_state->getValue(['gateway', 'recheck_time']);
+    if ($method == CasHelper::GATEWAY_CLIENT_SIDE && $recheck_time == -1) {
+      $form_state->setErrorByName('gateway][method', $this->t('The "Every page request" recheck time is not compatible with the "Client-side" method.'));
+    }
+
     return parent::validateForm($form, $form_state);
   }
 
@@ -584,8 +628,10 @@ class CasSettings extends ConfigFormBase {
       ->setValues($form_state->getValue(['gateway', 'paths']));
     $this->gatewayPaths->submitConfigurationForm($form, $condition_values);
     $config
-      ->set('gateway.check_frequency', $form_state->getValue(['gateway', 'check_frequency']))
-      ->set('gateway.paths', $this->gatewayPaths->getConfiguration());
+      ->set('gateway.enabled', $form_state->getValue(['gateway', 'enabled']))
+      ->set('gateway.recheck_time', $form_state->getValue(['gateway', 'recheck_time']))
+      ->set('gateway.paths', $this->gatewayPaths->getConfiguration())
+      ->set('gateway.method', $form_state->getValue(['gateway', 'method']));
 
     $condition_values = (new FormState())
       ->setValues($form_state->getValue(['forced_login', 'paths']));

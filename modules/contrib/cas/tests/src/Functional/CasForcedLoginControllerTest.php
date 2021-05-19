@@ -14,7 +14,7 @@ class CasForcedLoginControllerTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
+  protected static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
 
   /**
    * Tests the the forced login route that redirects users authenticate.

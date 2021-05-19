@@ -118,7 +118,7 @@ class CasRedirector {
         $response = new TrustedRedirectResponse($login_url);
         $response->addCacheableDependency($cacheable_metadata);
       }
-      $this->casHelper->log(LogLevel::DEBUG, "Cas redirecting to %url", ['%url' => $login_url]);
+      $this->casHelper->log(LogLevel::DEBUG, "Built CAS redirect URL to %url", ['%url' => $login_url]);
     }
     return $response;
   }

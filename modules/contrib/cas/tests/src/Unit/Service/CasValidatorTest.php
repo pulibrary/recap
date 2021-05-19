@@ -42,7 +42,7 @@ class CasValidatorTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp() : void {
     parent::setUp();
 
     // Mock event dispatcher to dispatch events.
