@@ -2,6 +2,9 @@
 
 namespace Drupal\KernelTests\Core\Database;
 
+use Drupal\Core\Database\DatabaseExceptionWrapper;
+use Drupal\Core\Database\IntegrityConstraintViolationException;
+
 /**
  * Tests the update query builder.
  *
@@ -72,7 +75,7 @@ class UpdateTest extends DatabaseTestBase {
   public function testWhereUpdate() {
     $num_updated = $this->connection->update('test')
       ->fields(['job' => 'Musician'])
-      ->where('age > :age', [':age' => 26])
+      ->where('[age] > :age', [':age' => 26])
       ->execute();
     $this->assertSame(2, $num_updated, 'Updated 2 records.');
 
@@ -86,7 +89,7 @@ class UpdateTest extends DatabaseTestBase {
   public function testWhereAndConditionUpdate() {
     $update = $this->connection->update('test')
       ->fields(['job' => 'Musician'])
-      ->where('age > :age', [':age' => 26])
+      ->where('[age] > :age', [':age' => 26])
       ->condition('name', 'Ringo');
     $num_updated = $update->execute();
     $this->assertSame(1, $num_updated, 'Updated 1 record.');
@@ -102,7 +105,7 @@ class UpdateTest extends DatabaseTestBase {
     // Ensure that expressions are handled properly. This should set every
     // record's age to a square of itself.
     $num_rows = $this->connection->update('test')
-      ->expression('age', 'age * age')
+      ->expression('age', '[age] * [age]')
       ->execute();
     $this->assertSame(4, $num_rows, 'Updated 4 records.');
 
@@ -141,6 +144,30 @@ class UpdateTest extends DatabaseTestBase {
 
     $saved_value = $this->connection->query('SELECT [update] FROM {select} WHERE [id] = :id', [':id' => 1])->fetchField();
     $this->assertEquals('New update value', $saved_value);
+  }
+
+  /**
+   * Updating a not existing table throws a DatabaseExceptionWrapper.
+   */
+  public function testUpdateNonExistingTable(): void {
+    $this->expectException(DatabaseExceptionWrapper::class);
+    $this->connection->update('a-table-that-does-not-exist')
+      ->fields([
+        'update' => 'New update value',
+      ])
+      ->condition('id', 1)
+      ->execute();
+  }
+
+  /**
+   * Updating a serial field throws a IntegrityConstraintViolationException.
+   */
+  public function testUpdateValueInSerial(): void {
+    $this->expectException(IntegrityConstraintViolationException::class);
+    $this->connection->update('test')
+      ->fields(['id' => 2])
+      ->condition('id', 1)
+      ->execute();
   }
 
 }

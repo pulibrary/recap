@@ -187,7 +187,7 @@ class DisplayTest extends ViewTestBase {
     $view->setDisplay('default');
     $errors = $view->validate();
     $this->assertTrue(!empty($errors), 'More link validation has some errors.');
-    $this->assertEqual('Display "Master" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', $errors['default'][0], 'More link validation has the right error.');
+    $this->assertEqual('Display "Default" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', $errors['default'][0], 'More link validation has the right error.');
 
     // Confirm that the view does not validate when the page display does not exist.
     $view = Views::getView('test_view');
@@ -195,7 +195,7 @@ class DisplayTest extends ViewTestBase {
     $view->display_handler->setOption('use_more', 1);
     $errors = $view->validate();
     $this->assertTrue(!empty($errors), 'More link validation has some errors.');
-    $this->assertEqual('Display "Master" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', $errors['default'][0], 'More link validation has the right error.');
+    $this->assertEqual('Display "Default" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', $errors['default'][0], 'More link validation has the right error.');
   }
 
   /**
@@ -327,7 +327,7 @@ class DisplayTest extends ViewTestBase {
 
     $this->drupalGet('<front>');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertCount(1, $this->xpath('//div[@id = :id]', [':id' => 'block-' . $block->id()]));
+    $this->assertSession()->elementsCount('xpath', "//div[@id = 'block-{$block->id()}']", 1);
 
     // Change the block plugin ID to an invalid one.
     $config = $this->config('views.view.test_display_invalid');
@@ -339,7 +339,7 @@ class DisplayTest extends ViewTestBase {
     $this->drupalGet('<front>');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertText('The &quot;invalid&quot; plugin does not exist.');
-    $this->assertCount(0, $this->xpath('//div[@id = :id]', [':id' => 'block-' . $block->id()]));
+    $this->assertSession()->elementNotExists('xpath', "//div[@id = 'block-{$block->id()}']");
   }
 
   /**

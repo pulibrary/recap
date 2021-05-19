@@ -202,7 +202,7 @@ class FilterAdminTest extends BrowserTestBase {
     $plain = 'plain_text';
 
     // Check that the fallback format exists and cannot be disabled.
-    $this->assertTrue($plain == filter_fallback_format(), 'The fallback format is set to plain text.');
+    $this->assertSame($plain, filter_fallback_format(), 'The fallback format is set to plain text.');
     $this->drupalGet('admin/config/content/formats');
     $this->assertNoRaw('admin/config/content/formats/manage/' . $plain . '/disable');
     $this->drupalGet('admin/config/content/formats/manage/' . $plain . '/disable');
@@ -305,8 +305,7 @@ class FilterAdminTest extends BrowserTestBase {
     $this->assertText('Basic page ' . $edit['title[0][value]'] . ' has been created.');
 
     // Verify that the creation message contains a link to a node.
-    $view_link = $this->xpath('//div[contains(@class, "messages")]//a[contains(@href, :href)]', [':href' => 'node/']);
-    $this->assertNotEmpty($view_link, 'The message area contains a link to a node');
+    $this->assertSession()->elementExists('xpath', '//div[contains(@class, "messages")]//a[contains(@href, "node/")]');
 
     $node = $this->drupalGetNodeByTitle($edit['title[0][value]']);
     $this->assertNotEmpty($node, 'Node found in database.');

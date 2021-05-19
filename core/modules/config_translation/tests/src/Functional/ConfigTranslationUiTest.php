@@ -43,6 +43,7 @@ class ConfigTranslationUiTest extends BrowserTestBase {
     'node',
     'views',
     'views_ui',
+    'menu_ui',
   ];
 
   /**
@@ -55,7 +56,7 @@ class ConfigTranslationUiTest extends BrowserTestBase {
    *
    * @var array
    */
-  protected $langcodes = ['fr', 'ta'];
+  protected $langcodes = ['fr', 'ta', 'tyv'];
 
   /**
    * Administrator user for tests.
@@ -595,8 +596,8 @@ class ConfigTranslationUiTest extends BrowserTestBase {
 
     $description = 'All content promoted to the front page.';
     $human_readable_name = 'Frontpage';
-    $display_settings_master = 'Master';
-    $display_options_master = '(Empty)';
+    $display_settings_default = 'Default';
+    $display_options_default = '(Empty)';
     $translation_base_url = 'admin/structure/views/view/frontpage/translate';
 
     $this->drupalGet($translation_base_url);
@@ -613,8 +614,8 @@ class ConfigTranslationUiTest extends BrowserTestBase {
     $edit = [
       'translation[config_names][views.view.frontpage][description]' => $description . " FR",
       'translation[config_names][views.view.frontpage][label]' => $human_readable_name . " FR",
-      'translation[config_names][views.view.frontpage][display][default][display_title]' => $display_settings_master . " FR",
-      'translation[config_names][views.view.frontpage][display][default][display_options][title]' => $display_options_master . " FR",
+      'translation[config_names][views.view.frontpage][display][default][display_title]' => $display_settings_default . " FR",
+      'translation[config_names][views.view.frontpage][display][default][display_options][title]' => $display_options_default . " FR",
     ];
     $this->drupalPostForm("$translation_base_url/fr/add", $edit, 'Save translation');
     $this->assertRaw(t('Successfully saved @language translation.', ['@language' => 'French']));
@@ -628,8 +629,8 @@ class ConfigTranslationUiTest extends BrowserTestBase {
     $this->drupalGet("$translation_base_url/fr/edit");
     $this->assertSession()->fieldValueEquals('translation[config_names][views.view.frontpage][description]', $description . " FR");
     $this->assertSession()->fieldValueEquals('translation[config_names][views.view.frontpage][label]', $human_readable_name . " FR");
-    $this->assertSession()->fieldValueEquals('translation[config_names][views.view.frontpage][display][default][display_title]', $display_settings_master . " FR");
-    $this->assertSession()->fieldValueEquals('translation[config_names][views.view.frontpage][display][default][display_options][title]', $display_options_master . " FR");
+    $this->assertSession()->fieldValueEquals('translation[config_names][views.view.frontpage][display][default][display_title]', $display_settings_default . " FR");
+    $this->assertSession()->fieldValueEquals('translation[config_names][views.view.frontpage][display][default][display_options][title]', $display_options_default . " FR");
   }
 
   /**
@@ -887,11 +888,6 @@ class ConfigTranslationUiTest extends BrowserTestBase {
     $this->container->get('state')->set('config_translation_test_config_translation_info_alter', TRUE);
     $this->container->get('plugin.manager.config_translation.mapper')->clearCachedDefinitions();
 
-    // Check out if the translation page has the altered in settings.
-    $this->drupalGet('admin/config/system/site-information/translate/fr/add');
-    $this->assertText('Feed channel');
-    $this->assertText('Feed description');
-
     // Check if the translation page does not have the altered out settings.
     $this->drupalGet('admin/config/people/accounts/translate/fr/add');
     $this->assertText('Name');
@@ -1070,6 +1066,24 @@ class ConfigTranslationUiTest extends BrowserTestBase {
     // Check that the translations are saved.
     $this->clickLink('Add');
     $this->assertRaw('FR label');
+  }
+
+  /**
+   * Test translation save confirmation message.
+   */
+  public function testMenuTranslationWithoutChange() {
+    $this->drupalLogin($this->adminUser);
+    $this->drupalGet('admin/structure/menu/manage/main/translate/tyv/add');
+    $this->submitForm([], 'Save translation');
+    $this->assertSession()->pageTextContains('Tuvan translation was not added. To add a translation, you must modify the configuration.');
+
+    $this->drupalGet('admin/structure/menu/manage/main/translate/tyv/add');
+    $edit = [
+      'translation[config_names][system.menu.main][label]' => 'Main navigation Translation',
+      'translation[config_names][system.menu.main][description]' => 'Site section links Translation',
+    ];
+    $this->submitForm($edit, 'Save translation');
+    $this->assertSession()->pageTextContains('Successfully saved Tuvan translation.');
   }
 
   /**

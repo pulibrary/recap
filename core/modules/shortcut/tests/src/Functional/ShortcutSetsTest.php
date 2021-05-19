@@ -65,18 +65,15 @@ class ShortcutSetsTest extends ShortcutTestBase {
     $this->assertSession()->titleEquals('List links | Drupal');
 
     // Test for the table.
-    $element = $this->xpath('//div[@class="layout-content"]//table');
-    $this->assertNotEmpty($element, 'Shortcut entity list table found.');
+    $this->assertSession()->elementExists('xpath', '//div[@class="layout-content"]//table');
 
     // Test the table header.
-    $elements = $this->xpath('//div[@class="layout-content"]//table/thead/tr/th');
-    $this->assertCount(3, $elements, 'Correct number of table header cells found.');
+    $this->assertSession()->elementsCount('xpath', '//div[@class="layout-content"]//table/thead/tr/th', 3);
 
     // Test the contents of each th cell.
-    $expected_items = [t('Name'), t('Weight'), t('Operations')];
-    foreach ($elements as $key => $element) {
-      $this->assertEqual($expected_items[$key], $element->getText());
-    }
+    $this->assertSession()->elementTextEquals('xpath', '//div[@class="layout-content"]//table/thead/tr/th[1]', 'Name');
+    $this->assertSession()->elementTextEquals('xpath', '//div[@class="layout-content"]//table/thead/tr/th[2]', 'Weight');
+    $this->assertSession()->elementTextEquals('xpath', '//div[@class="layout-content"]//table/thead/tr/th[3]', 'Operations');
 
     // Look for test shortcuts in the table.
     $weight = count($shortcuts);
@@ -115,7 +112,7 @@ class ShortcutSetsTest extends ShortcutTestBase {
     $this->drupalPostForm('user/' . $this->adminUser->id() . '/shortcuts', ['set' => $new_set->id()], 'Change set');
     $this->assertSession()->statusCodeEquals(200);
     $current_set = shortcut_current_displayed_set($this->adminUser);
-    $this->assertTrue($new_set->id() == $current_set->id(), 'Successfully switched own shortcut set.');
+    $this->assertSame($current_set->id(), $new_set->id(), 'Successfully switched own shortcut set.');
   }
 
   /**
@@ -126,7 +123,7 @@ class ShortcutSetsTest extends ShortcutTestBase {
 
     \Drupal::entityTypeManager()->getStorage('shortcut_set')->assignUser($new_set, $this->shortcutUser);
     $current_set = shortcut_current_displayed_set($this->shortcutUser);
-    $this->assertTrue($new_set->id() == $current_set->id(), "Successfully switched another user's shortcut set.");
+    $this->assertSame($current_set->id(), $new_set->id(), "Successfully switched another user's shortcut set.");
   }
 
   /**
@@ -168,7 +165,7 @@ class ShortcutSetsTest extends ShortcutTestBase {
     $this->clickLink(t('Edit shortcut set'));
     $this->submitForm(['label' => $new_label], 'Save');
     $set = ShortcutSet::load($set->id());
-    $this->assertTrue($set->label() == $new_label, 'Shortcut set has been successfully renamed.');
+    $this->assertSame($new_label, $set->label(), 'Shortcut set has been successfully renamed.');
   }
 
   /**
@@ -182,7 +179,7 @@ class ShortcutSetsTest extends ShortcutTestBase {
     $shortcut_set_storage->unassignUser($this->shortcutUser);
     $current_set = shortcut_current_displayed_set($this->shortcutUser);
     $default_set = shortcut_default_set($this->shortcutUser);
-    $this->assertTrue($current_set->id() == $default_set->id(), "Successfully unassigned another user's shortcut set.");
+    $this->assertSame($default_set->id(), $current_set->id(), "Successfully unassigned another user's shortcut set.");
   }
 
   /**

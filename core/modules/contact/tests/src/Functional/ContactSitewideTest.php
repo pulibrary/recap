@@ -50,6 +50,7 @@ class ContactSitewideTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->drupalPlaceBlock('system_breadcrumb_block');
+    $this->drupalPlaceBlock('local_tasks_block');
     $this->drupalPlaceBlock('local_actions_block');
     $this->drupalPlaceBlock('page_title_block');
   }
@@ -291,6 +292,9 @@ class ContactSitewideTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldValueEquals('label', $label);
 
+    // Verify contact "View" tab exists.
+    $this->assertSession()->linkExists('View');
+
     // Test field UI and field integration.
     $this->drupalGet('admin/structure/contact');
 
@@ -376,8 +380,8 @@ class ContactSitewideTest extends BrowserTestBase {
       $field_name . '[0][value]' => $this->randomMachineName(),
     ];
     $this->submitForm($edit, 'Send message');
-    $result = $this->xpath('//div[@role=:role]', [':role' => 'contentinfo']);
-    $this->assertCount(0, $result, 'Messages not found.');
+    // Verify that messages are not found.
+    $this->assertSession()->elementNotExists('xpath', '//div[@role="contentinfo"]');
     $this->assertSession()->addressEquals('user/' . $admin_user->id());
 
     // Test preview and visibility of the message field and label. Submit the

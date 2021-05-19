@@ -78,7 +78,7 @@ class SessionTest extends BrowserTestBase {
     $matches = [];
     preg_match('/\s*session_id:(.*)\n/', $this->getSession()->getPage()->getContent(), $matches);
     $this->assertTrue(!empty($matches[1]), 'Found session ID after logging in.');
-    $this->assertTrue($matches[1] != $original_session, 'Session ID changed after login.');
+    $this->assertNotSame($original_session, $matches[1], 'Session ID changed after login.');
   }
 
   /**
@@ -251,7 +251,7 @@ class SessionTest extends BrowserTestBase {
     $connection = Database::getConnection();
 
     $query = $connection->select('users_field_data', 'u');
-    $query->innerJoin('sessions', 's', 'u.uid = s.uid');
+    $query->innerJoin('sessions', 's', '[u].[uid] = [s].[uid]');
     $query->fields('u', ['access'])
       ->fields('s', ['timestamp'])
       ->condition('u.uid', $user->id());

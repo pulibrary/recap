@@ -8,6 +8,7 @@ use Drupal\Core\Database\Database;
  * Tests the temporary query functionality.
  *
  * @group Database
+ * @group legacy
  */
 class TemporaryQueryTest extends DatabaseTestBase {
 
@@ -32,6 +33,9 @@ class TemporaryQueryTest extends DatabaseTestBase {
    * Confirms that temporary tables work and are limited to one request.
    */
   public function testTemporaryQuery() {
+    $this->expectDeprecation('Connection::queryTemporary() is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. There is no replacement. See https://www.drupal.org/node/3211781');
+    $this->expectDeprecation('Connection::generateTemporaryTableName() is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. There is no replacement. See https://www.drupal.org/node/3211781');
+
     $connection = Database::getConnection();
     $this->drupalGet('database_test/db_query_temporary');
     $data = json_decode($this->getSession()->getPage()->getContent());
@@ -44,8 +48,8 @@ class TemporaryQueryTest extends DatabaseTestBase {
     }
 
     // Now try to run two temporary queries in the same request.
-    $table_name_test = $connection->queryTemporary('SELECT name FROM {test}', []);
-    $table_name_task = $connection->queryTemporary('SELECT pid FROM {test_task}', []);
+    $table_name_test = $connection->queryTemporary('SELECT [name] FROM {test}', []);
+    $table_name_task = $connection->queryTemporary('SELECT [pid] FROM {test_task}', []);
 
     $this->assertEqual($this->countTableRows('test'), $this->countTableRows($table_name_test), 'A temporary table was created successfully in this request.');
     $this->assertEqual($this->countTableRows('test_task'), $this->countTableRows($table_name_task), 'A second temporary table was created successfully in this request.');
@@ -54,7 +58,7 @@ class TemporaryQueryTest extends DatabaseTestBase {
     // in the modified query.
     $sql = "
       -- Let's select some rows into a temporary table
-      SELECT name FROM {test}
+      SELECT [name] FROM {test}
     ";
     $table_name_test = $connection->queryTemporary($sql, []);
     $this->assertEqual($this->countTableRows('test'), $this->countTableRows($table_name_test), 'Leading white space and comments do not interfere with temporary table creation.');

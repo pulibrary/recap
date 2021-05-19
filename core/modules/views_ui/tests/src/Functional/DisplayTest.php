@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\views_ui\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\views\Entity\View;
 use Drupal\views\Views;
 
@@ -87,18 +86,24 @@ class DisplayTest extends UITestBase {
     $view = $this->randomView();
     $path_prefix = 'admin/structure/views/view/' . $view['id'] . '/edit';
 
+    // Verify that the disabled display css class does not appear after initial
+    // adding of a view.
     $this->drupalGet($path_prefix);
-    $this->assertEmpty($this->xpath('//div[contains(@class, :class)]', [':class' => 'views-display-disabled']), 'Make sure the disabled display css class does not appear after initial adding of a view.');
-
+    $this->assertSession()->elementNotExists('xpath', "//div[contains(@class, 'views-display-disabled')]");
     $this->assertSession()->buttonExists('edit-displays-settings-settings-content-tab-content-details-top-actions-disable');
     $this->assertSession()->buttonNotExists('edit-displays-settings-settings-content-tab-content-details-top-actions-enable');
-    $this->submitForm([], 'Disable Page');
-    $this->assertNotEmpty($this->xpath('//div[contains(@class, :class)]', [':class' => 'views-display-disabled']), 'Make sure the disabled display css class appears once the display is marked as such.');
 
+    // Verify that the disabled display css class appears once the display is
+    // marked as such.
+    $this->submitForm([], 'Disable Page');
+    $this->assertSession()->elementExists('xpath', "//div[contains(@class, 'views-display-disabled')]");
     $this->assertSession()->buttonNotExists('edit-displays-settings-settings-content-tab-content-details-top-actions-disable');
     $this->assertSession()->buttonExists('edit-displays-settings-settings-content-tab-content-details-top-actions-enable');
+
+    // Verify that the disabled display css class does not appears once the
+    // display is enabled again.
     $this->submitForm([], 'Enable Page');
-    $this->assertEmpty($this->xpath('//div[contains(@class, :class)]', [':class' => 'views-display-disabled']), 'Make sure the disabled display css class does not appears once the display is enabled again.');
+    $this->assertSession()->elementNotExists('xpath', "//div[contains(@class, 'views-display-disabled')]");
   }
 
   /**
@@ -140,8 +145,7 @@ class DisplayTest extends UITestBase {
 
     // Assert that the expected text is found in each area category.
     foreach ($areas as $type) {
-      $element = $this->xpath('//div[contains(@class, :class)]/div', [':class' => $type]);
-      $this->assertEqual(new FormattableMarkup('The selected display type does not use @type plugins', ['@type' => $type]), $element[0]->getHtml());
+      $this->assertSession()->elementTextEquals('xpath', "//div[contains(@class, '$type')]/div", "The selected display type does not use $type plugins");
     }
   }
 
@@ -163,14 +167,14 @@ class DisplayTest extends UITestBase {
 
     // Test the default radio option on the link display form.
     $this->drupalPostForm($link_display_path, ['link_display' => 'page_1'], 'Apply');
-    // The form redirects to the master display.
+    // The form redirects to the default display.
     $this->drupalGet($path);
 
     $result = $this->xpath("//a[contains(@href, :path)]", [':path' => $link_display_path]);
     $this->assertEqual('Page', $result[0]->getHtml(), 'Make sure that the link option summary shows the right linked display.');
 
     $this->drupalPostForm($link_display_path, ['link_display' => 'custom_url', 'link_url' => 'a-custom-url'], 'Apply');
-    // The form redirects to the master display.
+    // The form redirects to the default display.
     $this->drupalGet($path);
 
     $this->assertSession()->linkExists('Custom URL', 0, 'The link option has custom URL as summary.');
@@ -191,15 +195,14 @@ class DisplayTest extends UITestBase {
 
     // The view should initially have the enabled class on its form wrapper.
     $this->drupalGet('admin/structure/views/view/' . $id);
-    $elements = $this->xpath('//div[contains(@class, :edit) and contains(@class, :status)]', [':edit' => 'views-edit-view', ':status' => 'enabled']);
-    $this->assertNotEmpty($elements, 'The enabled class was found on the form wrapper');
+    $this->assertSession()->elementExists('xpath', "//div[contains(@class, 'views-edit-view') and contains(@class, 'enabled')]");
 
     $view = Views::getView($id);
     $view->storage->disable()->save();
 
+    // The view should now have the disabled class on its form wrapper.
     $this->drupalGet('admin/structure/views/view/' . $id);
-    $elements = $this->xpath('//div[contains(@class, :edit) and contains(@class, :status)]', [':edit' => 'views-edit-view', ':status' => 'disabled']);
-    $this->assertNotEmpty($elements, 'The disabled class was found on the form wrapper.');
+    $this->assertSession()->elementExists('xpath', "//div[contains(@class, 'views-edit-view') and contains(@class, 'disabled')]");
   }
 
   /**
@@ -209,7 +212,7 @@ class DisplayTest extends UITestBase {
     $xss_markup = '"><script>alert(123)</script>';
     $view = $this->randomView();
     $view = View::load($view['id']);
-    \Drupal::configFactory()->getEditable('views.settings')->set('ui.show.master_display', TRUE)->save();
+    \Drupal::configFactory()->getEditable('views.settings')->set('ui.show.default_display', TRUE)->save();
 
     foreach ([$xss_markup, '&quot;><script>alert(123)</script>'] as $input) {
       $display =& $view->getDisplay('page_1');
@@ -277,15 +280,15 @@ class DisplayTest extends UITestBase {
     $this->drupalGet('admin/structure/views/nojs/handler/test_display/page_1/field/title');
     $this->assertNoText('All displays');
 
-    // Test that the override option is shown when display master is on.
-    \Drupal::configFactory()->getEditable('views.settings')->set('ui.show.master_display', TRUE)->save();
+    // Test that the override option is shown when default display is on.
+    \Drupal::configFactory()->getEditable('views.settings')->set('ui.show.default_display', TRUE)->save();
     $this->drupalGet('admin/structure/views/nojs/handler/test_display/page_1/field/title');
     $this->assertText('All displays');
 
     // Test that the override option is shown if the current display is
     // overridden so that the option to revert is available.
     $this->submitForm(['override[dropdown]' => 'page_1'], 'Apply');
-    \Drupal::configFactory()->getEditable('views.settings')->set('ui.show.master_display', FALSE)->save();
+    \Drupal::configFactory()->getEditable('views.settings')->set('ui.show.default_display', FALSE)->save();
     $this->drupalGet('admin/structure/views/nojs/handler/test_display/page_1/field/title');
     $this->assertText('Revert to default');
   }

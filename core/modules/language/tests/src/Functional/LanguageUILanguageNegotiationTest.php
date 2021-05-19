@@ -463,13 +463,11 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
 
     // Check that the language switcher active link matches the given browser
     // language.
-    $args = [':id' => 'block-test-language-block', ':url' => Url::fromRoute('<front>')->toString() . $langcode_browser_fallback];
-    $fields = $this->xpath('//div[@id=:id]//a[@class="language-link is-active" and starts-with(@href, :url)]', $args);
-    $this->assertSame($fields[0]->getText(), $languages[$langcode_browser_fallback]->getName(), 'The browser language is the URL active language');
+    $href = Url::fromRoute('<front>')->toString() . $langcode_browser_fallback;
+    $this->assertSession()->elementTextEquals('xpath', "//div[@id='block-test-language-block']//a[@class='language-link is-active' and starts-with(@href, '$href')]", $languages[$langcode_browser_fallback]->getName());
 
     // Check that URLs are rewritten using the given browser language.
-    $fields = $this->xpath('//div[@class="site-name"]/a[@rel="home" and @href=:url]', $args);
-    $this->assertSame($fields[0]->getText(), 'Drupal', 'URLs are rewritten using the browser language.');
+    $this->assertSession()->elementTextEquals('xpath', "//div[@class='site-name']/a[@rel='home' and @href='$href']", 'Drupal');
   }
 
   /**
@@ -535,14 +533,14 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
     // Test HTTPS via options.
     $italian_url = Url::fromRoute('system.admin', [], ['https' => TRUE, 'language' => $languages['it']])->toString();
     $correct_link = 'https://' . $link;
-    $this->assertTrue($italian_url == $correct_link, new FormattableMarkup('The right HTTPS URL (via options) (@url) in accordance with the chosen language', ['@url' => $italian_url]));
+    $this->assertSame($correct_link, $italian_url, new FormattableMarkup('The right HTTPS URL (via options) (@url) in accordance with the chosen language', ['@url' => $italian_url]));
 
     // Test HTTPS via current URL scheme.
     $request = Request::create('', 'GET', [], [], [], ['HTTPS' => 'on']);
     $this->container->get('request_stack')->push($request);
     $italian_url = Url::fromRoute('system.admin', [], ['language' => $languages['it']])->toString();
     $correct_link = 'https://' . $link;
-    $this->assertTrue($italian_url == $correct_link, new FormattableMarkup('The right URL (via current URL scheme) (@url) in accordance with the chosen language', ['@url' => $italian_url]));
+    $this->assertSame($correct_link, $italian_url, new FormattableMarkup('The right URL (via current URL scheme) (@url) in accordance with the chosen language', ['@url' => $italian_url]));
   }
 
   /**
