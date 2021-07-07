@@ -74,8 +74,9 @@ abstract class AggregatorTestBase extends BrowserTestBase {
    */
   public function createFeed($feed_url = NULL, array $edit = []) {
     $edit = $this->getFeedEditArray($feed_url, $edit);
-    $this->drupalPostForm('aggregator/sources/add', $edit, 'Save');
-    $this->assertText('The feed ' . Html::escape($edit['title[0][value]']) . ' has been added.');
+    $this->drupalGet('aggregator/sources/add');
+    $this->submitForm($edit, 'Save');
+    $this->assertSession()->pageTextContains('The feed ' . $edit['title[0][value]'] . ' has been added.');
 
     // Verify that the creation message contains a link to a feed.
     $this->assertSession()->elementExists('xpath', '//div[@data-drupal-messages]//a[contains(@href, "aggregator/sources/")]');
@@ -96,7 +97,8 @@ abstract class AggregatorTestBase extends BrowserTestBase {
    *   Feed object representing the feed.
    */
   public function deleteFeed(FeedInterface $feed) {
-    $this->drupalPostForm('aggregator/sources/' . $feed->id() . '/delete', [], 'Delete');
+    $this->drupalGet('aggregator/sources/' . $feed->id() . '/delete');
+    $this->submitForm([], 'Delete');
     $this->assertRaw(t('The feed %title has been deleted.', ['%title' => $feed->label()]));
   }
 
@@ -165,14 +167,13 @@ abstract class AggregatorTestBase extends BrowserTestBase {
   public function getDefaultFeedItemCount() {
     // Our tests are based off of rss.xml, so let's find out how many elements
     // should be related.
-    $feed_count = \Drupal::entityQuery('node')
+    return \Drupal::entityQuery('node')
       ->condition('promote', NodeInterface::PROMOTED)
       ->condition('status', NodeInterface::PUBLISHED)
       ->accessCheck(FALSE)
-      ->range(0, $this->config('system.rss')->get('items.limit'))
+      ->range(0, 10)
       ->count()
       ->execute();
-    return min($feed_count, 10);
   }
 
   /**
@@ -208,7 +209,7 @@ abstract class AggregatorTestBase extends BrowserTestBase {
 
     if ($expected_count !== NULL) {
       $feed->item_count = count($feed->items);
-      $this->assertEqual($expected_count, $feed->item_count, new FormattableMarkup('Total items in feed equal to the total items in database (@val1 != @val2)', ['@val1' => $expected_count, '@val2' => $feed->item_count]));
+      $this->assertEquals($expected_count, $feed->item_count, new FormattableMarkup('Total items in feed equal to the total items in database (@val1 != @val2)', ['@val1' => $expected_count, '@val2' => $feed->item_count]));
     }
   }
 
@@ -219,7 +220,8 @@ abstract class AggregatorTestBase extends BrowserTestBase {
    *   Feed object representing the feed.
    */
   public function deleteFeedItems(FeedInterface $feed) {
-    $this->drupalPostForm('admin/config/services/aggregator/delete/' . $feed->id(), [], 'Delete items');
+    $this->drupalGet('admin/config/services/aggregator/delete/' . $feed->id());
+    $this->submitForm([], 'Delete items');
     $this->assertRaw(t('The news items from %title have been deleted.', ['%title' => $feed->label()]));
   }
 
@@ -391,7 +393,8 @@ EOF;
       $edit = [];
       $edit['title[0][value]'] = $this->randomMachineName();
       $edit['body[0][value]'] = $this->randomMachineName();
-      $this->drupalPostForm('node/add/article', $edit, 'Save');
+      $this->drupalGet('node/add/article');
+      $this->submitForm($edit, 'Save');
     }
   }
 
