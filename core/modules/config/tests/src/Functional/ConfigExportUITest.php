@@ -52,7 +52,8 @@ class ConfigExportUITest extends BrowserTestBase {
 
     // Submit the export form and verify response. This will create a file in
     // temporary directory with the default name config.tar.gz.
-    $this->drupalPostForm('admin/config/development/configuration/full/export', [], 'Export');
+    $this->drupalGet('admin/config/development/configuration/full/export');
+    $this->submitForm([], 'Export');
     $this->assertSession()->statusCodeEquals(200);
 
     // Test if header contains file name with hostname and timestamp.
@@ -85,7 +86,7 @@ class ConfigExportUITest extends BrowserTestBase {
     $archiver->extract($temp_directory, ['system.maintenance.yml']);
     $file_contents = file_get_contents($temp_directory . '/' . 'system.maintenance.yml');
     $exported = Yaml::decode($file_contents);
-    $this->assertNotIdentical($exported['message'], 'Foo');
+    $this->assertNotSame('Foo', $exported['message']);
 
     // Check the single export form doesn't have "form-required" elements.
     $this->drupalGet('admin/config/development/configuration/single/export');

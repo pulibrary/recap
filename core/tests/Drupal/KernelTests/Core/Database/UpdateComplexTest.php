@@ -92,7 +92,7 @@ class UpdateComplexTest extends DatabaseTestBase {
     $num_updated = $this->connection->update('test')
       ->condition('name', 'Ringo')
       ->fields(['job' => 'Musician'])
-      ->expression('age', 'age + :age', [':age' => 4])
+      ->expression('age', '[age] + :age', [':age' => 4])
       ->execute();
     $this->assertSame(1, $num_updated, 'Updated 1 record.');
 
@@ -100,9 +100,9 @@ class UpdateComplexTest extends DatabaseTestBase {
     $this->assertSame('1', $num_matches, 'Updated fields successfully.');
 
     $person = $this->connection->query('SELECT * FROM {test} WHERE [name] = :name', [':name' => 'Ringo'])->fetch();
-    $this->assertEqual('Ringo', $person->name, 'Name set correctly.');
-    $this->assertEqual($before_age + 4, $person->age, 'Age set correctly.');
-    $this->assertEqual('Musician', $person->job, 'Job set correctly.');
+    $this->assertEquals('Ringo', $person->name, 'Name set correctly.');
+    $this->assertEquals($before_age + 4, $person->age, 'Age set correctly.');
+    $this->assertEquals('Musician', $person->job, 'Job set correctly.');
   }
 
   /**
@@ -112,20 +112,20 @@ class UpdateComplexTest extends DatabaseTestBase {
     $before_age = $this->connection->query('SELECT [age] FROM {test} WHERE [name] = :name', [':name' => 'Ringo'])->fetchField();
     $num_updated = $this->connection->update('test')
       ->condition('name', 'Ringo')
-      ->expression('age', 'age + :age', [':age' => 4])
+      ->expression('age', '[age] + :age', [':age' => 4])
       ->execute();
     $this->assertSame(1, $num_updated, 'Updated 1 record.');
 
     $after_age = $this->connection->query('SELECT [age] FROM {test} WHERE [name] = :name', [':name' => 'Ringo'])->fetchField();
-    $this->assertEqual($before_age + 4, $after_age, 'Age updated correctly');
+    $this->assertEquals($before_age + 4, $after_age, 'Age updated correctly');
   }
 
   /**
-   * Test UPDATE with a subselect value.
+   * Tests UPDATE with a subselect value.
    */
   public function testSubSelectUpdate() {
     $subselect = $this->connection->select('test_task', 't');
-    $subselect->addExpression('MAX(priority) + :increment', 'max_priority', [':increment' => 30]);
+    $subselect->addExpression('MAX([priority]) + :increment', 'max_priority', [':increment' => 30]);
     // Clone this to make sure we are running a different query when
     // asserting.
     $select = clone $subselect;
@@ -136,8 +136,8 @@ class UpdateComplexTest extends DatabaseTestBase {
     $num_updated = $query->execute();
     $after_age = $this->connection->query('SELECT [age] FROM {test} WHERE [name] = :name', [':name' => 'Ringo'])->fetchField();
     $expected_age = $select->execute()->fetchField();
-    $this->assertEqual($expected_age, $after_age);
-    $this->assertEqual(1, $num_updated, t('Expected 1 row to be updated in subselect update query.'));
+    $this->assertEquals($expected_age, $after_age);
+    $this->assertEquals(1, $num_updated, t('Expected 1 row to be updated in subselect update query.'));
   }
 
 }
