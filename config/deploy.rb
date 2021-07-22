@@ -1,6 +1,8 @@
 # config valid for current version and patch releases of Capistrano
 lock "~> 3.11.0"
 
+set :branch, ENV["BRANCH"] || "main"
+
 set :application, "recap"
 set :repo_url, "git@github.com:pulibrary/recap.git"
 
@@ -150,7 +152,7 @@ namespace :drupal do
         end
       end
   end
-  
+
   desc "change the owner of the directory to deploy"
   task :update_directory_owner_deploy do
       on release_roles :app do
@@ -236,12 +238,12 @@ namespace :drupal do
         end
       end
     end
-    
+
     desc "Update variables on a dump import"
     task :update_db_variables do
       on release_roles :drupal_primary do
         # todo vset is now config-set
-        # should be something like cset cas.settings server.cert 
+        # should be something like cset cas.settings server.cert
         # execute "drush -r #{release_path} vset --exact cas_cert #{fetch(:cas_cert_location)}"
       end
     end
@@ -280,7 +282,7 @@ namespace :deploy do
   task :after_deploy_check do
       invoke "drupal:prepare_shared_paths"
   end
-      
+
   desc "Set file system variables"
   task :after_deploy_updated do
       invoke "drupal:link_settings"
@@ -298,7 +300,7 @@ namespace :deploy do
   task :before_release do
     invoke "drupal:stop_apache2"
   end
-     
+
   desc "Reset directory permissions and Restart apache"
   task :after_release do
       invoke! "drupal:update_directory_owner"
@@ -313,7 +315,7 @@ namespace :deploy do
   after :check, "deploy:after_deploy_check"
 
   #after :started, "drupal:site_offline"
-  
+
   after :updated, "deploy:after_deploy_updated"
 
   before :finishing, "drupal:update_directory_owner_deploy"
