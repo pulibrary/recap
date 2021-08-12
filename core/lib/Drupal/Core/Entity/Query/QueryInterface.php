@@ -35,7 +35,7 @@ interface QueryInterface extends AlterableInterface {
    *     ->execute();
    * @endcode
    *
-   * @param string|\Drupal\Core\Condition\ConditionInterface $field
+   * @param string|\Drupal\Core\Entity\Query\ConditionInterface $field
    *   Name of the field being queried or an instance of ConditionInterface.
    *   In the case of the name, it must contain a field name, optionally
    *   followed by a column name. The column can be the reference property,
@@ -284,7 +284,10 @@ interface QueryInterface extends AlterableInterface {
   public function orConditionGroup();
 
   /**
-   * Queries the current revision.
+   * Limits the query to only default revisions.
+   *
+   * See the @link entity_api Entity API topic @endlink for information about
+   * the current revision.
    *
    * @return $this
    */

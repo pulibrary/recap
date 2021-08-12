@@ -1,98 +1,75 @@
-# ReCAP
+<img alt="Drupal Logo" src="https://www.drupal.org/files/Wordmark_blue_RGB.png" height="60px">
 
-## Local development with Lando
+Drupal is an open source content management platform supporting a variety of
+websites ranging from personal weblogs to large community-driven websites. For
+more information, visit the Drupal website, [Drupal.org][Drupal.org], and join
+the [Drupal community][Drupal community].
 
-1. `git clone git@github.com:pulibrary/recap.git`
-1. `cp sites/default/default.settings.php sites/default/settings.php`
-1. In your local `sites/default/settings.php` file include the following lando-style db config values:
+## Contributing
 
-    ```
-    $databases = array (
-      'default' =>
-      array (
-        'default' =>
-        array (
-          'database' => 'drupal8',
-          'username' => 'drupal8',
-          'password' => 'drupal8',
-          'host' => 'database',
-          'port' => '3306',
-          'driver' => 'mysql',
-          'prefix' => '',
-        ),
-      ),
-    );
-    ```
-1. Add the following useful local development configuration to the end of `sites/default/settings.php`
-    ```
-    /* Overrides for the local environment */
-    $conf['securepages_enable'] = 0;
-    /* This should be set in your php.ini file */
-    ini_set('memory_limit', '1G');
-    /* Turn off all caching */
-    $conf['css_gzip_compression'] = FALSE;
-    $conf['js_gzip_compression'] = FALSE;
-    $conf['cache'] = 0;
-    $conf['block_cache'] = 0;
-    $conf['preprocess_css'] = 0;
-    $conf['preprocess_js'] = 0;
-    /* end cache settings */
-    /* Turn on theme debugging. Injects the path to every Template utilized in the HTML source. */
-    $conf['theme_debug'] = TRUE;
+Drupal is developed on [Drupal.org][Drupal.org], the home of the international
+Drupal community since 2001!
 
-    /* Makes sure jquery is loaded on every page */
-    /* set to false in production */
-    $conf['javascript_always_use_jquery'] = TRUE;
+[Drupal.org][Drupal.org] hosts Drupal's [GitLab repository][GitLab repository],
+its [issue queue][issue queue], and its [documentation][documentation]. Before
+you start working on code, be sure to search the [issue queue][issue queue] and
+create an issue if your aren't able to find an existing issue.
 
-    $settings['trusted_host_patterns'] = [
-      '^recap.lndo.site$',
-    ];
+Every issue on Drupal.org automatically creates a new community-accessible fork
+that you can contribute to. Learn more about the code contribution process on
+the [Issue forks & merge requests page][issue forks].
 
-    $settings['install_profile'] = 'standard';
-    ```
-1. `mkdir .ssh` # excluded from version control
-1. `cp $HOME/.ssh/id_rsa .ssh/.`
-1. `cp $HOME/.ssh/id_rsa.pub .ssh/.` // key should be registered in princeton_ansible deploy role
-1. `lando start`
-1. `cp drush/sites/example.site.yml drush/sites/recap.site.yml`
-1. Uncomment the alias blocks and adjust the config values in the  `drush/sites/recap.site.yml` file to match the current remote and local drupal environments.
-1. `lando drush @recap.prod sql-dump --structure-tables-list='watchdog,sessions,cas_data_login,history,captcha_sessions,cache,cache_*' --result-file=/tmp/dump.sql; scp pulsys@recap-www-prod1:/tmp/dump.sql .`
-1. `lando db-import dump.sql`
-1. `lando drush rsync @recap.prod:%files @recap.local:%files`
-1. Copy the hash following `config_` in `sites/default/files`. Add value to `$settings['hash_salt']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
-    ```
-    $settings['hash_salt'] = 'abc123';
-    ```
-1. Copy the same hash from above and add the value to `$settings['config_sync_directory']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
-    ```
-    // This was pre 8.8.x
-    $config_directories = array(
-      CONFIG_SYNC_DIRECTORY => 'sites/default/files/config_abc123',
-    );
+## Usage
 
-    // This is the changed key after 8.8.x
-    $settings['config_sync_directory'] = 'sites/default/files/config_abc123'
-    ```
-1. Create a `drush/drush.yml` file with the following
-```
-options:
-  uri: 'http://recap.lndo.site'
-```
-1. `lando drush uli --name=your-username`
+For a brief introduction, see [USAGE.txt](/core/USAGE.txt). You can also find
+guides, API references, and more by visiting Drupal's [documentation
+page][documentation].
 
-### NPM and Gulp
+You can quickly extend Drupal's core feature set by installing any of its
+[thousands of free and open source modules][modules]. With Drupal and its
+module ecosystem, you can often build most or all of what your project needs
+before writing a single line of code.
 
-1. `cd themes/custom/recap`
-1. `lando npm install`
-1. `lando gulp deploy` (or any other gulp task)
+## Changelog
 
-## Deploying to the server
+Drupal keeps detailed [change records][changelog]. You can search Drupal's
+changes for a record of every notable breaking change and new feature since
+2011.
 
-We utilize capistrano to deploy the code out to the server.  To deploy code to an existing server run
-`cap <server set> deploy ` (for example `cap production deploy`).
+## Security
 
-To import a database run `cap <server set> drupal:database:import_dump SQL_DIR=<path to dump> SQL_FILE=<dump file name>`
+For a list of security announcements, see the [Security advisories
+page][Security advisories] (available as [an RSS feed][security RSS]). This
+page also describes how to subscribe to these announcements via email.
 
-To install code on a blank sever you must deploy and upload a database, so you need to pass the database bump variables to the deploy command `cap <server set> deploy SQL_DIR=<path to dump> SQL_FILE=<dump file name>`
+For information about the Drupal security process, or to find out how to report
+a potential security issue to the Drupal security team, see the [Security team
+page][security team].
 
-To see a list of al available command run `cap -T`
+## Need a helping hand?
+
+Visit the [Support page][support] or browse [over a thousand Drupal
+providers][service providers] offering design, strategy, development, and
+hosting services.
+
+## Legal matters
+
+Know your rights when using Drupal by reading Drupal core's
+[license](/core/LICENSE.txt).
+
+Learn about the [Drupal trademark and logo policy here][trademark].
+
+[Drupal.org]: https://www.drupal.org
+[Drupal community]: https://www.drupal.org/community
+[GitLab repository]: https://git.drupalcode.org/project/drupal
+[issue queue]: https://www.drupal.org/project/issues/drupal
+[issue forks]: https://www.drupal.org/drupalorg/docs/gitlab-integration/issue-forks-merge-requests
+[documentation]: https://www.drupal.org/documentation
+[changelog]: https://www.drupal.org/list-changes/drupal
+[modules]: https://www.drupal.org/project/project_module
+[security advisories]: https://www.drupal.org/security
+[security RSS]: https://www.drupal.org/security/rss.xml
+[security team]: https://www.drupal.org/drupal-security-team
+[service providers]: https://www.drupal.org/drupal-services
+[support]: https://www.drupal.org/support
+[trademark]: https://www.drupal.com/trademark
