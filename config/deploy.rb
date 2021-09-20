@@ -1,10 +1,10 @@
 # config valid for current version and patch releases of Capistrano
-lock "~> 3.11.0"
+lock "~> 3.16.0"
 
 set :branch, ENV["BRANCH"] || "main"
 
 set :application, "recap"
-set :repo_url, "git@github.com:pulibrary/recap.git"
+set :repo_url, "https://github.com/pulibrary/recap.git"
 
 set :keep_releases, 5
 
