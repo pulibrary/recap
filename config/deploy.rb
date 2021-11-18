@@ -232,7 +232,7 @@ namespace :drupal do
     task :upload_and_import do
       on release_roles :drupal_primary do
         upload! ENV["SQL_DIR"] + ENV["SQL_FILE"], '/tmp/'+ENV["SQL_FILE"]
-        execute "/home/deploy/sql/set_permission.sh"
+        # execute "/home/deploy/sql/set_permission.sh"
         within release_path do
             execute "sudo -u www-data #{release_path}/vendor/bin/drush sql-cli < /tmp/"+ENV["SQL_FILE"]
         end

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\externalauth\Tests;
+namespace Drupal\Tests\externalauth\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;

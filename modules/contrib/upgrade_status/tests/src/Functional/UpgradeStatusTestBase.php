@@ -30,6 +30,8 @@ abstract class UpgradeStatusTestBase extends BrowserTestBase {
     'upgrade_status_test_twig',
     'upgrade_status_test_library',
     'upgrade_status_test_library_exception',
+    'upgrade_status_test_deprecated',
+    'upgrade_status_test_obsolete',
   ];
 
   /**
@@ -56,6 +58,8 @@ abstract class UpgradeStatusTestBase extends BrowserTestBase {
       'scan[data][list][upgrade_status_test_theme_functions]' => TRUE,
       'scan[data][list][upgrade_status_test_library]' => TRUE,
       'scan[data][list][upgrade_status_test_library_exception]' => TRUE,
+      'scan[data][list][upgrade_status_test_deprecated]' => TRUE,
+      'scan[data][list][upgrade_status_test_obsolete]' => TRUE,
       'collaborate[data][list][upgrade_status_test_contrib_error]' => TRUE,
       ($this->getDrupalCoreMajorVersion() < 9 ? 'relax' : 'collaborate') . '[data][list][upgrade_status]' => TRUE,
       ($this->getDrupalCoreMajorVersion() < 9 ? 'relax' : 'collaborate') . '[data][list][upgrade_status_test_contrib_9_compatible]' => TRUE,

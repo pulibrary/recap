@@ -30,6 +30,13 @@ class DefinitionDiscoveryFactoryTest extends BrowserTestBase {
   protected $definitionPath;
 
   /**
+   * Set default theme to stable.
+   *
+   * @var string
+   */
+  protected $defaultTheme = 'stable';
+
+  /**
    * {@inheritdoc}
    */
   public static $modules = ['libraries'];

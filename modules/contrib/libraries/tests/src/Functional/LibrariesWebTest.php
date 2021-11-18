@@ -1,16 +1,16 @@
 <?php
 
-namespace Drupal\libraries\Tests;
+namespace Drupal\Tests\libraries\Functional;
 
 use Drupal\Component\Utility\Html;
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests basic detection and loading of libraries.
  *
  * @group libraries
  */
-class LibrariesWebTest extends WebTestBase {
+class LibrariesWebTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
@@ -18,11 +18,18 @@ class LibrariesWebTest extends WebTestBase {
   protected $profile = 'testing';
 
   /**
+   * Set default theme to stable.
+   *
+   * @var string
+   */
+  protected $defaultTheme = 'stable';
+
+  /**
    * Modules to install.
    *
    * @var array
    */
-  public static $modules = array('libraries', 'libraries_test');
+  public static $modules = ['libraries', 'libraries_test'];
 
   /**
    * The URL generator used in this test.
@@ -51,23 +58,23 @@ class LibrariesWebTest extends WebTestBase {
   /**
    * Tests libraries_detect_dependencies().
    */
-  function testLibrariesDetectDependencies() {
-    $library = array(
+  public function testLibrariesDetectDependencies() {
+    $library = [
       'name' => 'Example',
-      'dependencies' => array('Example missing'),
-    );
+      'dependencies' => ['Example missing'],
+    ];
     libraries_detect_dependencies($library);
     $this->assertEqual($library['error'], 'missing dependency', 'libraries_detect_dependencies() detects missing dependency');
-    $error_message = t('The %dependency library, which the %library library depends on, is not installed.', array(
+    $error_message = t('The %dependency library, which the %library library depends on, is not installed.', [
       '%dependency' => 'Example missing',
       '%library' => $library['name'],
-    ));
+    ]);
     $this->verbose("Expected:<br>$error_message");
     $this->verbose('Actual:<br>' . $library['error message']);
     $this->assertEqual($library['error message'], $error_message, 'Correct error message for a missing dependency');
     // Test versioned dependencies.
     $version = '1.1';
-    $compatible = array(
+    $compatible = [
       '1.1',
       '<=1.1',
       '>=1.1',
@@ -80,8 +87,8 @@ class LibrariesWebTest extends WebTestBase {
       '>0.1',
       '<1.2, >1.0',
       '>0.1, <=1.1',
-    );
-    $incompatible = array(
+    ];
+    $incompatible = [
       '1.2',
       '2.0',
       '<1.1',
@@ -93,10 +100,10 @@ class LibrariesWebTest extends WebTestBase {
       '>=1.2',
       '<1.1, >0.9',
       '>=0.1, <1.1',
-    );
-    $library = array(
+    ];
+    $library = [
       'name' => 'Example',
-    );
+    ];
     foreach ($compatible as $version_string) {
       $library['dependencies'][0] = "example_dependency ($version_string)";
       // libraries_detect_dependencies() is a post-detect callback, so
@@ -115,11 +122,11 @@ class LibrariesWebTest extends WebTestBase {
     }
     // Instead of repeating this assertion for each version string, we just
     // re-use the $library variable from the foreach loop.
-    $error_message = t('The version %dependency_version of the %dependency library is not compatible with the %library library.', array(
+    $error_message = t('The version %dependency_version of the %dependency library is not compatible with the %library library.', [
       '%dependency_version' => $version,
       '%dependency' => 'Example dependency',
       '%library' => $library['name'],
-    ));
+    ]);
     $this->verbose("Expected:<br>$error_message");
     $this->verbose('Actual:<br>' . $library['error message']);
     $this->assertEqual($library['error message'], $error_message, 'Correct error message for an incompatible dependency');
@@ -128,12 +135,14 @@ class LibrariesWebTest extends WebTestBase {
   /**
    * Tests libraries_scan_info_files().
    */
-  function testLibrariesScanInfoFiles() {
-    $expected = array('example_info_file' => (object) array(
-      'uri' => drupal_get_path('module', 'libraries') . '/tests/example/example_info_file.libraries.info.yml',
-      'filename' => 'example_info_file.libraries.info.yml',
-      'name' => 'example_info_file.libraries.info',
-    ));
+  public function testLibrariesScanInfoFiles() {
+    $expected = [
+      'example_info_file' => (object) [
+        'uri' => drupal_get_path('module', 'libraries') . '/tests/example/example_info_file.libraries.info.yml',
+        'filename' => 'example_info_file.libraries.info.yml',
+        'name' => 'example_info_file.libraries.info',
+      ],
+    ];
     $actual = libraries_scan_info_files();
     $this->verbose('Expected:<pre>' . var_export($expected, TRUE) . '</pre>');
     $this->verbose('Actual:<pre>' . var_export($actual, TRUE) . '</pre>');
@@ -144,19 +153,19 @@ class LibrariesWebTest extends WebTestBase {
   /**
    * Tests libraries_info().
    */
-  function testLibrariesInfo() {
+  public function testLibrariesInfo() {
     // Test that library information is found correctly.
-    $expected = array(
+    $expected = [
       'name' => 'Example files',
       'library path' => drupal_get_path('module', 'libraries') . '/tests/example',
       'version' => '1',
-      'files' => array(
-        'js' => array('example_1.js' => array()),
-        'css' => array('example_1.css' => array()),
-        'php' => array('example_1.php' => array()),
-      ),
+      'files' => [
+        'js' => ['example_1.js' => []],
+        'css' => ['example_1.css' => []],
+        'php' => ['example_1.php' => []],
+      ],
       'module' => 'libraries_test',
-    );
+    ];
     libraries_info_defaults($expected, 'example_files');
     $library = libraries_info('example_files');
     $this->verbose('Expected:<pre>' . var_export($expected, TRUE) . '</pre>');
@@ -164,10 +173,10 @@ class LibrariesWebTest extends WebTestBase {
     $this->assertEqual($library, $expected, 'Library information is correctly gathered.');
 
     // Test a library specified with an .info file gets detected.
-    $expected = array(
+    $expected = [
       'name' => 'Example info file',
       'info file' => drupal_get_path('module', 'libraries') . '/tests/example/example_info_file.libraries.info.yml',
-    );
+    ];
     libraries_info_defaults($expected, 'example_info_file');
     $library = libraries_info('example_info_file');
     // If this module was downloaded from Drupal.org, the Drupal.org packaging
@@ -182,33 +191,33 @@ class LibrariesWebTest extends WebTestBase {
   /**
    * Tests libraries_detect().
    */
-  function testLibrariesDetect() {
+  public function testLibrariesDetect() {
     // Test missing library.
     $library = libraries_detect('example_missing');
     $this->verbose('<pre>' . var_export($library, TRUE) . '</pre>');
     $this->assertEqual($library['error'], 'not found', 'Missing library not found.');
-    $error_message = t('The %library library could not be found.', array(
+    $error_message = t('The %library library could not be found.', [
       '%library' => $library['name'],
-    ));
+    ]);
     $this->assertEqual($library['error message'], $error_message, 'Correct error message for a missing library.');
 
     // Test unknown library version.
     $library = libraries_detect('example_undetected_version');
     $this->verbose('<pre>' . var_export($library, TRUE) . '</pre>');
     $this->assertEqual($library['error'], 'not detected', 'Undetected version detected as such.');
-    $error_message = t('The version of the %library library could not be detected.', array(
+    $error_message = t('The version of the %library library could not be detected.', [
       '%library' => $library['name'],
-    ));
+    ]);
     $this->assertEqual($library['error message'], $error_message, 'Correct error message for a library with an undetected version.');
 
     // Test unsupported library version.
     $library = libraries_detect('example_unsupported_version');
     $this->verbose('<pre>' . var_export($library, TRUE) . '</pre>');
     $this->assertEqual($library['error'], 'not supported', 'Unsupported version detected as such.');
-    $error_message = t('The installed version %version of the %library library is not supported.', array(
+    $error_message = t('The installed version %version of the %library library is not supported.', [
       '%version' => $library['version'],
       '%library' => $library['name'],
-    ));
+    ]);
     $this->assertEqual($library['error message'], $error_message, 'Correct error message for a library with an unsupported version.');
 
     // Test supported library version.
@@ -228,21 +237,21 @@ class LibrariesWebTest extends WebTestBase {
 
     // Test a top-level files property.
     $library = libraries_detect('example_files');
-    $files = array(
-      'js' => array('example_1.js' => array()),
-      'css' => array('example_1.css' => array()),
-      'php' => array('example_1.php' => array()),
-    );
+    $files = [
+      'js' => ['example_1.js' => []],
+      'css' => ['example_1.css' => []],
+      'php' => ['example_1.php' => []],
+    ];
     $this->verbose('<pre>' . var_export($library, TRUE) . '</pre>');
     $this->assertEqual($library['files'], $files, 'Top-level files property works.');
 
     // Test version-specific library files.
     $library = libraries_detect('example_versions');
-    $files = array(
-      'js' => array('example_2.js' => array()),
-      'css' => array('example_2.css' => array()),
-      'php' => array('example_2.php' => array()),
-    );
+    $files = [
+      'js' => ['example_2.js' => []],
+      'css' => ['example_2.css' => []],
+      'php' => ['example_2.php' => []],
+    ];
     $this->verbose('<pre>' . var_export($library, TRUE) . '</pre>');
     $this->assertEqual($library['files'], $files, 'Version-specific library files found.');
 
@@ -250,10 +259,10 @@ class LibrariesWebTest extends WebTestBase {
     $library = libraries_detect('example_variant_missing');
     $this->verbose('<pre>' . var_export($library, TRUE) . '</pre>');
     $this->assertEqual($library['variants']['example_variant']['error'], 'not found', 'Missing variant not found');
-    $error_message = t('The %variant variant of the %library library could not be found.', array(
+    $error_message = t('The %variant variant of the %library library could not be found.', [
       '%variant' => 'example_variant',
       '%library' => 'Example variant missing',
-    ));
+    ]);
     $this->assertEqual($library['variants']['example_variant']['error message'], $error_message, 'Correct error message for a missing variant.');
 
     // Test existing variant.
@@ -267,7 +276,7 @@ class LibrariesWebTest extends WebTestBase {
    *
    * @todo Remove or rewrite to accomodate integration with core Libraries.
    */
-  function _testLibrariesLoad() {
+  public function _testLibrariesLoad() {
     // Test dependencies.
     $library = libraries_load('example_dependency_missing');
     $this->verbose('<pre>' . var_export($library, TRUE) . '</pre>');
@@ -286,52 +295,52 @@ class LibrariesWebTest extends WebTestBase {
   /**
    * Tests the applying of callbacks.
    */
-  function testCallbacks() {
-    $expected = array(
+  public function testCallbacks() {
+    $expected = [
       'name' => 'Example callback',
       'library path' => drupal_get_path('module', 'libraries') . '/tests/example',
       'version' => '1',
-      'versions' => array(
-        '1' => array(
-          'variants' => array(
-            'example_variant' => array(
+      'versions' => [
+        '1' => [
+          'variants' => [
+            'example_variant' => [
               'info callback' => 'not applied',
               'pre-detect callback' => 'not applied',
               'post-detect callback' => 'not applied',
               'pre-load callback' => 'not applied',
               'post-load callback' => 'not applied',
-            ),
-          ),
+            ],
+          ],
           'info callback' => 'not applied',
           'pre-detect callback' => 'not applied',
           'post-detect callback' => 'not applied',
           'pre-load callback' => 'not applied',
           'post-load callback' => 'not applied',
-        ),
-      ),
-      'variants' => array(
-        'example_variant' => array(
+        ],
+      ],
+      'variants' => [
+        'example_variant' => [
           'info callback' => 'not applied',
           'pre-detect callback' => 'not applied',
           'post-detect callback' => 'not applied',
           'pre-load callback' => 'not applied',
           'post-load callback' => 'not applied',
-        ),
-      ),
-      'callbacks' => array(
-        'info' => array('_libraries_test_info_callback'),
-        'pre-detect' => array('_libraries_test_pre_detect_callback'),
-        'post-detect' => array('_libraries_test_post_detect_callback'),
-        'pre-load' => array('_libraries_test_pre_load_callback'),
-        'post-load' => array('_libraries_test_post_load_callback'),
-      ),
+        ],
+      ],
+      'callbacks' => [
+        'info' => ['_libraries_test_info_callback'],
+        'pre-detect' => ['_libraries_test_pre_detect_callback'],
+        'post-detect' => ['_libraries_test_post_detect_callback'],
+        'pre-load' => ['_libraries_test_pre_load_callback'],
+        'post-load' => ['_libraries_test_post_load_callback'],
+      ],
       'info callback' => 'not applied',
       'pre-detect callback' => 'not applied',
       'post-detect callback' => 'not applied',
       'pre-load callback' => 'not applied',
       'post-load callback' => 'not applied',
       'module' => 'libraries_test',
-    );
+    ];
     libraries_info_defaults($expected, 'example_callback');
 
     // Test a callback in the 'info' group.
@@ -398,7 +407,7 @@ class LibrariesWebTest extends WebTestBase {
    * @todo Remove or rewrite to accomodate integration with core Libraries.
    * @see _libraries_test_load()
    */
-  function _testLibrariesOutput() {
+  public function _testLibrariesOutput() {
     // Test loading of a simple library with a top-level files property.
     $this->drupalGet('libraries_test/files');
     $this->assertLibraryFiles('example_1', 'File loading');
@@ -463,38 +472,38 @@ class LibrariesWebTest extends WebTestBase {
    *   (optional) The expected file extensions of $name. Defaults to
    *   array('js', 'css', 'php').
    */
-  function assertLibraryFiles($name, $label = '', $extensions = array('js', 'css', 'php')) {
+  public function assertLibraryFiles($name, $label = '', $extensions = ['js', 'css', 'php']) {
     $label = ($label !== '' ? "$label: " : '');
 
     // Test that the wrong files are not loaded...
-    $names = array(
+    $names = [
       'example_1' => FALSE,
       'example_2' => FALSE,
       'example_3' => FALSE,
       'example_4' => FALSE,
-    );
+    ];
     // ...and the correct ones are.
     $names[$name] = TRUE;
 
     // Test for the specific HTML that the different file types appear as in the
     // DOM.
-    $html = array(
-      'js' => array('<script src="', '"></script>'),
-      'css' => array('<link rel="stylesheet" href="', '" media="all" />'),
+    $html = [
+      'js' => ['<script src="', '"></script>'],
+      'css' => ['<link rel="stylesheet" href="', '" media="all" />'],
       // PHP files do not get added to the DOM directly.
       // @see _libraries_test_load()
-      'php' => array('<li>', '</li>'),
-    );
+      'php' => ['<li>', '</li>'],
+    ];
 
-    $html_expected = array();
-    $html_not_expected = array();
+    $html_expected = [];
+    $html_not_expected = [];
 
     foreach ($names as $name => $expected) {
       foreach ($extensions as $extension) {
         $filepath = drupal_get_path('module', 'libraries') . "/tests/example/$name.$extension";
         // JavaScript and CSS files appear as full URLs and with an appended
         // query string.
-        if (in_array($extension, array('js', 'css'))) {
+        if (in_array($extension, ['js', 'css'])) {
           $filepath = $this->urlAssembler->assemble("base://$filepath", [
             'query' => [
               $this->state->get('system.css_js_query_string') ?: '0' => NULL,
@@ -502,7 +511,7 @@ class LibrariesWebTest extends WebTestBase {
             'absolute' => TRUE,
           ]);
           // If index.php is part of the generated URLs, we need to strip it.
-          //$filepath = str_replace('index.php/', '', $filepath);
+          // $filepath = str_replace('index.php/', '', $filepath);
         }
         list($prefix, $suffix) = $html[$extension];
         $raw = $prefix . $filepath . $suffix;

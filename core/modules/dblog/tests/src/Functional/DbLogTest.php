@@ -133,10 +133,10 @@ class DbLogTest extends BrowserTestBase {
     $this->assertSession()->linkByHrefExists($context['referer']);
 
     // Verify hostname.
-    $this->assertRaw($context['ip']);
+    $this->assertSession()->pageTextContains($context['ip']);
 
     // Verify location.
-    $this->assertRaw($context['request_uri']);
+    $this->assertSession()->pageTextContains($context['request_uri']);
 
     // Verify severity.
     $this->assertSession()->pageTextContains('Notice');
@@ -243,6 +243,23 @@ class DbLogTest extends BrowserTestBase {
     // Verify location is available as plain text.
     $this->assertEquals($request_uri, $this->cssSelect('table.dblog-event > tbody > tr:nth-child(4) > td')[0]->getHtml());
     $this->assertSession()->linkNotExists($request_uri);
+  }
+
+  /**
+   * Test that twig errors are displayed correctly.
+   */
+  public function testMessageParsing() {
+    $this->drupalLogin($this->adminUser);
+    // Log a common twig error with {{ }} and { } variables.
+    \Drupal::service('logger.factory')->get("php")
+      ->error('Incorrect parameter {{foo}} in path {path}: {value}',
+        ['foo' => 'bar', 'path' => '/baz', 'value' => 'horse']
+      );
+    // View the log page to verify it's correct.
+    $wid = \Drupal::database()->query('SELECT MAX(wid) FROM {watchdog}')->fetchField();
+    $this->drupalGet('admin/reports/dblog/event/' . $wid);
+    $this->assertSession()
+      ->responseContains('Incorrect parameter {bar} in path /baz: horse');
   }
 
   /**
@@ -402,7 +419,7 @@ class DbLogTest extends BrowserTestBase {
     $this->drupalGet('admin/reports/dblog/event/' . $result->fetchField());
 
     // Check if the link exists (unescaped).
-    $this->assertRaw($link);
+    $this->assertSession()->responseContains($link);
   }
 
   /**
@@ -850,7 +867,7 @@ class DbLogTest extends BrowserTestBase {
     $this->drupalGet('admin/reports/dblog');
     $this->assertSession()->statusCodeEquals(200);
     // Make sure HTML tags are filtered out.
-    $this->assertRaw('title="alert(&#039;foo&#039;);Lorem');
+    $this->assertSession()->responseContains('title="alert(&#039;foo&#039;);Lorem');
     $this->assertSession()->responseNotContains("<script>alert('foo');</script>");
 
     // Make sure HTML tags are filtered out in admin/reports/dblog/event/ too.
@@ -860,7 +877,7 @@ class DbLogTest extends BrowserTestBase {
     $wid = $query->execute()->fetchField();
     $this->drupalGet('admin/reports/dblog/event/' . $wid);
     $this->assertSession()->responseNotContains("<script>alert('foo');</script>");
-    $this->assertRaw("alert('foo'); <strong>Lorem ipsum</strong>");
+    $this->assertSession()->responseContains("alert('foo'); <strong>Lorem ipsum</strong>");
   }
 
   /**
@@ -903,8 +920,8 @@ class DbLogTest extends BrowserTestBase {
     // Check if the full message displays on the details page and backtrace is a
     // pre-formatted text.
     $message = new FormattableMarkup('%type: @message in %function (line', $error_user_notice);
-    $this->assertRaw($message);
-    $this->assertRaw('<pre class="backtrace">');
+    $this->assertSession()->responseContains($message);
+    $this->assertSession()->responseContains('<pre class="backtrace">');
   }
 
 }
