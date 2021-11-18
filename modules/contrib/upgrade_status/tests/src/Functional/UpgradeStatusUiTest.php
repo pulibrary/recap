@@ -3,6 +3,7 @@
 namespace Drupal\Tests\upgrade_status\Functional;
 
 use Drupal\Core\Url;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests the UI before and after running scans.
@@ -50,7 +51,7 @@ class UpgradeStatusUiTest extends UpgradeStatusTestBase {
     $assert_session->buttonExists('Export selected as HTML');
 
     // Error and no-error test module results should show.
-    $this->assertSame('4 problems', strip_tags($page->find('css', 'tr.project-upgrade_status_test_error td.scan-result')->getHtml()));
+    $this->assertSame('5 problems', strip_tags($page->find('css', 'tr.project-upgrade_status_test_error td.scan-result')->getHtml()));
     $this->assertSame($this->getDrupalCoreMajorVersion() < 9 ? 'No problems found' : '1 problem', strip_tags($page->find('css', 'tr.project-upgrade_status_test_9_compatible td.scan-result')->getHtml()));
     $this->assertSame('No problems found', strip_tags($page->find('css', 'tr.project-upgrade_status_test_10_compatible td.scan-result')->getHtml()));
 
@@ -65,10 +66,10 @@ class UpgradeStatusUiTest extends UpgradeStatusTestBase {
     $next_major = $this->getDrupalCoreMajorVersion() + 1;
     $this->assertSession()->linkByHrefExists('https://drupal.org/project/issues/upgrade_status_test_contributed_9_compatible?text=Drupal+' . $next_major . '&status=All');
 
-    // Click the first '4 problems' link. Should be the custom project.
-    $this->clickLink('4 problems');
+    // Click the first '5 problems' link. Should be the custom project.
+    $this->clickLink('5 problems', 1);
     $this->assertText('Upgrade status test error ' . \Drupal::VERSION);
-    $this->assertText('2 errors found. 2 warnings found.');
+    $this->assertText('2 errors found. 3 warnings found.');
     $this->assertText('Syntax error, unexpected T_STRING on line 3');
 
     // Go forward to the export page and assert that still contains the results
@@ -78,17 +79,17 @@ class UpgradeStatusUiTest extends UpgradeStatusTestBase {
     $this->assertText('Upgrade status test error ' . \Drupal::VERSION);
     $this->assertText('Custom projects');
     $this->assertNoText('Contributed projects');
-    $this->assertText('2 errors found. 2 warnings found.');
+    $this->assertText('2 errors found. 3 warnings found.');
     $this->assertText('Syntax error, unexpected T_STRING on line 3');
 
     // Go back to the listing page and click over to exporting in single ASCII.
     $this->drupalGet(Url::fromRoute('upgrade_status.report'));
-    $this->clickLink('4 problems');
+    $this->clickLink('5 problems', 1);
     $this->clickLink('Export as text');
     $this->assertText('Upgrade status test error ' . \Drupal::VERSION);
     $this->assertText('CUSTOM PROJECTS');
     $this->assertNoText('CONTRIBUTED PROJECTS');
-    $this->assertText('2 errors found. 2 warnings found.');
+    $this->assertText('2 errors found. 3 warnings found.');
     $this->assertText('Syntax error, unexpected T_STRING on line 3');
 
     // Run partial export of multiple projects.
@@ -110,8 +111,22 @@ class UpgradeStatusUiTest extends UpgradeStatusTestBase {
       $this->assertText('Upgrade status test error ' . \Drupal::VERSION);
       $this->assertNoText('Upgrade status test root module');
       $this->assertNoText('Upgrade status test contrib 9 compatbile');
-      $this->assertText('2 errors found. 2 warnings found.');
+      $this->assertText('2 errors found. 3 warnings found.');
       $this->assertText('Syntax error, unexpected T_STRING on line 3');
     }
   }
+
+  /**
+   * Test the user interface for role checking.
+   */
+  public function testRoleChecking() {
+    if ($this->getDrupalCoreMajorVersion() == 9) {
+      $authenticated = Role::load('authenticated');
+      $authenticated->grantPermission('upgrade status invalid permission test');
+      $authenticated->save();
+      $this->drupalGet(Url::fromRoute('upgrade_status.report'));
+      $this->assertSession()->pageTextContains('"upgrade status invalid permission test" of user role: "Authenticated user".');
+    }
+  }
+
 }

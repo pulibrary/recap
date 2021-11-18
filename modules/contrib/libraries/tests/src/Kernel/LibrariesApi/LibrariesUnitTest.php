@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\libraries\Tests;
+namespace Drupal\Tests\libraries\Kernel\LibrariesApi;
 
-use Drupal\simpletest\KernelTestBase;
+use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Tests basic Libraries API functions.
@@ -14,7 +14,7 @@ class LibrariesUnitTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = array('libraries');
+  public static $modules = ['libraries'];
 
   /**
    * Tests libraries_get_path().
@@ -32,20 +32,20 @@ class LibrariesUnitTest extends KernelTestBase {
    * Tests libraries_prepare_files().
    */
   function testLibrariesPrepareFiles() {
-    $expected = array(
-      'files' => array(
-        'js' => array('example.js' => array()),
-        'css' => array('example.css' => array()),
-        'php' => array('example.php' => array()),
-      ),
-    );
-    $library = array(
-      'files' => array(
-        'js' => array('example.js'),
-        'css' => array('example.css'),
-        'php' => array('example.php'),
-      ),
-    );
+    $expected = [
+      'files' => [
+        'js' => ['example.js' => []],
+        'css' => ['example.css' => []],
+        'php' => ['example.php' => []],
+      ],
+    ];
+    $library = [
+      'files' => [
+        'js' => ['example.js'],
+        'css' => ['example.css'],
+        'php' => ['example.php'],
+      ],
+    ];
     libraries_prepare_files($library, NULL, NULL);
     $this->assertEqual($expected, $library, 'libraries_prepare_files() works correctly.');
   }

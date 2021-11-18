@@ -9,7 +9,9 @@ parameters:
 
 	# FROM mglaman/drupal-check/phpstan/base_config.neon
 	reportUnmatchedIgnoredErrors: false
-	excludes_analyse:
+	excludePaths:
 		- */tests/Drupal/Tests/Listeners/Legacy/*
 		- */tests/fixtures/*.php
 		- */settings*.php
+		- */bower_components/*
+		- */node_modules/*
