@@ -207,7 +207,7 @@ namespace :drupal do
       upload! File.join(ENV['FILES_DIR'], gz_file_name), "/tmp/#{gz_file_name}"
       execute "mv /tmp/#{gz_file_name} #{shared_path}/files"
       execute "gzip -d #{shared_path}/files/#{gz_file_name}"
-      execute "cd #{shared_path}/files && tar -xvf #{tar_file_name}"
+      execute "cd #{shared_path}/files && sudo -u www-data tar -xvf #{tar_file_name}"
       execute "cd #{shared_path}/files && rm -f #{tar_file_name}"
       execute :sudo, "/bin/chown -R www-data #{shared_path}/files"
     end
