@@ -8,6 +8,13 @@ var gulp = require("gulp"),
 
 sass.compiler = require("node-sass");
 
+gulp.task("clean", function() {
+  return del([
+      "css/pinwheel.css",
+      "scripts/pinwheel.js"
+  ]);
+});
+
 // Compiles Sass to CSS
 gulp.task("sass", function() {
   return gulp
@@ -27,3 +34,6 @@ gulp.task("watch", function() {
   gulp.watch("./src/sass/**/*.scss", gulp.series("sass"));
   gulp.watch("./src/scripts/*.js", gulp.series("scripts"));
 });
+
+// Compiles SASS and scripts
+gulp.task("compile", gulp.series(["sass", "scripts"]));
