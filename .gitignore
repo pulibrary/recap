@@ -29,3 +29,4 @@ simpletest
 
 # Ignore node modules
 node_modules
+dump.sql
