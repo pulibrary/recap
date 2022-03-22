@@ -82,7 +82,7 @@ options:
 
 ### NPM and Gulp
 
-1. `cd themes/custom/recap`
+1. `cd themes/custom/pinwheel`
 1. `lando npm install`
 1. `lando gulp deploy` (or any other gulp task)
 
