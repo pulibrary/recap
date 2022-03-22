@@ -65,12 +65,6 @@
     ```
 1. Copy the same hash from above and add the value to `$settings['config_sync_directory']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
     ```
-    // This was pre 8.8.x
-    $config_directories = array(
-      CONFIG_SYNC_DIRECTORY => 'sites/default/files/config_abc123',
-    );
-
-    // This is the changed key after 8.8.x
     $settings['config_sync_directory'] = 'sites/default/files/config_abc123'
     ```
 1. Create a `drush/drush.yml` file with the following
