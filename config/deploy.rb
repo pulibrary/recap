@@ -117,6 +117,7 @@ namespace :drupal do
           execute :find, "#{release_path}", '-type d -exec', :chmod, "2750 {} ';'"
           execute :find, "#{shared_path}/tmp", '-type d -exec', :chmod, "2770 {} ';'"
           execute "chmod a+x #{release_path}/vendor/drush/drush/drush"
+          execute "chmod a+x #{release_path}/vendor/bin/*"
       end
   end
 
