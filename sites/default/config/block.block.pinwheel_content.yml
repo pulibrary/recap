@@ -1,0 +1,20 @@
+uuid: de8c544b-2cdd-40e5-9246-bf3f7e1db34c
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - pinwheel
+id: pinwheel_content
+theme: pinwheel
+region: content
+weight: -4
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  label_display: '0'
+  provider: system
+visibility: {  }

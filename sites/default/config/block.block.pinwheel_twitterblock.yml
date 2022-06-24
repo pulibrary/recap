@@ -1,0 +1,43 @@
+uuid: bfbb10b1-87c9-4337-82ee-2d43c26f7c0d
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+    - twitter_block
+  theme:
+    - pinwheel
+id: pinwheel_twitterblock
+theme: pinwheel
+region: content
+weight: -3
+provider: null
+plugin: twitter_block
+settings:
+  id: twitter_block
+  label: 'Tweets by'
+  label_display: '0'
+  provider: twitter_block
+  username: recaplib
+  theme: ''
+  link_color: ''
+  width: '280'
+  height: '600'
+  chrome:
+    noheader: '0'
+    nofooter: '0'
+    noborders: '0'
+    noscrollbar: '0'
+    transparent: '0'
+  border_color: ''
+  language: ''
+  tweet_limit: ''
+  related: ''
+  polite: polite
+  widget_id: '732250456165089284'
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    context_mapping: {  }
+    pages: '<front>'

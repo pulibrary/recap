@@ -1,0 +1,21 @@
+uuid: 6f3ec6aa-8a23-4f40-9671-e5acbc737b07
+langcode: en
+status: false
+dependencies:
+  module:
+    - search
+  theme:
+    - pinwheel
+id: pinwheel_search
+theme: pinwheel
+region: header
+weight: -4
+provider: null
+plugin: search_form_block
+settings:
+  id: search_form_block
+  label: Search
+  label_display: visible
+  provider: search
+  page_id: ''
+visibility: {  }

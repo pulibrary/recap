@@ -1,0 +1,20 @@
+uuid: 0857aaed-4b2c-453d-b1df-9f39aa94e5d2
+langcode: en
+status: false
+dependencies:
+  module:
+    - help
+  theme:
+    - pinwheel
+id: pinwheel_help
+theme: pinwheel
+region: header
+weight: -8
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Help
+  label_display: '0'
+  provider: help
+visibility: {  }

@@ -1,0 +1,58 @@
+uuid: d2f9e053-2404-44af-a505-5e5a36679cb1
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.restricted_html
+    - node.type.article
+    - node.type.gallery_image
+    - node.type.monthly_statistics
+    - node.type.page
+    - taxonomy.vocabulary.tags
+  module:
+    - contextual
+    - filter
+    - node
+    - quickedit
+    - search
+    - taxonomy
+id: web_editor
+label: 'Web Editor'
+weight: 3
+is_admin: null
+permissions:
+  - 'access content overview'
+  - 'access contextual links'
+  - 'access in-place editing'
+  - 'create article content'
+  - 'create gallery_image content'
+  - 'create monthly_statistics content'
+  - 'create page content'
+  - 'delete any monthly_statistics content'
+  - 'delete own article content'
+  - 'delete own gallery_image content'
+  - 'delete own monthly_statistics content'
+  - 'delete own page content'
+  - 'delete terms in tags'
+  - 'edit any article content'
+  - 'edit any gallery_image content'
+  - 'edit any monthly_statistics content'
+  - 'edit any page content'
+  - 'edit own article content'
+  - 'edit own gallery_image content'
+  - 'edit own monthly_statistics content'
+  - 'edit own page content'
+  - 'edit terms in tags'
+  - 'revert all revisions'
+  - 'revert article revisions'
+  - 'revert gallery_image revisions'
+  - 'revert monthly_statistics revisions'
+  - 'revert page revisions'
+  - 'use advanced search'
+  - 'use text format restricted_html'
+  - 'view all revisions'
+  - 'view article revisions'
+  - 'view gallery_image revisions'
+  - 'view monthly_statistics revisions'
+  - 'view own unpublished content'
+  - 'view page revisions'

@@ -1,0 +1,18 @@
+uuid: 30444348-3c38-410a-9832-c234e2c266ad
+langcode: en
+status: true
+dependencies:
+  theme:
+    - pinwheel
+id: pinwheel_local_actions
+theme: pinwheel
+region: content
+weight: -6
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Primary admin actions'
+  label_display: '0'
+  provider: core
+visibility: {  }

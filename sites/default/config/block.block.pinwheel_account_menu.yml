@@ -1,0 +1,25 @@
+uuid: be250a4c-2bcb-4714-900f-65b74c98e3bb
+langcode: en
+status: false
+dependencies:
+  config:
+    - system.menu.account
+  module:
+    - system
+  theme:
+    - pinwheel
+id: pinwheel_account_menu
+theme: pinwheel
+region: header
+weight: 0
+provider: null
+plugin: 'system_menu_block:account'
+settings:
+  id: 'system_menu_block:account'
+  label: 'User account menu'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: 1
+  expand_all_items: false
+visibility: {  }

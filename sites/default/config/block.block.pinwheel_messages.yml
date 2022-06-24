@@ -1,0 +1,20 @@
+uuid: ec79c307-9043-43ef-85cd-69851c147b36
+langcode: en
+status: false
+dependencies:
+  module:
+    - system
+  theme:
+    - pinwheel
+id: pinwheel_messages
+theme: pinwheel
+region: header
+weight: -2
+provider: null
+plugin: system_messages_block
+settings:
+  id: system_messages_block
+  label: 'Status messages'
+  label_display: '0'
+  provider: system
+visibility: {  }

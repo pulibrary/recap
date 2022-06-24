@@ -1,0 +1,25 @@
+uuid: 8ef64b89-1f9a-497d-9b1c-aa934ecd254a
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.main
+  module:
+    - system
+  theme:
+    - pinwheel
+id: pinwheel_main_menu
+theme: pinwheel
+region: header
+weight: -5
+provider: null
+plugin: 'system_menu_block:main'
+settings:
+  id: 'system_menu_block:main'
+  label: 'Main navigation'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: 2
+  expand_all_items: false
+visibility: {  }

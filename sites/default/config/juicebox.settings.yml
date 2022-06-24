@@ -1,0 +1,7 @@
+apply_markup_filter: true
+enable_cors: false
+translate_interface: false
+base_languagelist: ''
+juicebox_multisize_small: juicebox_small
+juicebox_multisize_medium: juicebox_medium
+juicebox_multisize_large: juicebox_large

@@ -1,0 +1,20 @@
+uuid: bd30e988-ea3a-483b-9200-bed311f459ec
+langcode: en
+status: true
+dependencies:
+  module:
+    - comment
+    - contact
+    - google_analytics
+    - search
+    - system
+id: anonymous
+label: 'Anonymous user'
+weight: 0
+is_admin: false
+permissions:
+  - 'access comments'
+  - 'access content'
+  - 'access site-wide contact form'
+  - 'opt-in or out of google analytics tracking'
+  - 'search content'

@@ -1,0 +1,13 @@
+langcode: en
+uuid: ac74cb64-2b66-478d-b24c-76d12d7e47cf
+name: ReCAP
+mail: kr2@princeton.edu
+slogan: ''
+page:
+  403: /node/29
+  404: ''
+  front: /node/1
+admin_compact_mode: false
+weight_select_max: 100
+default_langcode: en
+mail_notification: ''

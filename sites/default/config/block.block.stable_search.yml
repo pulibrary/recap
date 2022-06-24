@@ -1,0 +1,21 @@
+uuid: 4bc0a4b0-1298-45e6-aa23-35bbb4c1a172
+langcode: en
+status: true
+dependencies:
+  module:
+    - search
+  theme:
+    - stable
+id: stable_search
+theme: stable
+region: sidebar_first
+weight: -1
+provider: null
+plugin: search_form_block
+settings:
+  id: search_form_block
+  label: Search
+  label_display: visible
+  provider: search
+  page_id: ''
+visibility: {  }
