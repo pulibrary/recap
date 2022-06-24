@@ -312,7 +312,7 @@ abstract class ExtensionList {
     $extensions = $this->doScanExtensions();
 
     // Read info files for each extension.
-    foreach ($extensions as $extension_name => $extension) {
+    foreach ($extensions as $extension) {
       $extension->info = $this->createExtensionInfo($extension);
 
       // Invoke hook_system_info_alter() to give installed modules a chance to
@@ -340,10 +340,14 @@ abstract class ExtensionList {
    */
   public function getExtensionInfo($extension_name) {
     $all_info = $this->getAllInstalledInfo();
-    if (isset($all_info[$extension_name])) {
-      return $all_info[$extension_name];
+    if (!empty($extension_name)) {
+      $all_info = $this->getAllInstalledInfo();
+      if (isset($all_info[$extension_name])) {
+        return $all_info[$extension_name];
+      }
+      throw new UnknownExtensionException("The {$this->type} $extension_name does not exist or is not installed.");
     }
-    throw new UnknownExtensionException("The {$this->type} $extension_name does not exist or is not installed.");
+    return NULL;
   }
 
   /**
