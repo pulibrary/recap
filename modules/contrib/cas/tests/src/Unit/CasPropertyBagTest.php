@@ -117,4 +117,5 @@ class CasPropertyBagTest extends UnitTestCase {
     $property->setValue($bag, $attributes);
     $this->assertEquals($attributes, $bag->getAttributes());
   }
+
 }

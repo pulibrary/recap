@@ -14,7 +14,7 @@ class CasForcedLoginControllerTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
+  protected static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
 
   /**
    * Tests the the forced login route that redirects users authenticate.
@@ -40,7 +40,7 @@ class CasForcedLoginControllerTest extends CasBrowserTestBase {
     // URL as well, so test each of these cases individually.
     $params_to_test = [
       [],
-      ['returnto' => 'node/1'],
+      ['destination' => 'node/1'],
       ['foo' => 'bar', 'buzz' => 'baz'],
     ];
     foreach ($params_to_test as $params) {

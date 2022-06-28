@@ -48,14 +48,14 @@ class CasRedirectDataTest extends UnitTestCase {
   public function testServiceParmaeters() {
     $data = new CasRedirectData();
 
-    $data->setServiceParameter('returnto', 'node/1');
+    $data->setServiceParameter('destination', 'node/1');
     $parms = $data->getAllServiceParameters();
-    $this->assertEquals('node/1', $parms['returnto']);
-    $this->assertEquals('node/1', $data->getServiceParameter('returnto'), 'Getter');
+    $this->assertEquals('node/1', $parms['destination']);
+    $this->assertSame('node/1', $data->getServiceParameter('destination'));
 
-    $data->setServiceParameter('returnto', NULL);
+    $data->setServiceParameter('destination', NULL);
     $parms = $data->getAllServiceParameters();
-    $this->assertArrayNotHasKey('returnto', $parms, 'Service parameter removal');
+    $this->assertArrayNotHasKey('destination', $parms);
   }
 
   /**

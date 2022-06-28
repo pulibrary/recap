@@ -1,7 +1,12 @@
 services:
-  cas.subscriber:
-    class: Drupal\cas\Subscriber\CasSubscriber
-    arguments: ['@request_stack', '@current_route_match', '@config.factory',  '@current_user', '@plugin.manager.condition', '@cas.helper', '@cas.redirector']
+  cas.forced_auth_subscriber:
+    class: Drupal\cas\Subscriber\CasForcedAuthSubscriber
+    arguments: ['@current_route_match', '@config.factory',  '@current_user', '@plugin.manager.condition', '@cas.helper', '@cas.redirector']
+    tags:
+      - { name: 'event_subscriber' }
+  cas.gateway_subscriber:
+    class: Drupal\cas\Subscriber\CasGatewayAuthSubscriber
+    arguments: ['@current_route_match', '@config.factory',  '@current_user', '@plugin.manager.condition', '@cas.helper', '@cas.redirector']
     tags:
       - { name: 'event_subscriber' }
   cas.helper:

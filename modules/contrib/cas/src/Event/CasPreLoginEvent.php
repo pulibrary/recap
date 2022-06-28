@@ -114,25 +114,6 @@ class CasPreLoginEvent extends Event {
   }
 
   /**
-   * Set the $allowLogin property.
-   *
-   * @param bool $allow_login
-   *   TRUE to allow login, FALSE otherwise.
-   *
-   * @deprecated in cas:8.x-1.7 and is removed from cas:8.x-2.0. Use
-   *   ::allowLogin() or ::cancelLogin() instead.
-   */
-  public function setAllowLogin($allow_login) {
-    @trigger_error('Using ' . __METHOD__ . '() is deprecated in cas:8.x-1.7 and is removed from cas:8.x-2.0. Use ::allowLogin() or ::cancelLogin() instead.', E_USER_DEPRECATED);
-    if ($allow_login) {
-      $this->allowLogin();
-    }
-    else {
-      $this->cancelLogin();
-    }
-  }
-
-  /**
    * Return if this user is allowed to login.
    *
    * @return bool

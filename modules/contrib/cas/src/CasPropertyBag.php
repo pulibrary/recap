@@ -3,7 +3,7 @@
 namespace Drupal\cas;
 
 /**
- * Class CasPropertyBag.
+ * Data model for CAS property bag.
  */
 class CasPropertyBag {
 

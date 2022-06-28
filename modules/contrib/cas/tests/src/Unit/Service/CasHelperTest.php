@@ -51,7 +51,7 @@ class CasHelperTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp() : void {
     parent::setUp();
 
     $this->loggerFactory = $this->createMock('\Drupal\Core\Logger\LoggerChannelFactory');
@@ -67,27 +67,6 @@ class CasHelperTest extends UnitTestCase {
       ->willReturn('Use <a href="/caslogin">CAS login</a>');
     $this->token->replace('<script>alert("Hacked!");</script>')
       ->willReturn('<script>alert("Hacked!");</script>');
-  }
-
-  /**
-   * Provides parameters and expected return values for testGetServerLoginUrl.
-   *
-   * @return array
-   *   The list of parameters and return values.
-   *
-   * @see \Drupal\Tests\cas\Unit\CasHelperTest::testGetServerLoginUrl()
-   */
-  public function getServerLoginUrlDataProvider() {
-    return [
-      [
-        [],
-        'https://example.com/client',
-      ],
-      [
-        ['returnto' => 'node/1'],
-        'https://example.com/client?returnto=node%2F1',
-      ],
-    ];
   }
 
   /**
@@ -138,6 +117,7 @@ class CasHelperTest extends UnitTestCase {
 
   /**
    * @covers ::handleReturnToParameter
+   * @group legacy
    */
   public function testHandleReturnToParameter() {
     $config_factory = $this->getConfigFactoryStub([
@@ -152,9 +132,18 @@ class CasHelperTest extends UnitTestCase {
     $this->assertFalse($request->query->has('destination'));
     $this->assertSame('node/1', $request->query->get('returnto'));
 
+    $this->expectDeprecation("Using the 'returnto' query parameter in order to redirect to a destination after login is deprecated in cas:2.0.0 and removed from cas:3.0.0. Use 'destination' query parameter instead. See https://www.drupal.org/node/3231208");
     $cas_helper->handleReturnToParameter($request);
 
     // Check that the 'returnto' has been copied to 'destination'.
+    $this->assertSame('node/1', $request->query->get('destination'));
+    $this->assertSame('node/1', $request->query->get('returnto'));
+
+    // Check that 'returnto' still takes precedence over 'destination' in order
+    // to ensure backwards compatibility.
+    $request = new Request(['destination' => 'node/2', 'returnto' => 'node/1']);
+    $this->expectDeprecation("Using the 'returnto' query parameter in order to redirect to a destination after login is deprecated in cas:2.0.0 and removed from cas:3.0.0. Use 'destination' query parameter instead. See https://www.drupal.org/node/3231208");
+    $cas_helper->handleReturnToParameter($request);
     $this->assertSame('node/1', $request->query->get('destination'));
     $this->assertSame('node/1', $request->query->get('returnto'));
   }

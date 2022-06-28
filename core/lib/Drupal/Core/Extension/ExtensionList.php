@@ -340,14 +340,10 @@ abstract class ExtensionList {
    */
   public function getExtensionInfo($extension_name) {
     $all_info = $this->getAllInstalledInfo();
-    if (!empty($extension_name)) {
-      $all_info = $this->getAllInstalledInfo();
-      if (isset($all_info[$extension_name])) {
-        return $all_info[$extension_name];
-      }
-      throw new UnknownExtensionException("The {$this->type} $extension_name does not exist or is not installed.");
+    if (isset($all_info[$extension_name])) {
+      return $all_info[$extension_name];
     }
-    return NULL;
+    throw new UnknownExtensionException("The {$this->type} $extension_name does not exist or is not installed.");
   }
 
   /**

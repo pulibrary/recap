@@ -30,18 +30,18 @@
     "irc": "irc://irc.freenode.org/drupal-contribute",
     "source": "https://git.drupalcode.org/project/cas"
   },
-  "license": "GPL-2.0+",
+  "license": "GPL-2.0-or-later",
   "minimum-stability": "dev",
   "require": {
     "drupal/externalauth": "^1.2"
   },
   "require-dev": {
-    "drupal/cas_mock_server": "^1.0||dev-0.x"
+    "drupal/cas_mock_server": "^1.2"
   },
   "extra": {
     "drush": {
       "services": {
-        "drush.services.yml": "^9"
+        "drush.services.yml": "^9 || ^10"
       }
     }
   }

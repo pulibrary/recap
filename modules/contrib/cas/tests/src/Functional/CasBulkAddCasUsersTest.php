@@ -3,7 +3,7 @@
 namespace Drupal\Tests\cas\Functional;
 
 /**
- * Class CasBulkAddCasUsersTest.
+ * Tests adding bulk CAS users.
  *
  * @group cas
  */
