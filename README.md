@@ -80,6 +80,103 @@ options:
 1. `lando npm install`
 1. `lando gulp deploy` (or any other gulp task)
 
+### Configuration Syncing
+
+Each time you pull from production it is a good idea to check the status of your site.  To check and see if you need to get changes run
+```
+lando drush config:status
+```
+If everything is up to date you will see
+```
+[notice] No differences between DB and sync directory.
+```
+
+If there are changes you need to import you will see something like **(note: Only in sync dir in the State)**
+```
+ ---------------------------------------------------- ------------------ 
+  Name                                                 State             
+ ---------------------------------------------------- ------------------ 
+  core.entity_form_display.node.a_z_resource.default   Only in sync dir  
+```
+
+If there are changes you need to export you will see something like **(note: Only in DB in the State)**
+```
+---------------------------------------------------- ------------ 
+  Name                                                 State       
+ ---------------------------------------------------- ------------ 
+  core.entity_form_display.node.a_z_resource.default   Only in DB  
+```
+
+#### Importing Configuration
+Most of the time you will want to import the entire configuration.  The only time this would not be the case is if you have some states that are `Only in DB` and some the are `Only in sync dir` (You made changes and another developer have made changes).  To import the entire configuration run `lando drush config:import` or `lando drush config:import -y`.  If you run without the -y you will see a list of the changes being made before they get applied like below:
+```
++------------+----------------------------------------------------+-----------+
+| Collection | Config                                             | Operation |
++------------+----------------------------------------------------+-----------+
+|            | field.storage.node.field_resource_link             | Create    |
+|            | node.type.a_z_resource                             | Create    |
+|            | field.field.node.a_z_resource.field_resource_link  | Create    |
+```
+
+If you have both exports and imports see the section below.
+
+#### Exporting Configuration
+Most of the time you will want to export the entire configuration.  The only time this would not be the case is if you have some states that are `Only in DB` and some the are `Only in sync dir` (You made changes and another developer have made changes).  To export the entire configuration run `lando drush config:export` or `lando drush config:export -y`.  If you run without the -y you will see a list of the changes being made before they get applied like below:
+```
+ [notice] Differences of the active config to the export directory:
++------------+----------------------------------------------------+-----------+
+| Collection | Config                                             | Operation |
++------------+----------------------------------------------------+-----------+
+|            | field.storage.node.field_resource_link             | Create    |
+|            | node.type.a_z_resource                             | Create    |
+|            | field.field.node.a_z_resource.
++------------+----------------------------------------------------+-----------+
+
+
+ The .yml files in your export directory (sites/default/config) will be deleted and replaced with the active config. (yes/no) [yes]:
+ > yes
+
+ [success] Configuration successfully exported to sites/default/config.
+ ```
+
+If you have both exports and imports see the section below.
+
+### Both Exporting and Importing Configuration
+You made changes and another developer have made changes, and now the configuration must be merged.
+
+We will use git to combine the two configurations.  
+1. Check to make sure everything is committed in git with `git status`.  Commit any untracked changes.
+1. Export you local changes on top of the existing git changes.
+   ```
+   lando drush config:export
+   ```
+1. Double check you do not want keep any of the changes
+   ```
+   git status
+   git diff <modified file>
+   ```
+   for any file you want to keep the changes in
+   ```
+   git add <modified file>
+   ```
+   commit those changes so they do not get loast with either a `git commit` or `git commit --amend`
+1. restore the lost changes tracked by git
+   ```
+   git reset HEAD .
+   git checkout .
+   ```
+1. Import the changes both tracked and untracked
+   ```
+   lando drush config:import
+   ```
+1. Check your config status
+   ```
+   lando drush config:status
+   ```
+1. Commit your changes to git with a branch and a PR.
+
+
+
 ## Deploying to the server
 
 We utilize capistrano to deploy the code out to the server.  To deploy code to an existing server run
