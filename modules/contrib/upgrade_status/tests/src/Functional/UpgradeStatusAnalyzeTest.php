@@ -28,7 +28,6 @@ class UpgradeStatusAnalyzeTest extends UpgradeStatusTestBase {
     $this->assertTrue($key_value->has('upgrade_status_test_theme'));
     $this->assertTrue($key_value->has('upgrade_status_test_library'));
     $this->assertTrue($key_value->has('upgrade_status_test_deprecated'));
-    $this->assertTrue($key_value->has('upgrade_status_test_obsolete'));
 
     // The project upgrade_status_test_submodules_a shouldn't have scan result,
     // because it's a submodule of 'upgrade_status_test_submodules',
@@ -109,7 +108,7 @@ class UpgradeStatusAnalyzeTest extends UpgradeStatusTestBase {
     $this->assertEquals(14, $message['line']);
     $this->assertEquals($this->getDrupalCoreMajorVersion() < 9 ? 'ignore' : 'old', $message['upgrade_status_category']);
     $message = $file['messages'][2];
-    $this->assertEquals("Call to deprecated function upgrade_status_test_contrib_error_function_9_to_10(). Deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Use the replacement instead.", $message['message']);
+    $this->assertEquals("Call to deprecated function upgrade_status_test_contrib_error_function_9_to_10(). Deprecated in drupal:9.4.0 and is removed from drupal:10.0.0. Use the replacement instead.", $message['message']);
     $this->assertEquals(15, $message['line']);
     $this->assertEquals($this->getDrupalCoreMajorVersion() < 9 ? 'ignore' : 'later', $message['upgrade_status_category']);
     $message = $file['messages'][3];
@@ -222,13 +221,6 @@ class UpgradeStatusAnalyzeTest extends UpgradeStatusTestBase {
     $this->assertCount(1, $report['data']['files']);
     $file = reset($report['data']['files']);
     $this->assertEquals("This extension is deprecated. Don't use it. See https://drupal.org/project/upgrade_status.", $file['messages'][0]['message']);
-
-    $report = $key_value->get('upgrade_status_test_obsolete');
-    $this->assertNotEmpty($report);
-    $this->assertEquals(1, $report['data']['totals']['file_errors']);
-    $this->assertCount(1, $report['data']['files']);
-    $file = reset($report['data']['files']);
-    $this->assertEquals("This extension is obsolete. Obsolete extensions are usually uninstalled automatically when not needed anymore. You only need to do something about this if the uninstallation was unsuccesful. See https://drupal.org/project/upgrade_status.", $file['messages'][0]['message']);
   }
 
 }
