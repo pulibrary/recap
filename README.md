@@ -12,9 +12,9 @@
       array (
         'default' =>
         array (
-          'database' => 'drupal8',
-          'username' => 'drupal8',
-          'password' => 'drupal8',
+          'database' => 'drupal9',
+          'username' => 'drupal9',
+          'password' => 'drupal9',
           'host' => 'database',
           'port' => '3306',
           'driver' => 'mysql',
