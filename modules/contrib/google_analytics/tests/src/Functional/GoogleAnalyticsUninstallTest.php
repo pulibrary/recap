@@ -77,10 +77,11 @@ class GoogleAnalyticsUninstallTest extends BrowserTestBase {
     // Uninstall the module.
     $edit = [];
     $edit['uninstall[google_analytics]'] = TRUE;
-    $this->drupalPostForm('admin/modules/uninstall', $edit, $this->t('Uninstall'));
-    $this->assertNoText(\Drupal::translation()->translate('Configuration deletions'));
-    $this->drupalPostForm(NULL, NULL, $this->t('Uninstall'));
-    $this->assertText($this->t('The selected modules have been uninstalled.'));
+    $this->drupalGet('admin/modules/uninstall');
+    $this->submitForm($edit, $this->t('Uninstall'));
+    $this->assertSession()->pageTextNotContains(\Drupal::translation()->translate('Configuration deletions'));
+    $this->submitForm([], $this->t('Uninstall'));
+    $this->assertSession()->pageTextContains($this->t('The selected modules have been uninstalled.'));
 
     // Test if the directory and all files have been removed.
     $this->assertFalse($file_system->prepareDirectory($cache_path), 'Cache directory "public://google_analytics" has been removed.');
