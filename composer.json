@@ -15,7 +15,7 @@
         "drupal/cas": "^1.5",
         "drupal/core-composer-scaffold": "^9.0.0",
         "drupal/core-project-message": "^9.0.0",
-        "drupal/core-recommended": "^9.0.0",
+        "drupal/core-recommended": "9.4.7",
         "drupal/core-vendor-hardening": "^9.0.0",
         "drupal/editor_file": "^1.5",
         "drupal/externalauth": "^1.3",
