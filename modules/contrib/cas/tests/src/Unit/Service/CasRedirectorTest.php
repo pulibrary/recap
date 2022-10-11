@@ -59,7 +59,7 @@ class CasRedirectorTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp() : void {
     parent::setUp();
 
     $this->configFactory = $this->getConfigFactoryStub([
@@ -165,9 +165,9 @@ class CasRedirectorTest extends UnitTestCase {
     $cas_data->setParameter('strong_auth', NULL);
 
     // Verfiy setting of gateway parameters.
-    $cas_data->setServiceParameter('returnto', 'node/1');
+    $cas_data->setServiceParameter('destination', 'node/1');
     $response = $cas_redirector->buildRedirectResponse($cas_data);
-    $this->assertEquals('https://example-server.com/cas/login?service=http%3A//example.com/casservice%3Freturnto%3Dnode/1', $response->getTargetUrl(), 'Service parameters present');
+    $this->assertEquals('https://example-server.com/cas/login?service=http%3A//example.com/casservice%3Fdestination%3Dnode/1', $response->getTargetUrl(), 'Service parameters present');
 
     // Verify proper redirector type.
     $cas_data->setIsCacheable(TRUE);

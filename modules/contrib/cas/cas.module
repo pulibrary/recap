@@ -166,7 +166,7 @@ function _cas_add_cas_username_to_user_form(array &$form) {
 function _cas_user_form_validate(array &$form, FormStateInterface $form_state) {
   // Verify that it was the save / register button that was clicked. We don't
   // want to run our validation if this was for a 'cancel account' action.
-  if (in_array('::save', $form_state->getTriggeringElement()['#submit'])) {
+  if (in_array('::save', $form_state->getSubmitHandlers())) {
     // If the CAS enabled checkbox was checked, then ensure that the CAS
     // username field is not empty.
     if ($form_state->getValue('cas_enabled') && empty($form_state->getValue('cas_username'))) {
@@ -204,7 +204,7 @@ function _cas_user_form_submit(array $form, FormStateInterface $form_state) {
   if ($form_state->getValue('cas_username') && $form_state->getValue('cas_enabled')) {
     $cas_user_manager->setCasUsernameForAccount($account, $form_state->getValue('cas_username'));
   }
-  else {
+  elseif ($cas_user_manager->getCasUsernameForAccount($account->id())) {
     $cas_user_manager->removeCasUsernameForAccount($account);
   }
 }

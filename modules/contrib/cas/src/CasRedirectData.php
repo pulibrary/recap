@@ -3,7 +3,7 @@
 namespace Drupal\cas;
 
 /**
- * Class CasRedirectData.
+ * Provides tools to build the redirects.
  */
 class CasRedirectData {
 

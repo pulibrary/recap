@@ -26,8 +26,12 @@ function cas_token_info() {
           'description' => t('On most sites this is the same as the Drupal username.'),
         ],
         'login-url' => [
-          'name' => t('Login URL'),
-          'description' => t('The CAS login URL.'),
+          'name' => t('Login URL (relative)'),
+          'description' => t('The CAS login URL as a relative path.'),
+        ],
+        'login-url-absolute' => [
+          'name' => t('Login URL (absolute)'),
+          'description' => t('The complete CAS login URL including protocol and hostname,'),
         ],
       ],
     ],
@@ -59,6 +63,11 @@ function cas_tokens($type, $tokens, array $data, array $options, BubbleableMetad
         case 'login-url':
           $replacements[$original] = Url::fromRoute('cas.login')->toString();
           break;
+
+        case 'login-url-absolute':
+          $replacements[$original] = Url::fromRoute('cas.login', [], ['absolute' => TRUE])->toString();
+          break;
+
       }
     }
   }

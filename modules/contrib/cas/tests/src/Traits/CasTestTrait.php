@@ -49,16 +49,12 @@ trait CasTestTrait {
    *   The CAS email.
    * @param string $password
    *   The CAS user password.
+   * @param array $query
+   *   The query string passed to CAS login URL.
    */
-  protected function casLogin($email, $password) {
-    $query = [
-      'service' => Url::fromRoute('cas.service')->setAbsolute()->toString(),
-    ];
-    $edit = [
-      'email' => $email,
-      'password' => $password,
-    ];
-    $this->drupalPostForm('/cas-mock-server/login', $edit, 'Log in', ['query' => $query]);
+  protected function casLogin(string $email, string $password, array $query = []): void {
+    $this->drupalGet(Url::fromRoute('cas.login', [], ['query' => $query]));
+    $this->submitForm(['email' => $email, 'password' => $password], 'Log in');
   }
 
 }

@@ -12,7 +12,7 @@ class CasLoginFormTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
+  protected static $modules = ['cas', 'page_cache', 'dynamic_page_cache'];
 
   /**
    * Tests the login link on the user login form.

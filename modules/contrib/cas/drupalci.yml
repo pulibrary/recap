@@ -1,0 +1,28 @@
+build:
+  assessment:
+    validate_codebase:
+      # Remove patching as soon as #3192093 is committed.
+      # See https://www.drupal.org/project/coder/issues/3192093
+      container_command:
+        commands: "cd ${SOURCE_DIR}/vendor/drupal/coder && sudo -u www-data curl https://patch-diff.githubusercontent.com/raw/pfrenssen/coder/pull/135.diff | sudo -u www-data patch -p1"
+      phplint:
+        halt-on-fail: true
+      phpcs:
+        sniff-all-files: false
+        halt-on-fail: true
+    testing:
+      run_tests.phpunit:
+        types: 'PHPUnit-Unit'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.kernel:
+        types: 'PHPUnit-Kernel'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.functional:
+        types: 'PHPUnit-Functional'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false

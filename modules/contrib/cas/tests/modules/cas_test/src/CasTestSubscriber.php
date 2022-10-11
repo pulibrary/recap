@@ -8,7 +8,7 @@ use Drupal\cas\Service\CasHelper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Class CasTestSubscriber.
+ * Subscribes to pre-login and pre-register events.
  */
 class CasTestSubscriber implements EventSubscriberInterface {
 
@@ -32,19 +32,28 @@ class CasTestSubscriber implements EventSubscriberInterface {
     $username = $event->getDrupalUsername();
     $new_username = 'testing_' . $username;
     $event->setDrupalUsername($new_username);
+
+    $flag = \Drupal::state()->get('cas_test.flag');
+    if ($flag === 'cancel register without message') {
+      $event->cancelAutomaticRegistration();
+    }
+    elseif ($flag === 'cancel register with message') {
+      $event->cancelAutomaticRegistration('Cancelled with a custom message.');
+    }
   }
 
   /**
    * Cancels the login.
    *
    * @param \Drupal\cas\Event\CasPreLoginEvent $event
+   *   The event.
    */
   public function onPreLogin(CasPreLoginEvent $event) {
     $flag = \Drupal::state()->get('cas_test.flag');
-    if ($flag === 'cancel without message') {
+    if ($flag === 'cancel login without message') {
       $event->cancelLogin();
     }
-    elseif ($flag === 'cancel with message') {
+    elseif ($flag === 'cancel login with message') {
       $event->cancelLogin('Cancelled with a custom message.');
     }
   }

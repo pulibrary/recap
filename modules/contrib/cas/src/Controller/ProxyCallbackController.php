@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Drupal\cas\Service\CasHelper;
 
 /**
- * Class ProxyCallbackController.
+ * Provides a controller for the 'cas.proxyCallback' route.
  */
 class ProxyCallbackController implements ContainerInjectionInterface {
 
@@ -68,7 +68,7 @@ class ProxyCallbackController implements ContainerInjectionInterface {
   public function callback() {
     $this->casHelper->log(LogLevel::DEBUG, 'Proxy callback processing started.');
 
-    // @TODO: Check that request is coming from configured CAS server to avoid
+    // @todo Check that request is coming from configured CAS server to avoid
     // filling up the table with bogus pgt values.
     $request = $this->requestStack->getCurrentRequest();
 
