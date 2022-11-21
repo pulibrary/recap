@@ -36,13 +36,6 @@ class ServiceControllerTest extends UnitTestCase {
   protected $casHelper;
 
   /**
-   * The mocked Request Stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack|\PHPUnit_Framework_MockObject_MockObject
-   */
-  protected $requestStack;
-
-  /**
    * The mocked CasValidator.
    *
    * @var \Drupal\cas\Service\CasValidator|\PHPUnit_Framework_MockObject_MockObject
@@ -129,7 +122,7 @@ class ServiceControllerTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp() : void {
     parent::setUp();
 
     $this->casValidator = $this->getMockBuilder('\Drupal\cas\Service\CasValidator')
@@ -153,7 +146,6 @@ class ServiceControllerTest extends UnitTestCase {
     ]);
     $this->token = $this->prophesize(Token::class);
     $this->casHelper = new CasHelper($this->configFactory, new LoggerChannelFactory(), $this->token->reveal());
-    $this->requestStack = $this->createMock('\Symfony\Component\HttpFoundation\RequestStack');
     $this->urlGenerator = $this->createMock('\Drupal\Core\Routing\UrlGeneratorInterface');
 
     $this->requestObject = new Request();
@@ -187,19 +179,15 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testSingleLogout($returnto) {
+  public function testSingleLogout($destination) {
     $this->setupRequestParameters(
-      // returnto.
-      $returnto,
+      // destination.
+      $destination,
       // logoutRequest.
       TRUE,
       // ticket.
       FALSE
     );
-
-    $this->requestStack->expects($this->once())
-      ->method('getCurrentRequest')
-      ->will($this->returnValue($this->requestObject));
 
     $this->casLogout->expects($this->once())
       ->method('handleSlo')
@@ -210,7 +198,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casValidator,
       $this->casUserManager,
       $this->casLogout,
-      $this->requestStack,
+      NULL,
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
@@ -219,7 +207,7 @@ class ServiceControllerTest extends UnitTestCase {
     );
     $serviceController->setStringTranslation($this->getStringTranslationStub());
 
-    $response = $serviceController->handle();
+    $response = $serviceController->handle($this->requestObject);
     $this->assertEquals(200, $response->getStatusCode());
     $this->assertEquals('', $response->getContent());
   }
@@ -229,30 +217,22 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testMissingTicketRedirectsHome($returnto) {
+  public function testMissingTicketRedirectsHome($destination) {
     $this->setupRequestParameters(
-      // returnto.
-      $returnto,
+      // destination.
+      $destination,
       // logoutRequest.
       FALSE,
       // ticket.
       FALSE
     );
 
-    $this->requestStack->expects($this->once())
-      ->method('getCurrentRequest')
-      ->will($this->returnValue($this->requestObject));
-
-    if ($returnto) {
-      $this->assertDestinationSetFromReturnTo();
-    }
-
     $serviceController = new ServiceController(
       $this->casHelper,
       $this->casValidator,
       $this->casUserManager,
       $this->casLogout,
-      $this->requestStack,
+      NULL,
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
@@ -269,27 +249,19 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testSuccessfulLogin($returnto) {
+  public function testSuccessfulLogin($destination) {
     $this->setupRequestParameters(
-      // returnto.
-      $returnto,
+      // destination.
+      $destination,
       // logoutRequest.
       FALSE,
       // ticket.
       TRUE
     );
 
-    $this->requestStack->expects($this->once())
-      ->method('getCurrentRequest')
-      ->will($this->returnValue($this->requestObject));
-
-    if ($returnto) {
-      $this->assertDestinationSetFromReturnTo();
-    }
-
     $validation_data = new CasPropertyBag('testuser');
 
-    $this->assertSuccessfulValidation($returnto);
+    $this->assertSuccessfulValidation($destination);
 
     // Login should be called.
     $this->casUserManager->expects($this->once())
@@ -301,7 +273,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casValidator,
       $this->casUserManager,
       $this->casLogout,
-      $this->requestStack,
+      NULL,
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
@@ -318,25 +290,17 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testSuccessfulLoginProxyEnabled($returnto) {
+  public function testSuccessfulLoginProxyEnabled($destination) {
     $this->setupRequestParameters(
-      // returnto.
-      $returnto,
+      // destination.
+      $destination,
       // logoutRequest.
       FALSE,
       // ticket.
       TRUE
     );
 
-    $this->requestStack->expects($this->once())
-      ->method('getCurrentRequest')
-      ->will($this->returnValue($this->requestObject));
-
-    if ($returnto) {
-      $this->assertDestinationSetFromReturnTo();
-    }
-
-    $this->assertSuccessfulValidation($returnto, TRUE);
+    $this->assertSuccessfulValidation($destination, TRUE);
 
     $validation_data = new CasPropertyBag('testuser');
     $validation_data->setPgt('testpgt');
@@ -360,7 +324,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casValidator,
       $this->casUserManager,
       $this->casLogout,
-      $this->requestStack,
+      NULL,
       $this->urlGenerator,
       $configFactory,
       $this->messenger,
@@ -377,19 +341,15 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testTicketValidationError($returnto) {
+  public function testTicketValidationError($destination) {
     $this->setupRequestParameters(
-      // returnto.
-      $returnto,
+      // destination.
+      $destination,
       // logoutRequest.
       FALSE,
       // ticket.
       TRUE
     );
-
-    $this->requestStack->expects($this->once())
-      ->method('getCurrentRequest')
-      ->will($this->returnValue($this->requestObject));
 
     // Validation should throw an exception.
     $this->casValidator->expects($this->once())
@@ -405,7 +365,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casValidator,
       $this->casUserManager,
       $this->casLogout,
-      $this->requestStack,
+      NULL,
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
@@ -422,21 +382,17 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testLoginError($returnto) {
+  public function testLoginError($destination) {
     $this->setupRequestParameters(
-      // returnto.
-      $returnto,
+      // destination.
+      $destination,
       // logoutRequest.
       FALSE,
       // ticket.
       TRUE
     );
 
-    $this->requestStack->expects($this->once())
-      ->method('getCurrentRequest')
-      ->will($this->returnValue($this->requestObject));
-
-    $this->assertSuccessfulValidation($returnto);
+    $this->assertSuccessfulValidation($destination);
 
     // Login should throw an exception.
     $this->casUserManager->expects($this->once())
@@ -448,7 +404,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casValidator,
       $this->casUserManager,
       $this->casLogout,
-      $this->requestStack,
+      NULL,
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
@@ -467,19 +423,15 @@ class ServiceControllerTest extends UnitTestCase {
    *
    * @dataProvider parameterDataProvider
    */
-  public function testEventListenerChangesCasUsername($returnto) {
+  public function testEventListenerChangesCasUsername($destination) {
     $this->setupRequestParameters(
-      // returnto.
-      $returnto,
+      // destonation.
+      $destination,
       // logoutRequest.
       FALSE,
       // ticket.
       TRUE
     );
-
-    $this->requestStack->expects($this->once())
-      ->method('getCurrentRequest')
-      ->will($this->returnValue($this->requestObject));
 
     $this->eventDispatcher
       ->dispatch(Argument::type('string'), Argument::type(Event::class))
@@ -510,14 +462,14 @@ class ServiceControllerTest extends UnitTestCase {
       $this->casValidator,
       $this->casUserManager,
       $this->casLogout,
-      $this->requestStack,
+      NULL,
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
       $this->eventDispatcher->reveal(),
       $this->externalAuth->reveal()
     );
-    $serviceController->handle();
+    $serviceController->handle($this->requestObject);
   }
 
   /**
@@ -539,7 +491,7 @@ class ServiceControllerTest extends UnitTestCase {
 
     \Drupal::setContainer($container_builder);
 
-    $response = $serviceController->handle();
+    $response = $serviceController->handle($this->requestObject);
     $this->assertTrue($response->isRedirect('/user/login'));
   }
 
@@ -552,9 +504,9 @@ class ServiceControllerTest extends UnitTestCase {
    */
   public function parameterDataProvider() {
     return [
-      // "returnto" not set.
+      // "destination" not set.
       [FALSE],
-      // "returnto" set.
+      // "destination" set.
       [TRUE],
     ];
   }
@@ -569,27 +521,17 @@ class ServiceControllerTest extends UnitTestCase {
       ->with('<front>')
       ->will($this->returnValue('http://example.com/front'));
 
-    $response = $serviceController->handle();
+    $response = $serviceController->handle($this->requestObject);
     $this->assertTrue($response->isRedirect('http://example.com/front'));
-  }
-
-  /**
-   * Assert that the destination query param is set when returnto is present.
-   */
-  private function assertDestinationSetFromReturnTo() {
-    $this->queryBag->expects($this->once())
-      ->method('set')
-      ->with('destination')
-      ->will($this->returnValue('node/1'));
   }
 
   /**
    * Asserts that validation is executed.
    */
-  private function assertSuccessfulValidation($returnto, $for_proxy = FALSE) {
+  private function assertSuccessfulValidation($destination, $for_proxy = FALSE) {
     $service_params = [];
-    if ($returnto) {
-      $service_params['returnto'] = 'node/1';
+    if ($destination) {
+      $service_params['destination'] = 'node/1';
     }
 
     $validation_data = new CasPropertyBag('testuser');
@@ -612,14 +554,14 @@ class ServiceControllerTest extends UnitTestCase {
    * FALSE. If it's TRUE, we also mock the "get" method for the appropriate
    * parameter bag to return some predefined value.
    *
-   * @param bool $returnto
-   *   If returnto param should be set.
+   * @param bool $destination
+   *   If destination param should be set.
    * @param bool $logout_request
    *   If logoutRequest param should be set.
    * @param bool $ticket
    *   If ticket param should be set.
    */
-  private function setupRequestParameters($returnto, $logout_request, $ticket) {
+  private function setupRequestParameters($destination, $logout_request, $ticket) {
     // Request params.
     $map = [
       ['logoutRequest', $logout_request],
@@ -640,7 +582,7 @@ class ServiceControllerTest extends UnitTestCase {
 
     // Query string params.
     $map = [
-      ['returnto', $returnto],
+      ['destination', $destination],
       ['ticket', $ticket],
     ];
     $this->queryBag->expects($this->any())
@@ -648,8 +590,8 @@ class ServiceControllerTest extends UnitTestCase {
       ->will($this->returnValueMap($map));
 
     $map = [];
-    if ($returnto === TRUE) {
-      $map[] = ['returnto', NULL, 'node/1'];
+    if ($destination === TRUE) {
+      $map[] = ['destination', NULL, 'node/1'];
     }
     if ($ticket === TRUE) {
       $map[] = ['ticket', NULL, 'ST-foobar'];
@@ -662,8 +604,8 @@ class ServiceControllerTest extends UnitTestCase {
 
     // Query string "all" method should include all params.
     $all = [];
-    if ($returnto) {
-      $all['returnto'] = 'node/1';
+    if ($destination) {
+      $all['destination'] = 'node/1';
     }
     if ($ticket) {
       $all['ticket'] = 'ST-foobar';

@@ -8,7 +8,7 @@ use Drupal\Core\Database\Connection;
 use Psr\Log\LogLevel;
 
 /**
- * Class CasLogout.
+ * Provides a default implementation for 'cas.logout' service.
  */
 class CasLogout {
 

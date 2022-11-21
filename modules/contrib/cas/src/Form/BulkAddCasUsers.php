@@ -3,12 +3,9 @@
 namespace Drupal\cas\Form;
 
 use Drupal\cas\Exception\CasLoginException;
-use Drupal\cas\Service\CasUserManager;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\node\Entity\Node;
-use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
 
 /**
@@ -121,10 +118,10 @@ class BulkAddCasUsers extends FormBase {
    *   The CAS username, which will also become the Drupal username.
    * @param array $roles
    *   An array of roles to assign to the user.
-   * @param array $context
-   *   The batch context array, passed by reference.
    * @param string $email_hostname
    *   The hostname to combine with the username to create the email address.
+   * @param array $context
+   *   The batch context array, passed by reference.
    */
   public static function userAdd($cas_username, array $roles, $email_hostname, array &$context) {
     $cas_user_manager = \Drupal::service('cas.user_manager');
@@ -143,11 +140,14 @@ class BulkAddCasUsers extends FormBase {
 
     try {
       /** @var \Drupal\user\UserInterface $user */
-      $user = $cas_user_manager->register($cas_username, $user_properties, $cas_username);
+      $user = $cas_user_manager->register($cas_username, $cas_username, $user_properties);
       $context['results']['messages']['created'][] = $user->toLink()->toString();
     }
     catch (CasLoginException $e) {
-      \Drupal::logger('cas')->error('CasLoginException when registering user with name %name: %e', ['%name' => $cas_username, '%e' => $e->getMessage()]);
+      \Drupal::logger('cas')->error('CasLoginException when registering user with name %name: %e', [
+        '%name' => $cas_username,
+        '%e' => $e->getMessage(),
+      ]);
       $context['results']['messages']['errors'][] = $cas_username;
       return;
     }
@@ -164,23 +164,20 @@ class BulkAddCasUsers extends FormBase {
     $messenger = \Drupal::messenger();
     if ($success) {
       if (!empty($results['messages']['errors'])) {
-        $messenger->addError(t(
-          'An error was encountered creating accounts for the following users (check logs for more details): %usernames',
-          ['%usernames' => implode(', ', $results['messages']['errors'])]
-        ));
+        $messenger->addError(t('An error was encountered creating accounts for the following users (check logs for more details): %usernames', [
+          '%usernames' => implode(', ', $results['messages']['errors']),
+        ]));
       }
       if (!empty($results['messages']['already_exists'])) {
-        $messenger->addError(t(
-          'The following accounts were not registered because existing accounts are already using the usernames: %usernames',
-          ['%usernames' => implode(', ', $results['messages']['already_exists'])]
-        ));
+        $messenger->addError(t('The following accounts were not registered because existing accounts are already using the usernames: %usernames', [
+          '%usernames' => implode(', ', $results['messages']['already_exists']),
+        ]));
       }
       if (!empty($results['messages']['created'])) {
         $userLinks = Markup::create(implode(', ', $results['messages']['created']));
-        $messenger->addStatus(t(
-          'Successfully created accounts for the following usernames: %usernames',
-          ['%usernames' => $userLinks]
-        ));
+        $messenger->addStatus(t('Successfully created accounts for the following usernames: %usernames', [
+          '%usernames' => $userLinks,
+        ]));
       }
     }
     else {

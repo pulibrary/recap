@@ -93,7 +93,7 @@ class CasUserManagerTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp() : void {
     parent::setUp();
     $this->externalAuth = $this->getMockBuilder('\Drupal\externalauth\ExternalAuth')
       ->disableOriginalConstructor()
@@ -156,7 +156,7 @@ class CasUserManagerTest extends UnitTestCase {
       ])
       ->getMock();
 
-    $this->assertNotEmpty($cas_user_manager->register('test', [], 'test'), 'Successfully registered user.');
+    $this->assertNotEmpty($cas_user_manager->register('test', 'test', []), 'Successfully registered user.');
   }
 
   /**
@@ -240,7 +240,7 @@ class CasUserManagerTest extends UnitTestCase {
       ->method('dispatch')
       ->willReturnCallback(function ($event_type, $event) {
         if ($event instanceof CasPreRegisterEvent) {
-          $event->setAllowAutomaticRegistration(FALSE);
+          $event->cancelAutomaticRegistration();
         }
       });
 
@@ -252,9 +252,78 @@ class CasUserManagerTest extends UnitTestCase {
       ->expects($this->never())
       ->method('userLoginFinalize');
 
-    $this->expectException('Drupal\cas\Exception\CasLoginException', 'Cannot register user, an event listener denied access.');
+    $this->expectException('Drupal\cas\Exception\CasLoginException');
+    $this->expectExceptionMessage('Cannot register user, an event listener denied access.');
 
     $cas_user_manager->login(new CasPropertyBag('test'), 'ticket');
+  }
+
+  /**
+   * Account doesn't exist, autoreg is on, and listener allows registration.
+   *
+   * @covers ::login
+   */
+  public function testUserNotFoundAndEventListenerAllowAutoRegistration() {
+    $config_factory = $this->getConfigFactoryStub([
+      'cas.settings' => [
+        'user_accounts.auto_register' => TRUE,
+        'user_accounts.email_assignment_strategy' => CasUserManager::EMAIL_ASSIGNMENT_STANDARD,
+        'user_accounts.email_hostname' => 'sample.com',
+        'user_accounts.email_attribute' => 'email',
+      ],
+    ]);
+
+    $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
+      ->setMethods(['storeLoginSessionData', 'randomPassword'])
+      ->setConstructorArgs([
+        $this->externalAuth,
+        $this->authmap,
+        $config_factory,
+        $this->session,
+        $this->connection,
+        $this->eventDispatcher,
+        $this->casHelper,
+        $this->casProxyHelper->reveal(),
+      ])
+      ->getMock();
+
+    $expected_assigned_email = 'test@sample.com';
+
+    $this->externalAuth
+      ->method('load')
+      ->willReturn(FALSE);
+
+    $this->account
+      ->method('isactive')
+      ->willReturn(TRUE);
+
+    $this->eventDispatcher
+      ->method('dispatch')
+      ->willReturnCallback(function ($event_type, $event) {
+        if ($event instanceof CasPreRegisterEvent) {
+          $event->allowAutomaticRegistration();
+        }
+      });
+
+    $this->externalAuth
+      ->expects($this->once())
+      ->method('register')
+      ->with('test', 'cas', [
+        'name' => 'test',
+        'mail' => $expected_assigned_email,
+        'pass' => NULL,
+      ])
+      ->willReturn($this->account);
+
+    $this->externalAuth
+      ->expects($this->once())
+      ->method('userLoginFinalize')
+      ->willReturn($this->account);
+
+    $cas_property_bag = new CasPropertyBag('test');
+    $cas_property_bag->setAttributes(['email' => 'test@sample.com']);
+
+    $cas_user_manager->login($cas_property_bag, 'ticket');
   }
 
   /**

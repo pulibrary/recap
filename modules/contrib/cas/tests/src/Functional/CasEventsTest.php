@@ -6,7 +6,7 @@ use Drupal\cas\CasPropertyBag;
 use Drupal\Tests\cas\Traits\CasTestTrait;
 
 /**
- * Class CasEventsTest.
+ * Tests CAS events.
  *
  * @group cas
  */
@@ -17,7 +17,7 @@ class CasEventsTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'cas', 'cas_mock_server', 'cas_test'];
+  protected static $modules = ['block', 'cas', 'cas_mock_server', 'cas_test'];
 
   /**
    * Tests we can use the CasPreRegisterEvent to alter user properties.
@@ -60,14 +60,41 @@ class CasEventsTest extends CasBrowserTestBase {
     $this->placeBlock('system_menu_block:account');
 
     // Check the case when the subscriber didn't set a reason message.
-    \Drupal::state()->set('cas_test.flag', 'cancel without message');
+    \Drupal::state()->set('cas_test.flag', 'cancel login without message');
     $this->casLogin('antoine@example.com', 'baTistE');
     $this->assertSession()->pageTextContains('You do not have access to log in to this website. Please contact a site administrator if you believe you should have access.');
     $this->assertSession()->linkExists('Log in');
 
     // Check the case when the subscriber has set a reason message.
-    \Drupal::state()->set('cas_test.flag', 'cancel with message');
+    \Drupal::state()->set('cas_test.flag', 'cancel login with message');
     $this->casLogin('antoine@example.com', 'baTistE');
+    $this->assertSession()->pageTextContains('Cancelled with a custom message.');
+    $this->assertSession()->linkExists('Log in');
+  }
+
+  /**
+   * Tests cancelling the login with auto register process from a subscriber.
+   */
+  public function testRegistrationCancelling(): void {
+    // Get auto register from cas settings.
+    $settings = $this->config('cas.settings');
+    $settings->set('user_accounts.auto_register', TRUE)->save();
+    // Add a CAS user.
+    $this->createCasUser('Antoine Batiste', 'antoine@example.com', 'baTistE', []);
+    // Place the login/logout block so that we can check if user is logged in.
+    $this->placeBlock('system_menu_block:account');
+
+    // Check the case when the subscriber didn't set a reason message.
+    \Drupal::state()->set('cas_test.flag', 'cancel register without message');
+    $this->casLogin('antoine@example.com', 'baTistE');
+
+    $this->assertSession()->pageTextContains('You do not have access to log in to this website. Please contact a site administrator if you believe you should have access.');
+    $this->assertSession()->linkExists('Log in');
+
+    // Check the case when the subscriber has set a reason message.
+    \Drupal::state()->set('cas_test.flag', 'cancel register with message');
+    $this->casLogin('antoine@example.com', 'baTistE');
+
     $this->assertSession()->pageTextContains('Cancelled with a custom message.');
     $this->assertSession()->linkExists('Log in');
   }

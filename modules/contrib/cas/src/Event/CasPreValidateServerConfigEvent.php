@@ -4,7 +4,6 @@ namespace Drupal\cas\Event;
 
 use Drupal\cas\CasServerConfig;
 use Symfony\Component\EventDispatcher\Event;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class CasPreValidateServerConfigEvent.
@@ -33,7 +32,13 @@ class CasPreValidateServerConfigEvent extends Event {
     $this->casServerConfig = $casServerConfig;
   }
 
-  public function getCasServerConfig() {
+  /**
+   * Returns the CAS server config.
+   *
+   * @return \Drupal\cas\CasServerConfig
+   *   The CAS server config.
+   */
+  public function getCasServerConfig(): CasServerConfig {
     return $this->casServerConfig;
   }
 

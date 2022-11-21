@@ -17,7 +17,7 @@ use Psr\Log\LogLevel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Class CasValidator.
+ * The CAS ticket validator service.
  */
 class CasValidator {
 

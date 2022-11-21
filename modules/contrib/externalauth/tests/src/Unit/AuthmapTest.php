@@ -19,14 +19,14 @@ class AuthmapTest extends UnitTestCase {
   /**
    * The mocked database connection.
    *
-   * @var \Drupal\Core\Database\Connection|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Database\Connection|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $connection;
 
   /**
    * Mock statement.
    *
-   * @var \Drupal\Core\Database\Statement|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Database\Statement|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $statement;
 
@@ -47,7 +47,7 @@ class AuthmapTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create a Mock database connection object.

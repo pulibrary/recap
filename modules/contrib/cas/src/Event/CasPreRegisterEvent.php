@@ -58,6 +58,13 @@ class CasPreRegisterEvent extends Event {
   protected $propertyValues = [];
 
   /**
+   * Contains the reason of registration cancellation.
+   *
+   * @var \Drupal\Component\Render\MarkupInterface|string|null
+   */
+  protected $cancelRegistrationReason;
+
+  /**
    * Contructor.
    *
    * @param \Drupal\cas\CasPropertyBag $cas_property_bag
@@ -103,13 +110,20 @@ class CasPreRegisterEvent extends Event {
    *
    * @param bool $allow_automatic_registration
    *   TRUE to allow auto registration, FALSE to deny it.
+   *
+   * @deprecated in cas:2.0.0 and is removed from cas:3.0.0. Instead, use
+   *   \Drupal\cas\Event\CasPreRegisterEvent::allowAutomaticRegistration() or
+   *   \Drupal\cas\Event\CasPreRegisterEvent::cancelAutomaticRegistration().
+   *
+   * @see https://www.drupal.org/project/cas/issues/3221111
    */
   public function setAllowAutomaticRegistration($allow_automatic_registration) {
+    @trigger_error('CasPreRegisterEvent::setAllowAutomaticRegistration() is deprecated in cas:2.0.0 and is removed from cas:3.0.0. Instead, use \Drupal\cas\Event\CasPreRegisterEvent::allowAutomaticRegistration() or \Drupal\cas\Event\CasPreRegisterEvent::cancelAutomaticRegistration(). See https://www.drupal.org/project/cas/issues/3221111', E_USER_DEPRECATED);
     if ($allow_automatic_registration) {
-      $this->allowAutomaticRegistration = TRUE;
+      $this->allowAutomaticRegistration();
     }
     else {
-      $this->allowAutomaticRegistration = FALSE;
+      $this->cancelAutomaticRegistration();
     }
   }
 
@@ -153,6 +167,42 @@ class CasPreRegisterEvent extends Event {
    */
   public function setPropertyValues(array $property_values) {
     $this->propertyValues = array_merge($this->propertyValues, $property_values);
+  }
+
+  /**
+   * Returns the reason of the registration cancellation.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface|string|null
+   *   The reason of registration cancellation.
+   */
+  public function getCancelRegistrationReason() {
+    return $this->cancelRegistrationReason;
+  }
+
+  /**
+   * Allows automatic registration.
+   *
+   * @return $this
+   */
+  public function allowAutomaticRegistration(): self {
+    // Activate the allow automatic registration.
+    $this->allowAutomaticRegistration = TRUE;
+    $this->cancelRegistrationReason = NULL;
+    return $this;
+  }
+
+  /**
+   * Cancels automatic registration.
+   *
+   * @param \Drupal\Component\Render\MarkupInterface|string|null $reason
+   *   The reason of automatic cancellation property to set.
+   */
+  public function cancelAutomaticRegistration($reason = NULL): self {
+    // Set the reason code into the property.
+    $this->cancelRegistrationReason = $reason;
+    // Deactivate the allow automatic registration.
+    $this->allowAutomaticRegistration = FALSE;
+    return $this;
   }
 
 }

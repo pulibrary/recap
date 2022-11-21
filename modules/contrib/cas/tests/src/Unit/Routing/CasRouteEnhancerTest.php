@@ -39,7 +39,7 @@ class CasRouteEnhancerTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp() : void {
     parent::setUp();
 
     $this->casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')

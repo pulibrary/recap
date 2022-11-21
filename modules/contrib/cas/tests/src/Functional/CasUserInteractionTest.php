@@ -18,7 +18,7 @@ class CasUserInteractionTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'cas',
     'cas_mock_server',
@@ -28,7 +28,7 @@ class CasUserInteractionTest extends CasBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create a local user.

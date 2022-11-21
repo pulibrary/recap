@@ -56,31 +56,34 @@ function cas_form_user_form_alter(&$form, FormStateInterface $form_state, $form_
 
   $cas_user_manager = \Drupal::service('cas.user_manager');
   $account = $form_state->getFormObject()->getEntity();
-  $cas_username = $cas_user_manager->getCasUsernameForAccount($account->id());
+  if (!$account->isNew()) {
+    $cas_username = $cas_user_manager->getCasUsernameForAccount($account->id());
 
-  // If a CAS username was found for this user, then populate the CAS username
-  // form field with its current value. Also remove the password management
-  // fields if configured to do so.
-  if ($cas_username) {
-    $form['account']['cas_enabled']['#default_value'] = TRUE;
-    $form['account']['cas_username']['#default_value'] = $cas_username;
+    // If a CAS username was found for this user, then populate the CAS username
+    // form field with its current value. Also remove the password management
+    // fields if configured to do so.
+    if ($cas_username) {
+      $form['account']['cas_enabled']['#default_value'] = TRUE;
+      $form['account']['cas_username']['#default_value'] = $cas_username;
 
-    if (!\Drupal::currentUser()->hasPermission('administer users')) {
-      if (\Drupal::config('cas.settings')->get('user_accounts.restrict_password_management')) {
-        $form['account']['pass']['#access'] = FALSE;
+      if (!\Drupal::currentUser()->hasPermission('administer users')) {
+        if (\Drupal::config('cas.settings')->get('user_accounts.restrict_password_management')) {
+          $form['account']['pass']['#access'] = FALSE;
 
-        // Users are normally required to entier their current password when
-        // changing their password or email address. Since we are disabling
-        // access to change their password, and since a CAS user would not know
-        // their local Drupal password anyway, we remove this field as well.
-        if (isset($form['account']['current_pass'])) {
-          $form['account']['current_pass']['#access'] = FALSE;
+          // Users are normally required to entier their current password when
+          // changing their password or email address. Since we are disabling
+          // access to change their password, and since a CAS user would not
+          // know their local Drupal password anyway, we remove this field as
+          // well.
+          if (isset($form['account']['current_pass'])) {
+            $form['account']['current_pass']['#access'] = FALSE;
+          }
         }
-      }
 
-      if (\Drupal::config('cas.settings')->get('user_accounts.restrict_email_management')) {
-        if (isset($form['account']['mail'])) {
-          $form['account']['mail']['#disabled'] = TRUE;
+        if (\Drupal::config('cas.settings')->get('user_accounts.restrict_email_management')) {
+          if (isset($form['account']['mail'])) {
+            $form['account']['mail']['#disabled'] = TRUE;
+          }
         }
       }
     }
@@ -166,7 +169,7 @@ function _cas_add_cas_username_to_user_form(array &$form) {
 function _cas_user_form_validate(array &$form, FormStateInterface $form_state) {
   // Verify that it was the save / register button that was clicked. We don't
   // want to run our validation if this was for a 'cancel account' action.
-  if (in_array('::save', $form_state->getTriggeringElement()['#submit'])) {
+  if (in_array('::save', $form_state->getSubmitHandlers())) {
     // If the CAS enabled checkbox was checked, then ensure that the CAS
     // username field is not empty.
     if ($form_state->getValue('cas_enabled') && empty($form_state->getValue('cas_username'))) {
@@ -204,7 +207,7 @@ function _cas_user_form_submit(array $form, FormStateInterface $form_state) {
   if ($form_state->getValue('cas_username') && $form_state->getValue('cas_enabled')) {
     $cas_user_manager->setCasUsernameForAccount($account, $form_state->getValue('cas_username'));
   }
-  else {
+  elseif ($account->id() && $cas_user_manager->getCasUsernameForAccount($account->id())) {
     $cas_user_manager->removeCasUsernameForAccount($account);
   }
 }

@@ -49,7 +49,7 @@ class DenyCas implements ResponsePolicyInterface {
    */
   public function check(Response $response, Request $request) {
     $config = $this->configFactory->get('cas.settings');
-    if ($config->get('gateway.check_frequency') !== CasHelper::CHECK_NEVER) {
+    if ($config->get('gateway.enabled') && $config->get('gateway.method') === CasHelper::GATEWAY_SERVER_SIDE) {
       // User can indicate specific paths to enable (or disable) gateway mode.
       $condition = $this->conditionManager->createInstance('request_path');
       $condition->setConfiguration($config->get('gateway.paths'));

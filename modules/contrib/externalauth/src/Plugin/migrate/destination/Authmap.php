@@ -72,7 +72,7 @@ class Authmap extends DestinationBase implements ContainerFactoryPluginInterface
   /**
    * {@inheritdoc}
    */
-  public function getIds() {
+  public function getIds(): array {
     return [
       'uid' => [
         'type' => 'integer',
@@ -83,7 +83,7 @@ class Authmap extends DestinationBase implements ContainerFactoryPluginInterface
   /**
    * {@inheritdoc}
    */
-  public function fields(MigrationInterface $migration = NULL) {
+  public function fields(MigrationInterface $migration = NULL): array {
     return [
       'uid' => 'Primary key: users.uid for user.',
       'provider' => 'The name of the authentication provider providing the authname',
@@ -94,7 +94,7 @@ class Authmap extends DestinationBase implements ContainerFactoryPluginInterface
   /**
    * {@inheritdoc}
    */
-  public function import(Row $row, array $old_destination_id_values = []) {
+  public function import(Row $row, array $old_destination_id_values = []): array {
     /** @var \Drupal\user\UserInterface $account */
     $account = $this->userStorage->load($row->getDestinationProperty('uid'));
     $provider = $row->getDestinationProperty('provider');
