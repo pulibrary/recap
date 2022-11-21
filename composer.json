@@ -23,6 +23,7 @@
         "drupal/health_check": "^1.2",
         "drupal/juicebox": "^3.0@alpha",
         "drupal/libraries": "^3.0@alpha",
+        "drupal/profile_switcher": "^1.0@alpha",
         "drupal/twitter_block": "^3",
         "drupal/upgrade_status": "^3.4",
         "drush/drush": "^10.2"
