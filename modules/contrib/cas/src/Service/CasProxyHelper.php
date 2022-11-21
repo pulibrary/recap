@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Drupal\Core\Database\Connection;
 
 /**
- * Class CasProxyHelper.
+ * Default implementation of 'cas.proxy_helper' service.
  */
 class CasProxyHelper {
 
@@ -85,7 +85,7 @@ class CasProxyHelper {
    *   The fully formatted URL.
    */
   private function getServerProxyUrl($target_service) {
-    // TODO: Consider allowing the config to be altered.
+    // @todo Consider allowing the config to be altered.
     $casServerConfig = CasServerConfig::createFromModuleConfig($this->settings);
     $url = $casServerConfig->getServerBaseUrl() . 'proxy';
     $params = [];
@@ -116,7 +116,7 @@ class CasProxyHelper {
     $cas_url = $this->getServerProxyUrl($target_service);
     try {
       $this->casHelper->log(LogLevel::DEBUG, "Retrieving proxy ticket from %cas_url", ['%cas_url' => $cas_url]);
-      // TODO: Consider allowing the config to be altered.
+      // @todo Consider allowing the config to be altered.
       $casServerConfig = CasServerConfig::createFromModuleConfig($this->settings);
       $casServerConnectionOptions = $casServerConfig->getCasServerGuzzleConnectionOptions();
       $response = $this->httpClient->get($cas_url, $casServerConnectionOptions);
@@ -173,7 +173,10 @@ class CasProxyHelper {
     $cookie_jar = new CookieJar();
     try {
       $this->casHelper->log(LogLevel::DEBUG, "Contacting service: %service", ['%service' => $service_url]);
-      $this->httpClient->get($service_url, ['cookies' => $cookie_jar, 'timeout' => $this->settings->get('advanced.connection_timeout')]);
+      $this->httpClient->get($service_url, [
+        'cookies' => $cookie_jar,
+        'timeout' => $this->settings->get('advanced.connection_timeout'),
+      ]);
     }
     catch (ClientException $e) {
       throw new CasProxyException($e->getMessage());

@@ -42,12 +42,18 @@ cas.settings:
       type: mapping
       label: 'Gateway Feature'
       mapping:
-        check_frequency:
+        enabled:
+          type: boolean
+          label: 'Enabled'
+        recheck_time:
           type: integer
-          label: 'Check Frequency'
+          label: 'Recheck time'
         paths:
           type: condition.plugin.request_path
           label: 'Paths'
+        method:
+          type: string
+          label: 'Method'
     forced_login:
       type: mapping
       label: 'Forced Login'

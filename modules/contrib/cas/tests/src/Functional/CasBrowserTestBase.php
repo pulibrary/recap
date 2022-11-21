@@ -13,7 +13,7 @@ abstract class CasBrowserTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['cas'];
+  protected static $modules = ['cas'];
 
   /**
    * {@inheritdoc}

@@ -142,8 +142,7 @@ To enable this behavior, enable the r4032login module and configure it as such:
 
 1. Check the "Redirect user to the page they tried to access after login"
    checkbox
-1. Set the "Path to user login form" to "/cas"
-1. Set the "Destination parameter override" to "returnto"
+1. Set the "Path to user login form" to "/caslogin"
 
 
 ## Proxy
@@ -194,6 +193,6 @@ object.
 It is often useful to provide a login link on your site that, when clicked,
 will authenticate users via CAS and then return them to a specific page.
 
-You can use the special "returnto" parameter to accomplish this:
+You can use the standard Drupal "destination" parameter to accomplish this:
 
-https://yoursite.com/cas?returnto=/node/1
+https://yoursite.com/caslogin?destination=/node/1

@@ -67,7 +67,7 @@ class CasProtectedUserFieldConstraintValidator extends ProtectedUserFieldConstra
     // management and if the user being validated is a CAS user.
     if (!empty($items)) {
       $account = $items->getEntity();
-      if ($account && $this->restrictedPasswordManagement && !empty($this->casUserManager->getCasUsernameForAccount($account->id()))) {
+      if ($account->id() !== NULL && $this->restrictedPasswordManagement && !empty($this->casUserManager->getCasUsernameForAccount($account->id()))) {
         return;
       }
     }

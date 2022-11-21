@@ -11,7 +11,7 @@ use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Class CasHelper.
+ * Utility and helper methods.
  */
 class CasHelper {
 
@@ -35,27 +35,6 @@ class CasHelper {
    * @var int
    */
   const CA_NONE = 2;
-
-  /**
-   * Gateway config: never check preemptively to see if the user is logged in.
-   *
-   * @var int
-   */
-  const CHECK_NEVER = -2;
-
-  /**
-   * Gateway config: check once per session to see if the user is logged in.
-   *
-   * @var int
-   */
-  const CHECK_ONCE = -1;
-
-  /**
-   * Gateway config: check on every page load to see if the user is logged in.
-   *
-   * @var int
-   */
-  const CHECK_ALWAYS = 0;
 
   /**
    * Event type identifier for the CasPreUserLoadEvent.
@@ -115,6 +94,30 @@ class CasHelper {
    * Event type identifier for events fired after login has completed.
    */
   const EVENT_POST_LOGIN = 'cas.post_login';
+
+  /**
+   * Indicates gateway redirect performed server-side.
+   */
+  const GATEWAY_SERVER_SIDE = 'server_side';
+
+  /**
+   * Indicates gateway redirect performed client-side.
+   */
+  const GATEWAY_CLIENT_SIDE = 'client_side';
+
+  /**
+   * A list of routes we should never trigger CAS login redirect on.
+   */
+  const IGNOREABLE_AUTO_LOGIN_ROUTES = [
+    'cas.service',
+    'cas.proxyCallback',
+    'cas.login',
+    'cas.legacy_login',
+    'cas.logout',
+    'system.cron',
+    'user.logout',
+    'user.logout.http',
+  ];
 
   /**
    * Stores settings object.
@@ -178,28 +181,35 @@ class CasHelper {
   /**
    * Converts a "returnto" query param to a "destination" query param.
    *
-   * The original service URL for CAS server may contain a "returnto" query
-   * parameter that was placed there to redirect a user to specific page after
-   * logging in with CAS.
+   * This method is used in support of the deprecated method for creating CAS
+   * login links that return users to a specific page after login,
+   * e.g. /cas?returnto=/some/page.
    *
-   * Drupal has a built in mechanism for doing this, by instead using a
-   * "destination" parameter in the URL. Anytime there's a RedirectResponse
-   * returned, RedirectResponseSubscriber looks for the destination param and
-   * will redirect a user there instead.
+   * Since version 2.0.0, using the "returnto" query param for this purpose
+   * is deprecated and will be removed in version 3.0.0.
    *
-   * We cannot use this built in method when constructing the service URL,
-   * because when we redirect to the CAS server for login, Drupal would see
-   * our destination parameter in the URL and redirect there instead of CAS.
+   * It has since been replaced with Drupal's standard method of redirecting
+   * users to some page after an action via the "destination" query param,
+   * e.g. /cas?destination=/some/page.
    *
-   * However, when we redirect the user after a login success/failure, we can
-   * then convert it back to a "destination" parameter and let Drupal do it's
-   * thing when redirecting.
+   * Note that, even deprecated, "returnto" takes precedence over "destination",
+   * if both are passed as query parameters, in order to ensure backwards
+   * compatibility.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The Symfony request object.
+   *
+   * @deprecated in cas:2.0.0 and is removed from cas:3.0.0. No replacement is
+   *   provided.
+   *
+   * @see https://www.drupal.org/node/3231208
    */
   public function handleReturnToParameter(Request $request) {
+    // Convert the "returnto" parameter to "destination" so that core's
+    // RedirectResponseSubscriber can take over and actually redirect the user
+    // to that location if set.
     if ($request->query->has('returnto')) {
+      @trigger_error("Using the 'returnto' query parameter in order to redirect to a destination after login is deprecated in cas:2.0.0 and removed from cas:3.0.0. Use 'destination' query parameter instead. See https://www.drupal.org/node/3231208", E_USER_DEPRECATED);
       $this->log(LogLevel::DEBUG, "Converting query parameter 'returnto' to 'destination'.");
       $request->query->set('destination', $request->query->get('returnto'));
     }

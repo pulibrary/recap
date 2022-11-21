@@ -3,7 +3,7 @@
 namespace Drupal\cas\Exception;
 
 /**
- * Class CasLoginException.
+ * Exception occurring on login failure.
  */
 class CasLoginException extends \Exception {
 
@@ -40,7 +40,7 @@ class CasLoginException extends \Exception {
   /**
    * A user message when login failed on a subscriber cancellation.
    *
-   * @var \Drupal\Component\Render\MarkupInterface|string;
+   * @var \Drupal\Component\Render\MarkupInterface|string
    */
   protected $subscriberCancelReason;
 
@@ -53,7 +53,8 @@ class CasLoginException extends \Exception {
    * @return $this
    */
   public function setSubscriberCancelReason($reason) {
-    if ($this->getCode() === self::SUBSCRIBER_DENIED_LOGIN) {
+    $code = $this->getCode();
+    if ($code === self::SUBSCRIBER_DENIED_LOGIN || $code === self::SUBSCRIBER_DENIED_REG) {
       $this->subscriberCancelReason = $reason;
     }
     return $this;

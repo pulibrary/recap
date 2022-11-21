@@ -55,6 +55,32 @@ function externalauth_views_data() {
         'id' => 'string',
       ],
     ],
+    'uid' => [
+      'title' => t('Drupal User ID'),
+      'help' => t('The user linked to the authname.'),
+      'relationship' => [
+        'base' => 'users_field_data',
+        'base field' => 'uid',
+        'id' => 'standard',
+        'label' => t('Linked Drupal user'),
+      ],
+      'field' => [
+        'id' => 'numeric',
+      ],
+      'filter' => [
+        'id' => 'numeric',
+      ],
+      'sort' => [
+        'id' => 'standard',
+      ],
+    ],
+    'delete_link' => [
+      'title' => t('Link to delete @label entry', ['@label' => 'authmap']),
+      'help' => t('Provide a link to delete the @label entry.', ['@label' => 'authmap']),
+      'field' => [
+        'id' => 'authmap_link_delete',
+      ],
+    ],
   ];
 
   return $data;

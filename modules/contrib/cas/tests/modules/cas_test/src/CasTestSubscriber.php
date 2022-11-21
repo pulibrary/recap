@@ -4,21 +4,24 @@ namespace Drupal\cas_test;
 
 use Drupal\cas\Event\CasPreLoginEvent;
 use Drupal\cas\Event\CasPreRegisterEvent;
+use Drupal\cas\Event\CasPreValidateEvent;
 use Drupal\cas\Service\CasHelper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Class CasTestSubscriber.
+ * Subscribes to pre-login and pre-register events.
  */
 class CasTestSubscriber implements EventSubscriberInterface {
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
-    $events[CasHelper::EVENT_PRE_REGISTER][] = ['onPreRegister', 0];
-    $events[CasHelper::EVENT_PRE_LOGIN][] = ['onPreLogin', 0];
-    return $events;
+  public static function getSubscribedEvents(): array {
+    return [
+      CasHelper::EVENT_PRE_REGISTER => 'onPreRegister',
+      CasHelper::EVENT_PRE_LOGIN => 'onPreLogin',
+      CasHelper::EVENT_PRE_VALIDATE => 'onPreValidate',
+    ];
   }
 
   /**
@@ -27,25 +30,48 @@ class CasTestSubscriber implements EventSubscriberInterface {
    * @param \Drupal\cas\Event\CasPreRegisterEvent $event
    *   The event.
    */
-  public function onPreRegister(CasPreRegisterEvent $event) {
+  public function onPreRegister(CasPreRegisterEvent $event): void {
     // Add a prefix of "testing_" to the CAS username.
     $username = $event->getDrupalUsername();
     $new_username = 'testing_' . $username;
     $event->setDrupalUsername($new_username);
+
+    $flag = \Drupal::state()->get('cas_test.flag');
+    if ($flag === 'cancel register without message') {
+      $event->cancelAutomaticRegistration();
+    }
+    elseif ($flag === 'cancel register with message') {
+      $event->cancelAutomaticRegistration('Cancelled with a custom message.');
+    }
   }
 
   /**
    * Cancels the login.
    *
    * @param \Drupal\cas\Event\CasPreLoginEvent $event
+   *   The event.
    */
-  public function onPreLogin(CasPreLoginEvent $event) {
+  public function onPreLogin(CasPreLoginEvent $event): void {
     $flag = \Drupal::state()->get('cas_test.flag');
-    if ($flag === 'cancel without message') {
+    if ($flag === 'cancel login without message') {
       $event->cancelLogin();
     }
-    elseif ($flag === 'cancel with message') {
+    elseif ($flag === 'cancel login with message') {
       $event->cancelLogin('Cancelled with a custom message.');
+    }
+  }
+
+  /**
+   * Triggers ticket validation failure.
+   *
+   * @param \Drupal\cas\Event\CasPreValidateEvent $event
+   *   The pre-validate event.
+   *
+   * @see \Drupal\Tests\cas\Functional\CasPostLoginDestinationTest::testCachedRedirect()
+   */
+  public function onPreValidate(CasPreValidateEvent $event): void {
+    if (\Drupal::state()->get('cas_test.enable_ticket_validation_failure')) {
+      $event->setValidationPath('invalid/ticket/validation/path');
     }
   }
 

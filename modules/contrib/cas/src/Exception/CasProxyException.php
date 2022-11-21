@@ -3,7 +3,7 @@
 namespace Drupal\cas\Exception;
 
 /**
- * Class CasProxyException.
+ * Extends \Exception.
  */
 class CasProxyException extends \Exception {
 }
