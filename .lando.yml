@@ -2,14 +2,14 @@ name: recap
 recipe: drupal9
 config:
   php: '8.1'
+  via: nginx
   webroot: .
-  composer_version: '2.0.12'
 services:
   appserver:
     build:
       - composer install
   node:
-    type: 'node:6.15'
+    type: node
     globals:
       gulp-cli: latest
 tooling:

@@ -168,6 +168,24 @@ class DrupalSelenium2Driver extends Selenium2Driver {
     $not_clickable_exception = NULL;
     $result = $this->waitFor(10, function () use (&$not_clickable_exception, $xpath, $value) {
       try {
+        // \Behat\Mink\Driver\Selenium2Driver::setValue() will call .blur() on
+        // the element, modify that to trigger the "input" and "change" events
+        // instead. They indicate the value has changed, rather than implying
+        // user focus changes.
+        $this->executeJsOnXpath($xpath, <<<JS
+var node = {{ELEMENT}};
+var original = node.blur;
+node.blur = function() {
+  node.dispatchEvent(new Event("input", {bubbles:true}));
+  node.dispatchEvent(new Event("change", {bubbles:true}));
+  // Do not wait for the debounce, which only triggers the 'formUpdated` event
+  // up to once every 0.3 seconds. In tests, no humans are typing, hence there
+  // is no need to debounce.
+  // @see Drupal.behaviors.formUpdated
+  node.dispatchEvent(new Event("formUpdated", {bubbles:true}));
+  node.blur = original;
+};
+JS);
         parent::setValue($xpath, $value);
         return TRUE;
       }
@@ -212,6 +230,26 @@ class DrupalSelenium2Driver extends Selenium2Driver {
     } while (microtime(TRUE) < $end);
 
     return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function dragTo($sourceXpath, $destinationXpath) {
+    // Ensure both the source and destination exist at this point.
+    $this->getWebDriverSession()->element('xpath', $sourceXpath);
+    $this->getWebDriverSession()->element('xpath', $destinationXpath);
+
+    try {
+      parent::dragTo($sourceXpath, $destinationXpath);
+    }
+    catch (Exception $e) {
+      // Do not care if this fails for any reason. It is a source of random
+      // fails. The calling code should be doing assertions on the results of
+      // dragging anyway. See upstream issues:
+      // - https://github.com/minkphp/MinkSelenium2Driver/issues/97
+      // - https://github.com/minkphp/MinkSelenium2Driver/issues/51
+    }
   }
 
 }
