@@ -56,8 +56,8 @@
 1. `lando start`
 1. `cp drush/sites/example.site.yml drush/sites/recap.site.yml`
 1. Uncomment the alias blocks and adjust the config values in the  `drush/sites/recap.site.yml` file to match the current remote and local drupal environments.
-1. `lando drush @recap.prod sql-dump --structure-tables-list='watchdog,sessions,cas_data_login,history,captcha_sessions,cache,cache_*' --result-file=/tmp/dump.sql; scp pulsys@recap-www-prod1:/tmp/dump.sql .`
-1. `lando db-import dump.sql`
+1. `bundle exec cap production database_dump; // this will produce a datestamped dump file in the format "backup-YYYY-MM-DD-{environment}.sql.gz".
+1. `lando db-import backup-YYYY-MM-DD-{environment}.sql.gz`
 1. `lando drush rsync @recap.prod:%files @recap.local:%files`
 1. Copy the hash following `config_` in `sites/default/files`. Add value to `$settings['hash_salt']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
     ```

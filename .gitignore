@@ -29,4 +29,7 @@ simpletest
 
 # Ignore node modules
 node_modules
-dump.sql
+
+# don't commit db dumps
+*.sql
+*.sql.gz
