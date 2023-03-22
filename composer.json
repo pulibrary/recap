@@ -13,9 +13,9 @@
     "require": {
         "composer/installers": "^1.9",
         "drupal/cas": "^2.0",
-        "drupal/core-composer-scaffold": "9.4.10",
-        "drupal/core-project-message": "9.4.10",
-        "drupal/core-recommended": "9.4.10",
+        "drupal/core-composer-scaffold": "9.4.12",
+        "drupal/core-project-message": "9.4.12",
+        "drupal/core-recommended": "9.4.12",
         "drupal/core-vendor-hardening": "^9.0.0",
         "drupal/editor_file": "^1.5",
         "drupal/externalauth": "^2.0",
