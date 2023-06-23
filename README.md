@@ -51,12 +51,12 @@
     $settings['install_profile'] = 'standard';
     ```
 1. `mkdir .ssh` # excluded from version control
-1. `cp $HOME/.ssh/id_rsa .ssh/.`
-1. `cp $HOME/.ssh/id_rsa.pub .ssh/.` // key should be registered in princeton_ansible deploy role
+1. `cp $HOME/.ssh/id_ed25519 .ssh/.`
+1. `cp $HOME/.ssh/id_ed25519.pub .ssh/.` // key should be registered in princeton_ansible deploy role
 1. `lando start`
 1. `cp drush/sites/example.site.yml drush/sites/recap.site.yml`
 1. Uncomment the alias blocks and adjust the config values in the  `drush/sites/recap.site.yml` file to match the current remote and local drupal environments.
-1. `bundle exec cap production database_dump; // this will produce a datestamped dump file in the format "backup-YYYY-MM-DD-{environment}.sql.gz".
+1. `bundle exec cap production database_dump` // this will produce a datestamped dump file in the format "backup-YYYY-MM-DD-{environment}.sql.gz".
 1. `lando db-import backup-YYYY-MM-DD-{environment}.sql.gz`
 1. `lando drush rsync @recap.prod:%files @recap.local:%files`
 1. Copy the hash following `config_` in `sites/default/files`. Add value to `$settings['hash_salt']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
