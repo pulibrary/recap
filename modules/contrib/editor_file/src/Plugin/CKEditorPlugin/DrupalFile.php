@@ -6,6 +6,7 @@ use Drupal\ckeditor\CKEditorPluginBase;
 use Drupal\ckeditor\CKEditorPluginConfigurableInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\editor\Entity\Editor;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Defines the "drupalfile" plugin.
@@ -18,11 +19,13 @@ use Drupal\editor\Entity\Editor;
  */
 class DrupalFile extends CKEditorPluginBase implements CKEditorPluginConfigurableInterface {
 
+  use StringTranslationTrait;
+
   /**
    * {@inheritdoc}
    */
   public function getFile() {
-    return drupal_get_path('module', 'editor_file') . '/js/plugins/drupalfile/plugin.js';
+    return \Drupal::service('extension.list.module')->getPath('editor_file') . '/js/plugins/drupalfile/plugin.js';
   }
 
   /**
@@ -39,8 +42,8 @@ class DrupalFile extends CKEditorPluginBase implements CKEditorPluginConfigurabl
    */
   public function getConfig(Editor $editor) {
     return [
-      'drupalFile_dialogTitleAdd' => t('Add File'),
-      'drupalFile_dialogTitleEdit' => t('Edit File'),
+      'drupalFile_dialogTitleAdd' => $this->t('Add File'),
+      'drupalFile_dialogTitleEdit' => $this->t('Edit File'),
     ];
   }
 
@@ -48,10 +51,10 @@ class DrupalFile extends CKEditorPluginBase implements CKEditorPluginConfigurabl
    * {@inheritdoc}
    */
   public function getButtons() {
-    $path = drupal_get_path('module', 'editor_file') . '/js/plugins/drupalfile';
+    $path = \Drupal::service('extension.list.module')->getPath('editor_file') . '/js/plugins/drupalfile';
     return [
       'DrupalFile' => [
-        'label' => t('File'),
+        'label' => $this->t('File'),
         'image' => $path . '/file.png',
       ],
     ];
@@ -67,7 +70,9 @@ class DrupalFile extends CKEditorPluginBase implements CKEditorPluginConfigurabl
     $form_state->loadInclude('editor_file', 'admin.inc');
     $form['file_upload'] = editor_file_upload_settings_form($editor);
     $form['file_upload']['#attached']['library'][] = 'editor_file/drupal.ckeditor.drupalfile.admin';
-    $form['file_upload']['#element_validate'][] = [$this, 'validateFileUploadSettings'];
+    $form['file_upload']['#element_validate'][] = [
+      $this, 'validateFileUploadSettings',
+    ];
     return $form;
   }
 

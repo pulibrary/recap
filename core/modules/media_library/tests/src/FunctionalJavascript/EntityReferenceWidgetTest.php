@@ -22,6 +22,13 @@ class EntityReferenceWidgetTest extends MediaLibraryTestBase {
   protected static $modules = ['field_ui'];
 
   /**
+   * The theme to install as the default for testing.
+   *
+   * @var string
+   */
+  protected $defaultTheme = 'starterkit_theme';
+
+  /**
    * Test media items.
    *
    * @var \Drupal\media\MediaInterface[]
@@ -591,8 +598,7 @@ JS;
 
     // Assert that preview is present for current user, who can view media.
     $this->drupalGet($node->toUrl('edit-form'));
-    $preview_name = $page->find('css', '[data-drupal-selector="edit-field-unlimited-media-selection-0"] .media-library-item__name');
-    $this->assertSame('Horse', $preview_name->getText());
+    $assert_session->elementTextContains('css', '[data-drupal-selector="edit-field-unlimited-media-selection-0"]', 'Horse');
     $remove_button = $page->find('css', '[data-drupal-selector="edit-field-unlimited-media-selection-0-remove-button"]');
     $this->assertSame('Remove Horse', $remove_button->getAttribute('aria-label'));
     $assert_session->pageTextNotContains('You do not have permission to view media item');
@@ -618,8 +624,7 @@ JS;
     // Assert that preview does not reveal media name.
     $this->drupalGet($node->toUrl('edit-form'));
     // There should be no preview name.
-    $preview_name = $page->find('css', '[data-drupal-selector="edit-field-unlimited-media-selection-0"] .media-library-item__name');
-    $this->assertNull($preview_name);
+    $assert_session->elementTextNotContains('css', '[data-drupal-selector="edit-field-unlimited-media-selection-0"]', 'Horse');
     // The remove button should have a generic message.
     $remove_button = $page->find('css', '[data-drupal-selector="edit-field-unlimited-media-selection-0-remove-button"]');
     $this->assertSame('Remove media', $remove_button->getAttribute('aria-label'));

@@ -51,20 +51,23 @@ class CasPasswordResetTest extends CasBrowserTestBase {
   public function testPasswordResetAsAnonymous() {
     // Test with the 'user_accounts.restrict_password_management' setting off.
     $this->settings->set('user_accounts.restrict_password_management', FALSE)->save();
+    $this->drupalGet('/user/password');
 
     // Check that a CAS user is able to reset their password.
-    $this->drupalPostForm('/user/password', ['name' => 'user_with_cas'], 'Submit');
+    $this->submitForm(['name' => 'user_with_cas'], 'Submit');
     $this->assertStatusMessage('user_with_cas');
+    $this->drupalGet('/user/password');
 
     // Check that a non-CAS user is able to reset their password.
-    $this->drupalPostForm('/user/password', ['name' => 'user_without_cas'], 'Submit');
+    $this->submitForm(['name' => 'user_without_cas'], 'Submit');
     $this->assertStatusMessage('user_without_cas');
 
     // Test with the 'user_accounts.restrict_password_management' setting on.
     $this->settings->set('user_accounts.restrict_password_management', TRUE)->save();
+    $this->drupalGet('/user/password');
 
     // Check that a CAS user is not able to reset their password.
-    $this->drupalPostForm('/user/password', ['name' => 'user_with_cas'], 'Submit');
+    $this->submitForm(['name' => 'user_with_cas'], 'Submit');
     $this->assertSession()->addressEquals('user/password');
     $this->assertSession()->pageTextContains('The requested account is associated with CAS and its password cannot be managed from this website.');
 
@@ -74,9 +77,10 @@ class CasPasswordResetTest extends CasBrowserTestBase {
     $this->getSession()->reload();
     $this->assertSession()->pageTextContains('You cannot manage your password. Back to homepage.');
     $this->assertSession()->linkExists('homepage');
+    $this->drupalGet('/user/password');
 
     // Check that a non-CAS user is able to reset their password.
-    $this->drupalPostForm('/user/password', ['name' => 'user_without_cas'], 'Submit');
+    $this->submitForm(['name' => 'user_without_cas'], 'Submit');
     $this->assertStatusMessage('user_without_cas');
   }
 
@@ -93,13 +97,15 @@ class CasPasswordResetTest extends CasBrowserTestBase {
 
     // Check that a non-CAS user is able to reset their password.
     $this->drupalLogin($this->nonCasUser);
-    $this->drupalPostForm('/user/password', [], 'Submit');
+    $this->drupalGet('/user/password');
+    $this->submitForm([], 'Submit');
     $this->assertSession()->addressEquals($this->nonCasUser->toUrl());
     $this->assertStatusMessage('user_without_cas@example.com');
 
     // Check that a CAS user is able to reset their password.
     $this->drupalLogin($this->casUser);
-    $this->drupalPostForm('/user/password', [], 'Submit');
+    $this->drupalGet('/user/password');
+    $this->submitForm([], 'Submit');
     $this->assertSession()->addressEquals($this->casUser->toUrl());
     $this->assertStatusMessage('user_with_cas@example.com');
 
@@ -112,7 +118,8 @@ class CasPasswordResetTest extends CasBrowserTestBase {
 
     // Check that a non-CAS user is able to reset their password.
     $this->drupalLogin($this->nonCasUser);
-    $this->drupalPostForm('/user/password', [], 'Submit');
+    $this->drupalGet('/user/password');
+    $this->submitForm([], 'Submit');
     $this->assertSession()->addressEquals($this->nonCasUser->toUrl());
     $this->assertStatusMessage('user_without_cas@example.com');
   }

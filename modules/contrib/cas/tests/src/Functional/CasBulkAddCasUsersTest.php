@@ -25,8 +25,9 @@ class CasBulkAddCasUsersTest extends CasBrowserTestBase {
       'email_hostname' => 'sample.com',
       'roles[sample_role]' => TRUE,
     ];
+    $this->drupalGet('/admin/people/create/cas-bulk');
 
-    $this->drupalPostForm('/admin/people/create/cas-bulk', $edit, 'Create new accounts');
+    $this->submitForm($edit, 'Create new accounts');
 
     $casUserManager = \Drupal::service('cas.user_manager');
 
@@ -34,12 +35,12 @@ class CasBulkAddCasUsersTest extends CasBrowserTestBase {
     $user_test3 = user_load_by_name('test 3');
     $this->assertNotFalse($user_test3, 'User with username "test 3" exists.');
     $this->assertTrue($user_test3->hasRole('sample_role'), 'The "test 3" user has role "sample_role"');
-    $this->assertEqual('test 3@sample.com', $user_test3->get('mail')->value, 'The "test 3" user has the email "test 3@sample.com".');
+    $this->assertEquals('test 3@sample.com', $user_test3->get('mail')->value, 'The "test 3" user has the email "test 3@sample.com".');
     $this->assertEquals('test 3', $casUserManager->getCasUsernameForAccount($user_test3->id()));
 
     $user_test4 = user_load_by_name('test4');
     $this->assertNotFalse($user_test4, 'User with username "test4" exists.');
-    $this->assertEqual('test4@sample.com', $user_test4->get('mail')->value, 'The "test4" user has the email "test4@sample.com".');
+    $this->assertEquals('test4@sample.com', $user_test4->get('mail')->value, 'The "test4" user has the email "test4@sample.com".');
     $this->assertTrue($user_test4->hasRole('sample_role'), 'The "test4" user has role "sample_role"');
     $this->assertEquals('test4', $casUserManager->getCasUsernameForAccount($user_test4->id()));
 

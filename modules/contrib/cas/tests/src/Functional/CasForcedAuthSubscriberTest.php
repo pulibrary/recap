@@ -50,7 +50,8 @@ class CasForcedAuthSubscriberTest extends CasBrowserTestBase {
       'forced_login[enabled]' => TRUE,
       'forced_login[paths][pages]' => "/node/2\n/my/path",
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
 
     $config = $this->config('cas.settings');
     $this->assertTrue($config->get('forced_login.enabled'));

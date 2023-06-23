@@ -32,17 +32,20 @@ Framework managers
 
   Frontend
   - Lauri Eskola 'lauriii' https://www.drupal.org/u/lauriii
+  - (provisional) Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
   - (provisional) Cristina Chumillas 'ckrina' https://www.drupal.org/u/ckrina
   - (provisional) Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
+  - (provisional) Sally Young 'justafish' https://www.drupal.org/u/justafish
 
 Release managers
 - Nathaniel Catchpole 'catch' https://www.drupal.org/u/catch
 - Jess Myrbo 'xjm' https://www.drupal.org/u/xjm
+- (provisional) Dave Long 'longwave' https://www.drupal.org/u/longwave
 - (provisional) Victoria Spagnolo 'quietone' https://www.drupal.org/u/quietone
 
 Core JavaScript packages
- - (provisional) Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
- - (provisional) Sally Young 'justafish' https://www.drupal.org/u/justafish
+ - Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
+ - Sally Young 'justafish' https://www.drupal.org/u/justafish
 
 Committer team facilitators
 - Pamela Barone 'pameeela' https://www.drupal.org/u/pameeela
@@ -99,6 +102,7 @@ Block
 
 Block Content
 - Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
+- Stephen Mustgrave 'smustgrave' https://www.drupal.org/u/smustgrave
 
 Book
 - Peter Wolanin 'pwolanin' https://www.drupal.org/u/pwolanin
@@ -141,7 +145,6 @@ Comment
 
 Configuration API
 - Alex Pott 'alexpott' https://www.drupal.org/u/alexpott
-- Matthew Tift 'mtift' https://www.drupal.org/u/mtift
 
 Configuration Entity API
 - Alex Pott 'alexpott' https://www.drupal.org/u/alexpott
@@ -152,7 +155,6 @@ Configuration UI
 
 Configuration Translation
 - Gábor Hojtsy 'Gábor Hojtsy' https://www.drupal.org/u/gábor-hojtsy
-- Tobias Zimmermann 'tstoeckler' https://www.drupal.org/u/tstoeckler
 - Vijayachandran Mani 'vijaycs85' https://www.drupal.org/u/vijaycs85
 
 Contact
@@ -174,9 +176,10 @@ Cron
 
 CSS
 - John Albin Wilkins 'JohnAlbin' https://www.drupal.org/u/johnalbin
+- Mike Herchel 'mherchel' https://www.drupal.org/u/mherchel
 
 Database API
-- ?
+- David Bekker 'daffie' https://www.drupal.org/u/daffie
 
   MySQL DB driver
   - David Strauss 'David Strauss' https://www.drupal.org/u/david-strauss
@@ -213,7 +216,6 @@ Entity API
 - Nathaniel Catchpole 'catch' https://www.drupal.org/u/catch
 - Hristo Chonov 'hchonov' https://www.drupal.org/u/hchonov
 - Sascha Grossenbacher 'Berdir' https://www.drupal.org/u/berdir
-- Tobias Zimmermann 'tstoeckler' https://www.drupal.org/u/tstoeckler
 
 Extension API
 - ?
@@ -334,6 +336,7 @@ Olivero
 - Putra Bonaccorsi 'proeung' https://www.drupal.org/u/proeung
 - Jen Witkowski 'jwitkowski79' https://www.drupal.org/u/jwitkowski79
 - Konstantin Shupenko 'kostyashupenko' https://www.drupal.org/u/kostyashupenko
+- Andy Blum 'andy-blum' https://www.drupal.org/u/andy-blum
 
 Options
 - ?
@@ -394,7 +397,6 @@ Seven
 - ?
 
 Shortcut
-- Tobias Zimmermann 'tstoeckler' https://www.drupal.org/u/tstoeckler
 - Jibran Ijaz 'jibran' https://www.drupal.org/u/jibran
 
 Stable
@@ -417,7 +419,7 @@ Taxonomy
 - Nathaniel Catchpole 'catch' https://www.drupal.org/u/catch
 
 Telephone
-- ?
+- Stephen Mustgrave 'smustgrave' https://www.drupal.org/u/smustgrave
 
 Testing framework
 - Alex Pott 'alexpott' https://www.drupal.org/u/alexpott
@@ -426,7 +428,7 @@ Testing framework
 - Alberto M. 'mondrake' https://www.drupal.org/u/mondrake
 
 Text Field
-- ?
+- Stephen Mustgrave 'smustgrave' https://www.drupal.org/u/smustgrave
 
 Theme API
 - Alex Bronstein 'effulgentsia' https://www.drupal.org/u/effulgentsia

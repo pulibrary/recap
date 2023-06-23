@@ -98,7 +98,7 @@ class CasRedirectData {
    *   Value of the parameter.
    */
   public function getParameter($key) {
-    return isset($this->redirectParameters[$key]) ? $this->redirectParameters[$key] : NULL;
+    return $this->redirectParameters[$key] ?? NULL;
   }
 
   /**
@@ -138,7 +138,7 @@ class CasRedirectData {
    *   Value of the attribute.
    */
   public function getServiceParameter($key) {
-    return isset($this->serviceParameters[$key]) ? $this->serviceParameters[$key] : NULL;
+    return $this->serviceParameters[$key] ?? NULL;
   }
 
   /**

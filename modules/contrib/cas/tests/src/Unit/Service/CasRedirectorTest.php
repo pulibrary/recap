@@ -24,21 +24,21 @@ class CasRedirectorTest extends UnitTestCase {
   /**
    * Mock Cas Helper.
    *
-   * @var \Drupal\cas\Service\CasHelper|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasHelper|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $casHelper;
 
   /**
    * Mock URL Generator.
    *
-   * @var \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $urlGenerator;
 
   /**
    * The mocked event dispatcher.
    *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $eventDispatcher;
 
@@ -75,25 +75,18 @@ class CasRedirectorTest extends UnitTestCase {
       ],
     ]);
 
-    $this->casHelper = $this
-      ->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
 
     $this->urlGenerator = $this->createMock('\Drupal\Core\Routing\UrlGeneratorInterface');
     $this->urlGenerator->method('generate')
       ->willReturnCallback([$this, 'getServiceUrl']);
 
     // Mock event dispatcher to dispatch events.
-    $this->eventDispatcher = $this->getMockBuilder('\Symfony\Component\EventDispatcher\EventDispatcherInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->eventDispatcher = $this->createMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
 
     // We have to mock the cache context manager which is called when we
     // add cache contexts to a cacheable metadata.
-    $cache_contexts_manager = $this->getMockBuilder('Drupal\Core\Cache\Context\CacheContextsManager')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $cache_contexts_manager = $this->createMock('Drupal\Core\Cache\Context\CacheContextsManager');
     $cache_contexts_manager->method('assertValidTokens')->willReturn(TRUE);
 
     $container = new Container();
@@ -124,16 +117,20 @@ class CasRedirectorTest extends UnitTestCase {
   /**
    * Dispatch an event.
    *
-   * @param string $event_name
-   *   Name of event fired.
    * @param \Drupal\cas\Event\CasPreRedirectEvent $event
    *   Event fired.
+   * @param string $event_name
+   *   Name of event fired.
+   *
+   * @return \Drupal\cas\Event\CasPreRedirectEvent
+   *   The event instance.
    */
-  public function dispatchEvent($event_name, CasPreRedirectEvent $event) {
+  public function dispatchEvent(CasPreRedirectEvent $event, $event_name): CasPreRedirectEvent {
     $this->events[$event_name] = $event;
     $data = $event->getCasRedirectData();
     $data->setParameter('strong_auth', 'true');
     $data->forceRedirection();
+    return $event;
   }
 
   /**

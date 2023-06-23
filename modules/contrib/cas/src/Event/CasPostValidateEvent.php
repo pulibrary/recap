@@ -3,7 +3,7 @@
 namespace Drupal\cas\Event;
 
 use Drupal\cas\CasPropertyBag;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event fired after CAS validation happens.

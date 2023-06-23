@@ -45,7 +45,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
       'cas_enabled' => FALSE,
       'cas_username' => 'test_user_1_cas',
     ];
-    $this->drupalPostForm('/user/' . $test_user_1->id() . '/edit', $edit, 'Save');
+    $this->drupalGet('/user/' . $test_user_1->id() . '/edit');
+    $this->submitForm($edit, 'Save');
 
     // Verify the field is empty.
     $cas_username_field = $this->getSession()->getPage()->findField('cas_username');
@@ -56,7 +57,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
       'cas_enabled' => TRUE,
       'cas_username' => 'test_user_1_cas',
     ];
-    $this->drupalPostForm('/user/' . $test_user_1->id() . '/edit', $edit, 'Save');
+    $this->drupalGet('/user/' . $test_user_1->id() . '/edit');
+    $this->submitForm($edit, 'Save');
 
     // Check that field is still filled in with the CAS username.
     $cas_username_field = $this->getSession()->getPage()->findField('cas_username');
@@ -75,7 +77,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
       'cas_enabled' => TRUE,
       'cas_username' => 'test_user_1_cas',
     ];
-    $this->drupalPostForm('/admin/people/create', $new_user_data, 'Create new account');
+    $this->drupalGet('/admin/people/create');
+    $this->submitForm($new_user_data, 'Create new account');
     $output = $this->getSession()->getPage()->getContent();
 
     $validation_error_message = 'The specified CAS username is already in use by another user.';
@@ -84,7 +87,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
     // Submit with proper CAS username, and verify user was created and has the
     // proper CAS username associated.
     $new_user_data['cas_username'] = 'test_user_2_cas';
-    $this->drupalPostForm('/admin/people/create', $new_user_data, 'Create new account');
+    $this->drupalGet('/admin/people/create');
+    $this->submitForm($new_user_data, 'Create new account');
     $output = $this->getSession()->getPage()->getContent();
     $this->assertStringNotContainsString($validation_error_message, $output, 'Validation error should not be found.');
 
@@ -97,7 +101,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
     // Should be able to clear out the CAS enabled checkbox to remove the
     // authmap entry.
     $edit = ['cas_enabled' => FALSE];
-    $this->drupalPostForm('/user/' . $test_user_2->id() . '/edit', $edit, 'Save');
+    $this->drupalGet('/user/' . $test_user_2->id() . '/edit');
+    $this->submitForm($edit, 'Save');
     $authmap = $this->container->get('externalauth.authmap');
     $this->assertFalse($authmap->get($test_user_2->id(), 'cas'));
     // Visit the edit page for this user to ensure CAS username field empty.
@@ -127,7 +132,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
       'user_accounts[restrict_password_management]' => TRUE,
       'user_accounts[prevent_normal_login]' => FALSE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->assertEquals(TRUE, $this->config('cas.settings')->get('user_accounts.restrict_password_management'));
     $this->drupalLogout();
 
@@ -146,13 +152,15 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
       'current_pass' => 'incorrectpassword',
       'mail' => 'new-noncasuser-email@sample.com',
     ];
+    $this->drupalGet('/user/' . $non_cas_user->id() . '/edit');
     // First try changing data with wrong password to ensure the protected
     // password constraint still works.
-    $this->drupalPostForm('/user/' . $non_cas_user->id() . '/edit', $form_data, 'Save');
+    $this->submitForm($form_data, 'Save');
     $this->assertSession()->responseContains('Your current password is missing or incorrect');
     // Now again with the correct current password.
     $form_data['current_pass'] = $non_cas_user->pass_raw;
-    $this->drupalPostForm('/user/' . $non_cas_user->id() . '/edit', $form_data, 'Save');
+    $this->drupalGet('/user/' . $non_cas_user->id() . '/edit');
+    $this->submitForm($form_data, 'Save');
     $this->assertSession()->responseContains('The changes have been saved.');
 
     // For CAS users, we modify the user form to remove the password management
@@ -170,7 +178,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
     $form_data = [
       'mail' => 'new-casuser-email@sample.com',
     ];
-    $this->drupalPostForm('/user/' . $cas_user->id() . '/edit', $form_data, 'Save');
+    $this->drupalGet('/user/' . $cas_user->id() . '/edit');
+    $this->submitForm($form_data, 'Save');
     $this->assertSession()->responseContains('The changes have been saved.');
 
     // An admin should still be able to see the password fields the CAS user.
@@ -185,7 +194,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
     $edit = [
       'user_accounts[restrict_password_management]' => FALSE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->assertEquals(FALSE, $this->config('cas.settings')->get('user_accounts.restrict_password_management'));
     $this->drupalLogout();
 
@@ -203,12 +213,14 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
       'current_pass' => 'incorrectpassword',
       'mail' => 'another-new-casuser-email@sample.com',
     ];
+    $this->drupalGet('/user/' . $cas_user->id() . '/edit');
     // First try changing data with wrong password.
-    $this->drupalPostForm('/user/' . $cas_user->id() . '/edit', $form_data, 'Save');
+    $this->submitForm($form_data, 'Save');
     $this->assertSession()->responseContains('Your current password is missing or incorrect');
     // Now again with the correct current password.
     $form_data['current_pass'] = $cas_user->pass_raw;
-    $this->drupalPostForm('/user/' . $cas_user->id() . '/edit', $form_data, 'Save');
+    $this->drupalGet('/user/' . $cas_user->id() . '/edit');
+    $this->submitForm($form_data, 'Save');
     $this->assertSession()->responseContains('The changes have been saved.');
   }
 
@@ -234,7 +246,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
       'user_accounts[restrict_email_management]' => TRUE,
       'user_accounts[prevent_normal_login]' => FALSE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->assertEquals(TRUE, $this->config('cas.settings')->get('user_accounts.restrict_email_management'));
     $this->drupalLogout();
 
@@ -249,13 +262,15 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
       'current_pass' => 'incorrectpassword',
       'mail' => 'new-noncasuser-email@sample.com',
     ];
+    $this->drupalGet('/user/' . $non_cas_user->id() . '/edit');
     // First try changing data with wrong password to ensure the protected
     // password constraint still works.
-    $this->drupalPostForm('/user/' . $non_cas_user->id() . '/edit', $form_data, 'Save');
+    $this->submitForm($form_data, 'Save');
     $this->assertSession()->responseContains('Your current password is missing or incorrect');
     // Now again with the correct current password.
     $form_data['current_pass'] = $non_cas_user->pass_raw;
-    $this->drupalPostForm('/user/' . $non_cas_user->id() . '/edit', $form_data, 'Save');
+    $this->drupalGet('/user/' . $non_cas_user->id() . '/edit');
+    $this->submitForm($form_data, 'Save');
     $this->assertSession()->responseContains('The changes have been saved.');
 
     // For CAS users, we modify the user form to disable the email field.
@@ -280,7 +295,8 @@ class CasUserFormFieldTest extends CasBrowserTestBase {
     $edit = [
       'user_accounts[restrict_email_management]' => FALSE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->assertEquals(FALSE, $this->config('cas.settings')->get('user_accounts.restrict_email_management'));
     $this->drupalLogout();
 

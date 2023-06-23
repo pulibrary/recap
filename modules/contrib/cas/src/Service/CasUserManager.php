@@ -2,21 +2,22 @@
 
 namespace Drupal\cas\Service;
 
+use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Password\PasswordGeneratorInterface;
+use Drupal\cas\CasPropertyBag;
 use Drupal\cas\Event\CasPostLoginEvent;
 use Drupal\cas\Event\CasPreLoginEvent;
 use Drupal\cas\Event\CasPreRegisterEvent;
+use Drupal\cas\Exception\CasLoginException;
 use Drupal\externalauth\AuthmapInterface;
 use Drupal\externalauth\Exception\ExternalAuthRegisterException;
-use Drupal\cas\Exception\CasLoginException;
 use Drupal\externalauth\ExternalAuthInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LogLevel;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Drupal\Core\Database\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Drupal\cas\CasPropertyBag;
-use Drupal\Component\Utility\Crypt;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * Provides the 'cas.user_manager' service default implementation.
@@ -101,6 +102,13 @@ class CasUserManager {
   protected $provider = 'cas';
 
   /**
+   * The password generator service.
+   *
+   * @var \Drupal\Core\Password\PasswordGeneratorInterface
+   */
+  protected PasswordGeneratorInterface $passwordGenerator;
+
+  /**
    * CasUserManager constructor.
    *
    * @param \Drupal\externalauth\ExternalAuthInterface $external_auth
@@ -119,8 +127,10 @@ class CasUserManager {
    *   The CAS helper.
    * @param \Drupal\cas\Service\CasProxyHelper $cas_proxy_helper
    *   The CAS Proxy helper.
+   * @param \Drupal\Core\Password\PasswordGeneratorInterface $password_generator
+   *   The password generator service.
    */
-  public function __construct(ExternalAuthInterface $external_auth, AuthmapInterface $authmap, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher, CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper) {
+  public function __construct(ExternalAuthInterface $external_auth, AuthmapInterface $authmap, ConfigFactoryInterface $settings, SessionInterface $session, Connection $database_connection, EventDispatcherInterface $event_dispatcher, CasHelper $cas_helper, CasProxyHelper $cas_proxy_helper, PasswordGeneratorInterface $password_generator) {
     $this->externalAuth = $external_auth;
     $this->authmap = $authmap;
     $this->settings = $settings;
@@ -129,6 +139,7 @@ class CasUserManager {
     $this->eventDispatcher = $event_dispatcher;
     $this->casHelper = $cas_helper;
     $this->casProxyHelper = $cas_proxy_helper;
+    $this->passwordGenerator = $password_generator;
   }
 
   /**
@@ -188,7 +199,7 @@ class CasUserManager {
         $cas_pre_register_event = new CasPreRegisterEvent($property_bag);
         $cas_pre_register_event->setPropertyValue('mail', $this->getEmailForNewAccount($property_bag));
         $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_REGISTER.');
-        $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_REGISTER, $cas_pre_register_event);
+        $this->eventDispatcher->dispatch($cas_pre_register_event, CasHelper::EVENT_PRE_REGISTER);
         if ($cas_pre_register_event->getAllowAutomaticRegistration()) {
           $account = $this->register($property_bag->getUsername(), $cas_pre_register_event->getDrupalUsername(), $cas_pre_register_event->getPropertyValues());
         }
@@ -212,7 +223,7 @@ class CasUserManager {
     // in and/or alter the user entity before we save it.
     $pre_login_event = new CasPreLoginEvent($account, $property_bag);
     $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_LOGIN.');
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_LOGIN, $pre_login_event);
+    $this->eventDispatcher->dispatch($pre_login_event, CasHelper::EVENT_PRE_LOGIN);
 
     // Save user entity since event listeners may have altered it.
     // @todo Don't take it for granted. Find if the account was really altered.
@@ -233,7 +244,7 @@ class CasUserManager {
 
     $postLoginEvent = new CasPostLoginEvent($account, $property_bag);
     $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_POST_LOGIN.');
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_POST_LOGIN, $postLoginEvent);
+    $this->eventDispatcher->dispatch($postLoginEvent, CasHelper::EVENT_POST_LOGIN);
 
     if ($this->settings->get('proxy.initialize') && $property_bag->getPgt()) {
       $this->casHelper->log(LogLevel::DEBUG, "Storing PGT information for this session.");
@@ -316,7 +327,7 @@ class CasUserManager {
    */
   protected function randomPassword() {
     // Default length is 10, use a higher number that's harder to brute force.
-    return \user_password(30);
+    return $this->passwordGenerator->generate(30);
   }
 
   /**

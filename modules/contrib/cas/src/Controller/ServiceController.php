@@ -193,7 +193,7 @@ class ServiceController implements ContainerInjectionInterface {
       }
       // Always return a 200 response. CAS Server doesn’t care either way what
       // happens here, since it is a fire-and-forget approach taken.
-      return Response::create('', 200);
+      return new Response('', 200);
     }
 
     /* If there is no ticket parameter on the request, the browser either:
@@ -207,7 +207,7 @@ class ServiceController implements ContainerInjectionInterface {
     if (!$request->query->has('ticket')) {
       $this->casHelper->log(LogLevel::DEBUG, "No CAS ticket found in request to service controller; backing out.");
       $this->casHelper->handleReturnToParameter($request);
-      return RedirectResponse::create($this->urlGenerator->generate('<front>'));
+      return new RedirectResponse($this->urlGenerator->generate('<front>'));
     }
 
     // There is a ticket present, meaning CAS server has returned the browser
@@ -245,7 +245,7 @@ class ServiceController implements ContainerInjectionInterface {
     // Dispatch an event that allows modules to alter any of the CAS data before
     // it's used to lookup a Drupal user account via the authmap table.
     $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_USER_LOAD.');
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_USER_LOAD, new CasPreUserLoadEvent($cas_validation_info));
+    $this->eventDispatcher->dispatch(new CasPreUserLoadEvent($cas_validation_info), CasHelper::EVENT_PRE_USER_LOAD);
 
     if ($cas_validation_info->getUsername() !== $cas_validation_info->getOriginalUsername()) {
       $this->casHelper->log(
@@ -265,7 +265,7 @@ class ServiceController implements ContainerInjectionInterface {
     // @see \Drupal\cas\Event\CasPreUserLoadRedirectEvent
     $cas_pre_user_load_redirect_event = new CasPreUserLoadRedirectEvent($ticket, $cas_validation_info, $service_params);
     $this->casHelper->log(LogLevel::DEBUG, 'Dispatching EVENT_PRE_USER_LOAD_REDIRECT.');
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_USER_LOAD_REDIRECT, $cas_pre_user_load_redirect_event);
+    $this->eventDispatcher->dispatch($cas_pre_user_load_redirect_event, CasHelper::EVENT_PRE_USER_LOAD_REDIRECT);
 
     // A subscriber might have set an HTTP redirect response allowing potential
     // user interaction to be injected into the flow.
@@ -331,14 +331,14 @@ class ServiceController implements ContainerInjectionInterface {
       // the failure page.
       $request->query->remove('destination');
 
-      return RedirectResponse::create(Url::fromUserInput($this->settings->get('error_handling.login_failure_page'))->toString());
+      return new RedirectResponse(Url::fromUserInput($this->settings->get('error_handling.login_failure_page'))->toString());
     }
     // Otherwise, send them to the homepage, or to the previous page they were
     // on when login was initiated (which is handled automatically via the
     // "destination" parameter).
     else {
       $this->casHelper->handleReturnToParameter($request);
-      return RedirectResponse::create($this->urlGenerator->generate('<front>'));
+      return new RedirectResponse($this->urlGenerator->generate('<front>'));
     }
   }
 

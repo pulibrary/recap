@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\cas\Unit\Service;
 
+use Drupal\Core\Password\PasswordGeneratorInterface;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\cas\Event\CasPreLoginEvent;
 use Drupal\cas\Event\CasPreRegisterEvent;
 use Drupal\cas\Service\CasProxyHelper;
@@ -20,6 +22,7 @@ use Drupal\cas\CasPropertyBag;
  */
 class CasUserManagerTest extends UnitTestCase {
 
+  use ProphecyTrait;
   /**
    * The mocked External Auth manager.
    *
@@ -37,28 +40,28 @@ class CasUserManagerTest extends UnitTestCase {
   /**
    * The mocked Entity Manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Entity\EntityManagerInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $entityManager;
 
   /**
    * The mocked session manager.
    *
-   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $session;
 
   /**
    * The mocked database connection.
    *
-   * @var \Drupal\Core\Database\Connection|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Database\Connection|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $connection;
 
   /**
    * The mocked event dispatcher.
    *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $eventDispatcher;
 
@@ -91,36 +94,30 @@ class CasUserManagerTest extends UnitTestCase {
   protected $account;
 
   /**
+   * The mocked password generator service.
+   *
+   * @var \Drupal\Core\Password\PasswordGeneratorInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $passwordGenerator;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() : void {
     parent::setUp();
-    $this->externalAuth = $this->getMockBuilder('\Drupal\externalauth\ExternalAuth')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->authmap = $this->getMockBuilder('\Drupal\externalauth\Authmap')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $storage = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage')
-      ->setMethods(NULL)
-      ->getMock();
+    $this->externalAuth = $this->createMock('\Drupal\externalauth\ExternalAuth');
+    $this->authmap = $this->createMock('\Drupal\externalauth\Authmap');
+    $storage = $this->createMock('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage');
     $this->session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
       ->setConstructorArgs([$storage])
       ->getMock();
     $this->session->start();
-    $this->connection = $this->getMockBuilder('\Drupal\Core\Database\Connection')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->eventDispatcher = $this->getMockBuilder('\Symfony\Component\EventDispatcher\EventDispatcherInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->account = $this->getMockBuilder('Drupal\user\UserInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->connection = $this->createMock('\Drupal\Core\Database\Connection');
+    $this->eventDispatcher = $this->createMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
+    $this->casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
+    $this->account = $this->createMock('Drupal\user\UserInterface');
     $this->casProxyHelper = $this->prophesize(CasProxyHelper::class);
+    $this->passwordGenerator = $this->prophesize(PasswordGeneratorInterface::class);
   }
 
   /**
@@ -153,6 +150,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->eventDispatcher,
         $this->casHelper,
         $this->casProxyHelper->reveal(),
+        $this->passwordGenerator->reveal(),
       ])
       ->getMock();
 
@@ -184,6 +182,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->eventDispatcher,
         $this->casHelper,
         $this->casProxyHelper->reveal(),
+        $this->passwordGenerator->reveal(),
       ])
       ->getMock();
 
@@ -229,6 +228,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->eventDispatcher,
         $this->casHelper,
         $this->casProxyHelper->reveal(),
+        $this->passwordGenerator->reveal(),
       ])
       ->getMock();
 
@@ -238,10 +238,11 @@ class CasUserManagerTest extends UnitTestCase {
 
     $this->eventDispatcher
       ->method('dispatch')
-      ->willReturnCallback(function ($event_type, $event) {
+      ->willReturnCallback(function ($event, $event_type) {
         if ($event instanceof CasPreRegisterEvent) {
           $event->cancelAutomaticRegistration();
         }
+        return $event;
       });
 
     $cas_user_manager
@@ -284,6 +285,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->eventDispatcher,
         $this->casHelper,
         $this->casProxyHelper->reveal(),
+        $this->passwordGenerator->reveal(),
       ])
       ->getMock();
 
@@ -299,10 +301,11 @@ class CasUserManagerTest extends UnitTestCase {
 
     $this->eventDispatcher
       ->method('dispatch')
-      ->willReturnCallback(function ($event_type, $event) {
+      ->willReturnCallback(function ($event, $event_type) {
         if ($event instanceof CasPreRegisterEvent) {
           $event->allowAutomaticRegistration();
         }
+        return $event;
       });
 
     $this->externalAuth
@@ -354,6 +357,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->eventDispatcher,
         $this->casHelper,
         $this->casProxyHelper->reveal(),
+        $this->passwordGenerator->reveal(),
       ])
       ->getMock();
 
@@ -428,6 +432,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->eventDispatcher,
         $this->casHelper,
         $this->casProxyHelper->reveal(),
+        $this->passwordGenerator->reveal(),
       ])
       ->getMock();
 
@@ -441,10 +446,11 @@ class CasUserManagerTest extends UnitTestCase {
 
     $this->eventDispatcher
       ->method('dispatch')
-      ->willReturnCallback(function ($event_type, $event) {
+      ->willReturnCallback(function ($event, $event_type) {
         if ($event instanceof CasPreLoginEvent) {
           $event->cancelLogin();
         }
+        return $event;
       });
 
     $cas_user_manager
@@ -477,6 +483,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->eventDispatcher,
         $this->casHelper,
         $this->casProxyHelper->reveal(),
+        $this->passwordGenerator->reveal(),
       ])
       ->getMock();
 
@@ -528,6 +535,7 @@ class CasUserManagerTest extends UnitTestCase {
         $this->eventDispatcher,
         $this->casHelper,
         $this->casProxyHelper->reveal(),
+        $this->passwordGenerator->reveal(),
       ])
       ->getMock();
 

@@ -5,6 +5,5 @@ drupal.ckeditor.drupalfile.admin:
   dependencies:
     - core/jquery
     - core/drupal
-    - core/jquery.once
     - core/drupal.vertical-tabs
     - core/drupalSettings

@@ -2,6 +2,8 @@
 
 namespace Drupal\cas\Subscriber;
 
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Drupal\cas\CasRedirectData;
 use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Service\CasRedirector;
@@ -17,8 +19,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -151,11 +151,11 @@ class CasGatewayAuthSubscriber implements EventSubscriberInterface {
    * gateway auth check. Caching is disabled on all paths this would be
    * active on. See the DenyCas response policy file.
    *
-   * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   The event.
    */
-  public function onRequest(GetResponseEvent $event) {
-    if (!$event->isMasterRequest()) {
+  public function onRequest(RequestEvent $event) {
+    if (!$event->isMainRequest()) {
       return;
     }
 
@@ -228,7 +228,7 @@ class CasGatewayAuthSubscriber implements EventSubscriberInterface {
       // auth checks.
       if ($this->gatewayRecheckTime > 0) {
         $expireTime = time() + (60 * $this->gatewayRecheckTime);
-        $cookie = new Cookie('cas_gateway_checked_ss', 1, $expireTime);
+        $cookie = Cookie::create('cas_gateway_checked_ss', 1, $expireTime);
         $response->headers->setCookie($cookie);
       }
       $event->setResponse($response);
@@ -259,11 +259,11 @@ class CasGatewayAuthSubscriber implements EventSubscriberInterface {
    * Unlike the server-side implementation, this one works with page caching
    * so we need to set appropriate cache metadata.
    *
-   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\ResponseEvent $event
    *   The event.
    */
-  public function onResponse(FilterResponseEvent $event) {
-    if (!$event->isMasterRequest()) {
+  public function onResponse(ResponseEvent $event) {
+    if (!$event->isMainRequest()) {
       return;
     }
 

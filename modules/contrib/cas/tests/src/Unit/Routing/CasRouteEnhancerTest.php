@@ -4,6 +4,7 @@ namespace Drupal\Tests\cas\Unit\Routing;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\cas\Routing\CasRouteEnhancer;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 /**
  * CasRouteEnhancer unit tests.
@@ -18,21 +19,21 @@ class CasRouteEnhancerTest extends UnitTestCase {
   /**
    * The mocked CasHelper.
    *
-   * @var \Drupal\cas\Service\CasHelper|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasHelper|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $casHelper;
 
   /**
    * The mocked Request.
    *
-   * @var \Symfony\Component\HttpFoundation\Request|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Symfony\Component\HttpFoundation\Request|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $request;
 
   /**
    * The mocked Route.
    *
-   * @var \Symfony\Component\Routing\Route|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Symfony\Component\Routing\Route|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $route;
 
@@ -42,15 +43,9 @@ class CasRouteEnhancerTest extends UnitTestCase {
   protected function setUp() : void {
     parent::setUp();
 
-    $this->casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->request = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Request')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->route = $this->getMockBuilder('\Symfony\Component\Routing\Route')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
+    $this->request = $this->createMock('\Symfony\Component\HttpFoundation\Request');
+    $this->route = $this->createMock('\Symfony\Component\Routing\Route');
   }
 
   /**
@@ -70,10 +65,7 @@ class CasRouteEnhancerTest extends UnitTestCase {
    * @dataProvider enhanceDataProvider
    */
   public function testEnhance($path, $cas_logout_enabled, $is_cas_user) {
-    $session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session')
-      ->disableOriginalConstructor()
-      ->setMethods(['get'])
-      ->getMock();
+    $session = $this->createMock(Session::class);
     $session->expects($this->any())
       ->method('get')
       ->with('is_cas_user')

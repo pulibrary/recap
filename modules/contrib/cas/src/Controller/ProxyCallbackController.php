@@ -76,7 +76,7 @@ class ProxyCallbackController implements ContainerInjectionInterface {
     // inform CAS Server of an error.
     if (!($request->query->get('pgtId') && $request->query->get('pgtIou'))) {
       $this->casHelper->log(LogLevel::ERROR, "Either pgtId or pgtIou parameters are missing from the request.");
-      return Response::create('Missing necessary parameters', 400);
+      return new Response('Missing necessary parameters', 400);
     }
     else {
       // Store the pgtIou and pgtId in the database for later use.
@@ -89,7 +89,7 @@ class ProxyCallbackController implements ContainerInjectionInterface {
         ['%pgt_id' => $pgt_id, '%pgt_iou' => $pgt_iou]
       );
       // PGT stored properly, tell CAS Server to proceed.
-      return Response::create('OK', 200);
+      return new Response('OK', 200);
     }
   }
 

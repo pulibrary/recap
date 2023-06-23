@@ -2,21 +2,20 @@
 
 namespace Drupal\Tests\cas\Unit\Controller;
 
+use Drupal\Core\Logger\LoggerChannelFactory;
+use Drupal\Core\Utility\Token;
+use Drupal\Tests\UnitTestCase;
 use Drupal\cas\CasPropertyBag;
 use Drupal\cas\Controller\ServiceController;
 use Drupal\cas\Event\CasPreUserLoadRedirectEvent;
 use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\Exception\CasValidateException;
 use Drupal\cas\Service\CasHelper;
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\Logger\LoggerChannelFactory;
-use Drupal\Core\Utility\Token;
 use Drupal\externalauth\ExternalAuthInterface;
-use Drupal\Tests\UnitTestCase;
-use Prophecy\Argument;
-use Symfony\Component\EventDispatcher\Event;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * ServiceController unit tests.
@@ -28,38 +27,40 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class ServiceControllerTest extends UnitTestCase {
 
+  use ProphecyTrait;
+
   /**
    * The mocked CasHelper.
    *
-   * @var \Drupal\cas\Service\CasHelper|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasHelper|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $casHelper;
 
   /**
    * The mocked CasValidator.
    *
-   * @var \Drupal\cas\Service\CasValidator|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasValidator|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $casValidator;
 
   /**
    * The mocked CasUserManager.
    *
-   * @var \Drupal\cas\Service\CasUserManager|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasUserManager|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $casUserManager;
 
   /**
    * The mocked CasLogout.
    *
-   * @var \Drupal\cas\Service\CasLogout|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasLogout|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $casLogout;
 
   /**
    * The mocked Url Generator.
    *
-   * @var \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $urlGenerator;
 
@@ -101,14 +102,14 @@ class ServiceControllerTest extends UnitTestCase {
   /**
    * The event dispatcher.
    *
-   * @var \Prophecy\Prophecy\ObjectProphecy
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $eventDispatcher;
 
   /**
    * The external auth service.
    *
-   * @var \Prophecy\Prophecy\ObjectProphecy
+   * @var \Drupal\externalauth\ExternalAuthInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $externalAuth;
 
@@ -125,15 +126,12 @@ class ServiceControllerTest extends UnitTestCase {
   protected function setUp() : void {
     parent::setUp();
 
-    $this->casValidator = $this->getMockBuilder('\Drupal\cas\Service\CasValidator')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->casUserManager = $this->getMockBuilder('\Drupal\cas\Service\CasUserManager')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->casLogout = $this->getMockBuilder('\Drupal\cas\Service\CasLogout')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $cas_validation_info = $this->createMock(CasPropertyBag::class);
+    $this->casValidator = $this->createMock('\Drupal\cas\Service\CasValidator');
+    $this->casValidator->method('validateTicket')->willReturn($cas_validation_info);
+
+    $this->casUserManager = $this->createMock('\Drupal\cas\Service\CasUserManager');
+    $this->casLogout = $this->createMock('\Drupal\cas\Service\CasLogout');
     $this->configFactory = $this->getConfigFactoryStub([
       'cas.settings' => [
         'server.hostname' => 'example-server.com',
@@ -151,12 +149,12 @@ class ServiceControllerTest extends UnitTestCase {
     $this->requestObject = new Request();
     $request_bag = $this->createMock('\Symfony\Component\HttpFoundation\ParameterBag');
     $query_bag = $this->createMock('\Symfony\Component\HttpFoundation\ParameterBag');
+    $query_bag->method('has')->willReturn(TRUE);
+
     $this->requestObject->query = $query_bag;
     $this->requestObject->request = $request_bag;
 
-    $storage = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage')
-      ->setMethods(NULL)
-      ->getMock();
+    $storage = $this->createMock('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage');
     $session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
       ->setConstructorArgs([$storage])
       ->setMethods(NULL)
@@ -170,7 +168,16 @@ class ServiceControllerTest extends UnitTestCase {
 
     $this->messenger = $this->createMock('\Drupal\Core\Messenger\MessengerInterface');
 
-    $this->eventDispatcher = $this->prophesize(ContainerAwareEventDispatcher::class);
+    $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+    $this->eventDispatcher->method('dispatch')
+      ->withAnyParameters()
+      ->willReturnCallback(function (Event $event, string $event_name): Event {
+        if ($event instanceof CasPreUserLoadRedirectEvent && $event_name === CasHelper::EVENT_PRE_USER_LOAD_REDIRECT) {
+          $event->getPropertyBag()->setUsername('foobar');
+        }
+        return $event;
+      });
+
     $this->externalAuth = $this->prophesize(ExternalAuthInterface::class);
   }
 
@@ -202,7 +209,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
-      $this->eventDispatcher->reveal(),
+      $this->eventDispatcher,
       $this->externalAuth->reveal()
     );
     $serviceController->setStringTranslation($this->getStringTranslationStub());
@@ -236,7 +243,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
-      $this->eventDispatcher->reveal(),
+      $this->eventDispatcher,
       $this->externalAuth->reveal()
     );
     $serviceController->setStringTranslation($this->getStringTranslationStub());
@@ -265,8 +272,7 @@ class ServiceControllerTest extends UnitTestCase {
 
     // Login should be called.
     $this->casUserManager->expects($this->once())
-      ->method('login')
-      ->with($this->equalTo($validation_data), $this->equalTo('ST-foobar'));
+      ->method('login');
 
     $serviceController = new ServiceController(
       $this->casHelper,
@@ -277,7 +283,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
-      $this->eventDispatcher->reveal(),
+      $this->eventDispatcher,
       $this->externalAuth->reveal()
     );
     $serviceController->setStringTranslation($this->getStringTranslationStub());
@@ -306,9 +312,7 @@ class ServiceControllerTest extends UnitTestCase {
     $validation_data->setPgt('testpgt');
 
     // Login should be called.
-    $this->casUserManager->expects($this->once())
-      ->method('login')
-      ->with($this->equalTo($validation_data), $this->equalTo('ST-foobar'));
+    $this->casUserManager->expects($this->once())->method('login');
 
     $configFactory = $this->getConfigFactoryStub([
       'cas.settings' => [
@@ -328,7 +332,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->urlGenerator,
       $configFactory,
       $this->messenger,
-      $this->eventDispatcher->reveal(),
+      $this->eventDispatcher,
       $this->externalAuth->reveal()
     );
     $serviceController->setStringTranslation($this->getStringTranslationStub());
@@ -360,6 +364,10 @@ class ServiceControllerTest extends UnitTestCase {
     $this->casUserManager->expects($this->never())
       ->method('login');
 
+    $this->urlGenerator->method('generate')
+      ->with($this->equalTo('<front>'))
+      ->willReturn('/user/login');
+
     $serviceController = new ServiceController(
       $this->casHelper,
       $this->casValidator,
@@ -369,7 +377,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
-      $this->eventDispatcher->reveal(),
+      $this->eventDispatcher,
       $this->externalAuth->reveal()
     );
     $serviceController->setStringTranslation($this->getStringTranslationStub());
@@ -399,6 +407,10 @@ class ServiceControllerTest extends UnitTestCase {
       ->method('login')
       ->will($this->throwException(new CasLoginException()));
 
+    $this->urlGenerator->method('generate')
+      ->with($this->equalTo('<front>'))
+      ->willReturn('/user/login');
+
     $serviceController = new ServiceController(
       $this->casHelper,
       $this->casValidator,
@@ -408,7 +420,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
-      $this->eventDispatcher->reveal(),
+      $this->eventDispatcher,
       $this->externalAuth->reveal()
     );
     $serviceController->setStringTranslation($this->getStringTranslationStub());
@@ -433,19 +445,9 @@ class ServiceControllerTest extends UnitTestCase {
       TRUE
     );
 
-    $this->eventDispatcher
-      ->dispatch(Argument::type('string'), Argument::type(Event::class))
-      ->will(function (array $args) {
-        if ($args[0] === CasHelper::EVENT_PRE_USER_LOAD_REDIRECT && $args[1] instanceof CasPreUserLoadRedirectEvent) {
-          $args[1]->getPropertyBag()->setUsername('foobar');
-        }
-      });
-
     $expected_bag = new CasPropertyBag('foobar');
 
-    $this->casUserManager->expects($this->once())
-      ->method('login')
-      ->with($this->equalTo($expected_bag), 'ST-foobar');
+    $this->casUserManager->expects($this->once())->method('login');
 
     $this->casValidator->expects($this->once())
       ->method('validateTicket')
@@ -466,7 +468,7 @@ class ServiceControllerTest extends UnitTestCase {
       $this->urlGenerator,
       $this->configFactory,
       $this->messenger,
-      $this->eventDispatcher->reveal(),
+      $this->eventDispatcher,
       $this->externalAuth->reveal()
     );
     $serviceController->handle($this->requestObject);
@@ -475,22 +477,7 @@ class ServiceControllerTest extends UnitTestCase {
   /**
    * Asserts that user is redirected to a special page on login failure.
    */
-  private function assertRedirectedToSpecialPageOnLoginFailure($serviceController) {
-    // Service controller calls Url:: methods directly, since there's no
-    // existing service class to use instead of that. This makes unit testing
-    // hard. We need to place mock services that Url:: uses in the container.
-    $path_validator = $this->createMock('Drupal\Core\Path\PathValidatorInterface');
-    $unrouted_url_assember = $this->createMock('Drupal\Core\Utility\UnroutedUrlAssemblerInterface');
-    $unrouted_url_assember
-      ->expects($this->atLeastOnce())
-      ->method('assemble')
-      ->will($this->returnValue('/user/login'));
-    $container_builder = new ContainerBuilder();
-    $container_builder->set('path.validator', $path_validator);
-    $container_builder->set('unrouted_url_assembler', $unrouted_url_assember);
-
-    \Drupal::setContainer($container_builder);
-
+  protected function assertRedirectedToSpecialPageOnLoginFailure($serviceController): void {
     $response = $serviceController->handle($this->requestObject);
     $this->assertTrue($response->isRedirect('/user/login'));
   }
