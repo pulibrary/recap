@@ -87,7 +87,7 @@ class CasRedirector {
     // Dispatch an event that allows modules to alter or prevent the redirect,
     // or to change the CAS server that we're redirected to.
     $pre_redirect_event = new CasPreRedirectEvent($data, $casServerConfig);
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_REDIRECT, $pre_redirect_event);
+    $this->eventDispatcher->dispatch($pre_redirect_event, CasHelper::EVENT_PRE_REDIRECT);
 
     // Build the service URL, which is where the CAS server will send users
     // back to after authenticating them. We always send users back to our main

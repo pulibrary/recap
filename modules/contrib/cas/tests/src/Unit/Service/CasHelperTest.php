@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\cas\Unit\Service;
 
+use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\cas\Service\CasHelper;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Logger\LoggerChannelFactory;
@@ -20,24 +21,25 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class CasHelperTest extends UnitTestCase {
 
+  use ProphecyTrait;
   /**
    * The mocked Url generator.
    *
-   * @var \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $urlGenerator;
 
   /**
    * The mocked logger factory.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelFactory|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Logger\LoggerChannelFactory|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $loggerFactory;
 
   /**
    * The mocked log channel.
    *
-   * @var \Drupal\Core\Logger\LoggerChannel|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Logger\LoggerChannel|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $loggerChannel;
 
@@ -55,9 +57,7 @@ class CasHelperTest extends UnitTestCase {
     parent::setUp();
 
     $this->loggerFactory = $this->createMock('\Drupal\Core\Logger\LoggerChannelFactory');
-    $this->loggerChannel = $this->getMockBuilder('\Drupal\Core\Logger\LoggerChannel')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->loggerChannel = $this->createMock('\Drupal\Core\Logger\LoggerChannel');
     $this->loggerFactory->expects($this->any())
       ->method('get')
       ->with('cas')

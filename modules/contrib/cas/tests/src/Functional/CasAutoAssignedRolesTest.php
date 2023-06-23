@@ -25,7 +25,8 @@ class CasAutoAssignedRolesTest extends CasBrowserTestBase {
       'user_accounts[auto_assigned_roles][]' => [$role_1, $role_2],
       'user_accounts[email_hostname]' => 'sample.com',
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
 
     $this->assertEquals([$role_1, $role_2], $this->config('cas.settings')->get('user_accounts.auto_assigned_roles'));
 

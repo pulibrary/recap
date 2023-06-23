@@ -8,6 +8,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
  * CasHelper unit tests.
@@ -22,21 +24,21 @@ class CasProxyHelperTest extends UnitTestCase {
   /**
    * The mocked session manager.
    *
-   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
    */
   protected $session;
 
   /**
    * The mocked CAS helper.
    *
-   * @var \Drupal\cas\Service\CasHelper|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\cas\Service\CasHelper|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $casHelper;
 
   /**
    * The mocked database connection object.
    *
-   * @var \Drupal\Core\Database\Connection|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Database\Connection|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $database;
 
@@ -46,22 +48,10 @@ class CasProxyHelperTest extends UnitTestCase {
   protected function setUp() : void {
     parent::setUp();
 
-    $storage = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage')
-      ->setMethods(NULL)
-      ->getMock();
-    $this->session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
-      ->setConstructorArgs([$storage])
-      ->setMethods(NULL)
-      ->getMock();
+    $this->session = new Session(new MockArraySessionStorage());
     $this->session->start();
-
-    $this->casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $this->database = $this->getMockBuilder('\Drupal\Core\Database\Connection')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
+    $this->database = $this->createMock('\Drupal\Core\Database\Connection');
   }
 
   /**

@@ -13,7 +13,7 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Middleware;
 use Drupal\cas\Service\CasHelper;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * CasValidator unit tests.
@@ -28,7 +28,7 @@ class CasValidatorTest extends UnitTestCase {
   /**
    * The mocked event dispatcher.
    *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $eventDispatcher;
 
@@ -46,20 +46,21 @@ class CasValidatorTest extends UnitTestCase {
     parent::setUp();
 
     // Mock event dispatcher to dispatch events.
-    $this->eventDispatcher = $this->getMockBuilder('\Symfony\Component\EventDispatcher\EventDispatcherInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->eventDispatcher = $this->createMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
   }
 
   /**
    * Dispatch an event.
    *
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
+   *   Event fired.
    * @param string $event_name
    *   Name of event fired.
-   * @param \Symfony\Component\EventDispatcher\Event $event
-   *   Event fired.
+   *
+   * @return \Symfony\Contracts\EventDispatcher\Event
+   *   The fired event.
    */
-  public function dispatchEvent($event_name, Event $event) {
+  public function dispatchEvent(Event $event, $event_name): Event {
     $this->events[$event_name] = $event;
     switch ($event_name) {
       case CasHelper::EVENT_PRE_VALIDATE:
@@ -70,9 +71,8 @@ class CasValidatorTest extends UnitTestCase {
       case CasHelper::EVENT_POST_VALIDATE:
         $propertyBag = $event->getCasPropertyBag();
         $propertyBag->setAttribute('email', ['modified@example.com']);
-        break;
-
     }
+    return $event;
   }
 
   /**
@@ -133,9 +133,7 @@ class CasValidatorTest extends UnitTestCase {
       ->method('generateFromRoute')
       ->will($this->returnValue('https://example.com/casproxycallback'));
 
-    $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
 
     $casValidator = new CasValidator($httpClient, $casHelper, $configFactory, $urlGenerator, $this->eventDispatcher);
 
@@ -314,9 +312,7 @@ class CasValidatorTest extends UnitTestCase {
     $handler = HandlerStack::create($mock);
     $httpClient = new Client(['handler' => $handler]);
 
-    $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
 
     $configFactory = $this->getConfigFactoryStub([
       'cas.settings' => [
@@ -558,9 +554,7 @@ class CasValidatorTest extends UnitTestCase {
       ],
     ]);
 
-    $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
 
     $urlGenerator = $this->createMock('\Drupal\Core\Routing\UrlGeneratorInterface');
 
@@ -609,9 +603,7 @@ class CasValidatorTest extends UnitTestCase {
       ],
     ]);
 
-    $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
 
     $urlGenerator = $this->createMock('\Drupal\Core\Routing\UrlGeneratorInterface');
 
@@ -659,9 +651,7 @@ class CasValidatorTest extends UnitTestCase {
 
     $ticket = $this->randomMachineName(8);
 
-    $casHelper = $this->getMockBuilder('\Drupal\cas\Service\CasHelper')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
 
     $urlGenerator = $this->createMock('\Drupal\Core\Routing\UrlGeneratorInterface');
 
@@ -669,10 +659,10 @@ class CasValidatorTest extends UnitTestCase {
     $casValidator->validateTicket($ticket);
 
     // The 'fake' subscriber we created alters the path on the server to
-    // "customPath", test that that actually occured.
-    $expected_url = "https://example-server.com/cas/customPath?service&ticket=" . $ticket . '&foo=bar';
+    // "customPath", test that actually occurred.
+    $expected_url = "@https://example\-server\.com/cas/customPath\?service=?&ticket=" . $ticket . '&foo=bar@';
     $actual_url = (string) $guzzleTransactions[0]['request']->getUri();
-    $this->assertEquals($expected_url, $actual_url);
+    $this->assertMatchesRegularExpression($expected_url, $actual_url);
   }
 
 }

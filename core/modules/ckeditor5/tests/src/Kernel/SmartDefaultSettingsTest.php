@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\Tests\ckeditor5\Kernel;
 
 use Drupal\ckeditor5\HTMLRestrictions;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\editor\Entity\Editor;
@@ -129,22 +130,22 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     ])->setSyncing(TRUE)->save();
 
     FilterFormat::create(
-      Yaml::parseFile('core/profiles/standard/config/install/filter.format.full_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/filter.format.full_html.yml')
     )
       ->setSyncing(TRUE)
       ->save();
     Editor::create(
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.full_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.full_html.yml')
     )->setSyncing(TRUE)->save();
 
-    $basic_html_format = Yaml::parseFile('core/profiles/standard/config/install/filter.format.basic_html.yml');
-    FilterFormat::create($basic_html_format)->save();
+    $basic_html_format = Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/filter.format.basic_html.yml');
+    FilterFormat::create($basic_html_format)->setSyncing(TRUE)->save();
     Editor::create(
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     )->setSyncing(TRUE)->save();
 
     FilterFormat::create(
-      Yaml::parseFile('core/profiles/standard/config/install/filter.format.restricted_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/filter.format.restricted_html.yml')
     )->setSyncing(TRUE)->save();
 
     $basic_html_format_without_image_uploads = $basic_html_format;
@@ -154,7 +155,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     Editor::create(
       ['format' => 'basic_html_without_image_uploads']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     )->setImageUploadSettings(['status' => FALSE])->setSyncing(TRUE)->save();
 
     $allowed_html_parents = ['filters', 'filter_html', 'settings', 'allowed_html'];
@@ -168,7 +169,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     Editor::create(
       ['format' => 'basic_html_without_h4_h6']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     )->setSyncing(TRUE)->save();
 
     $new_value = str_replace(['<h2 id> ', '<h3 id> ', '<h4 id> ', '<h5 id> ', '<h6 id> '], '', $current_value);
@@ -180,7 +181,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     Editor::create(
       ['format' => 'basic_html_without_headings']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     )->setSyncing(TRUE)->save();
 
     $basic_html_format_with_pre = $basic_html_format;
@@ -191,7 +192,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     Editor::create(
       ['format' => 'basic_html_with_pre']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     )->setSyncing(TRUE)->save();
 
     $basic_html_format_with_h1 = $basic_html_format;
@@ -202,7 +203,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     Editor::create(
       ['format' => 'basic_html_with_h1']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     )->setSyncing(TRUE)->save();
 
     $new_value = str_replace('<p>', '<p class="text-align-center text-align-justify">', $current_value);
@@ -214,7 +215,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     Editor::create(
       ['format' => 'basic_html_with_alignable_p']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     )->setSyncing(TRUE)->save();
 
     $basic_html_format_with_media_embed = $basic_html_format;
@@ -228,7 +229,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     $basic_html_editor_with_media_embed = Editor::create(
       ['format' => 'basic_html_with_media_embed']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     );
     $settings = $basic_html_editor_with_media_embed->getSettings();
     // Add "insert media from library" button to CKEditor 4 configuration, the
@@ -247,7 +248,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     $basic_html_editor_with_media_embed_view_mode_enabled_no_view_modes_configured = Editor::create(
       ['format' => 'basic_html_with_media_embed_view_mode_enabled_no_view_modes_configured']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     );
     $settings = $basic_html_editor_with_media_embed_view_mode_enabled_no_view_modes_configured->getSettings();
     // Add "insert media from library" button to CKEditor 4 configuration, the
@@ -265,7 +266,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     Editor::create(
       ['format' => 'basic_html_with_any_data_attr']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     )->setSyncing(TRUE)->save();
 
     $basic_html_format_with_media_embed_view_mode_enabled_two_view_modes_configured = $basic_html_format_with_media_embed_view_mode_invalid;
@@ -275,7 +276,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     $basic_html_editor_with_media_embed_view_mode_enabled_two_view_modes_configured = Editor::create(
       ['format' => 'basic_html_with_media_embed_view_mode_enabled_two_view_modes_configured']
       +
-      Yaml::parseFile('core/profiles/standard/config/install/editor.editor.basic_html.yml')
+      Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
     );
     $settings = $basic_html_editor_with_media_embed_view_mode_enabled_two_view_modes_configured->getSettings();
     // Add "insert media from library" button to CKEditor 4 configuration, the
@@ -572,7 +573,9 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     ];
     $db_logs = [];
     foreach ($db_logged as $log) {
-      $db_logs[$type_to_status[$log->severity]][] = $log->message;
+      $variables = unserialize($log->variables);
+      $message = new FormattableMarkup($log->message, $variables);
+      $db_logs[$type_to_status[$log->severity]][] = (string) $message;
     }
 
     // Transforms TranslatableMarkup objects to string.

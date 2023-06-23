@@ -45,32 +45,6 @@ class DrupalSelenium2Driver extends Selenium2Driver {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function attachFile($xpath, $path) {
-    $element = $this->getWebDriverSession()->element('xpath', $xpath);
-
-    if ('input' !== strtolower($element->name()) || 'file' !== strtolower($element->attribute('type'))) {
-      $message = 'Impossible to %s the element with XPath "%s" as it is not a %s input';
-
-      throw new DriverException(sprintf($message, 'attach a file on', $xpath, 'file'));
-    }
-
-    // Upload the file to Selenium and use the remote path. This will
-    // ensure that Selenium always has access to the file, even if it runs
-    // as a remote instance.
-    try {
-      $remotePath = $this->uploadFileAndGetRemoteFilePath($path);
-    }
-    catch (\Exception $e) {
-      // File could not be uploaded to remote instance. Use the local path.
-      $remotePath = $path;
-    }
-
-    $element->postValue(['value' => [$remotePath]]);
-  }
-
-  /**
    * Uploads a file to the Selenium instance and returns the remote path.
    *
    * \Behat\Mink\Driver\Selenium2Driver::uploadFile() is a private method so
@@ -171,20 +145,23 @@ class DrupalSelenium2Driver extends Selenium2Driver {
         // \Behat\Mink\Driver\Selenium2Driver::setValue() will call .blur() on
         // the element, modify that to trigger the "input" and "change" events
         // instead. They indicate the value has changed, rather than implying
-        // user focus changes.
+        // user focus changes. This script only runs when Drupal javascript has
+        // been loaded.
         $this->executeJsOnXpath($xpath, <<<JS
-var node = {{ELEMENT}};
-var original = node.blur;
-node.blur = function() {
-  node.dispatchEvent(new Event("input", {bubbles:true}));
-  node.dispatchEvent(new Event("change", {bubbles:true}));
-  // Do not wait for the debounce, which only triggers the 'formUpdated` event
-  // up to once every 0.3 seconds. In tests, no humans are typing, hence there
-  // is no need to debounce.
-  // @see Drupal.behaviors.formUpdated
-  node.dispatchEvent(new Event("formUpdated", {bubbles:true}));
-  node.blur = original;
-};
+if (typeof Drupal !== 'undefined') {
+  var node = {{ELEMENT}};
+  var original = node.blur;
+  node.blur = function() {
+    node.dispatchEvent(new Event("input", {bubbles:true}));
+    node.dispatchEvent(new Event("change", {bubbles:true}));
+    // Do not wait for the debounce, which only triggers the 'formUpdated` event
+    // up to once every 0.3 seconds. In tests, no humans are typing, hence there
+    // is no need to debounce.
+    // @see Drupal.behaviors.formUpdated
+    node.dispatchEvent(new Event("formUpdated", {bubbles:true}));
+    node.blur = original;
+  };
+}
 JS);
         parent::setValue($xpath, $value);
         return TRUE;

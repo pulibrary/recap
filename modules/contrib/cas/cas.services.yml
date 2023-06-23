@@ -20,7 +20,7 @@ services:
     arguments: ['@http_client', '@cas.helper', '@config.factory', '@url_generator.non_bubbling', '@event_dispatcher']
   cas.user_manager:
     class: Drupal\cas\Service\CasUserManager
-    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@config.factory', '@session', '@database', '@event_dispatcher', '@cas.helper', '@cas.proxy_helper']
+    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@config.factory', '@session', '@database', '@event_dispatcher', '@cas.helper', '@cas.proxy_helper', '@password_generator']
   cas.logout:
     class: Drupal\cas\Service\CasLogout
     arguments: ['@cas.helper', '@database', '@config.factory']

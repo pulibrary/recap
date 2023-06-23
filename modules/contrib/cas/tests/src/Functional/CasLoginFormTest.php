@@ -31,7 +31,8 @@ class CasLoginFormTest extends CasBrowserTestBase {
       'general[login_link_enabled]' => TRUE,
       'general[login_link_label]' => 'Click here to login!',
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $config = $this->config('cas.settings');
     $this->assertTrue($config->get('login_link_enabled'));
     $this->assertEquals('Click here to login!', $config->get('login_link_label'));
@@ -57,17 +58,19 @@ class CasLoginFormTest extends CasBrowserTestBase {
     $cas_user->setPassword('password');
     $cas_user->save();
     $this->container->get('cas.user_manager')->setCasUsernameForAccount($cas_user, 'cas_user');
+    $this->drupalGet('/user/login');
 
     // Log in in as normal user should work.
-    $this->drupalPostForm('/user/login', [
+    $this->submitForm([
       'name' => 'normal_user',
       'pass' => 'password',
     ], 'Log in');
     $this->assertSession()->addressEquals('/user/' . $normal_user->id());
     $this->drupalLogout();
+    $this->drupalGet('/user/login');
 
     // Log in as CAS user should not work.
-    $this->drupalPostForm('/user/login', [
+    $this->submitForm([
       'name' => 'cas_user',
       'pass' => 'password',
     ], 'Log in');
@@ -79,8 +82,9 @@ class CasLoginFormTest extends CasBrowserTestBase {
     $this->config('cas.settings')
       ->set('error_handling.message_prevent_normal_login', 'Just use the <a href="[cas:login-url]">CAS Login</a>')
       ->save();
+    $this->drupalGet('/user/login');
 
-    $this->drupalPostForm('/user/login', [
+    $this->submitForm([
       'name' => 'cas_user',
       'pass' => 'password',
     ], 'Log in');
@@ -93,11 +97,13 @@ class CasLoginFormTest extends CasBrowserTestBase {
     $edit = [
       'user_accounts[prevent_normal_login]' => FALSE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->drupalLogout();
+    $this->drupalGet('/user/login');
 
     // Log in as CAS user should work now.
-    $this->drupalPostForm('/user/login', [
+    $this->submitForm([
       'name' => 'cas_user',
       'pass' => 'password',
     ], 'Log in');

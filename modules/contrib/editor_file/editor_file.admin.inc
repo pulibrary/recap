@@ -79,7 +79,11 @@ function editor_file_upload_settings_form(Editor $editor) {
     '#title' => t('Allowed file extensions'),
     '#default_value' => $extensions,
     '#description' => t('Separate extensions with a space or comma and do not include the leading dot.'),
-    '#element_validate' => [['\Drupal\file\Plugin\Field\FieldType\FileItem', 'validateExtensions']],
+    '#element_validate' => [
+      [
+        '\Drupal\file\Plugin\Field\FieldType\FileItem', 'validateExtensions',
+      ],
+    ],
     '#maxlength' => 256,
     // By making this field required, we prevent a potential security issue
     // that would allow files of any type to be uploaded.

@@ -4,7 +4,7 @@ namespace Drupal\cas\Routing;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\EnhancerInterface;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

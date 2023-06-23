@@ -27,7 +27,8 @@ class CasForcedLoginControllerTest extends CasBrowserTestBase {
       'server[hostname]' => 'fakecasserver.localhost',
       'server[path]' => '/auth',
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
 
     $this->drupalLogout();
 

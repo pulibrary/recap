@@ -31,7 +31,8 @@ class CasEventsTest extends CasBrowserTestBase {
       'user_accounts[auto_register]' => TRUE,
       'user_accounts[email_hostname]' => 'sample.com',
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
 
     $cas_property_bag = new CasPropertyBag('foo');
     \Drupal::service('cas.user_manager')->login($cas_property_bag, 'fake_ticket_string');

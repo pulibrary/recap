@@ -2,15 +2,15 @@
 
 namespace Drupal\cas\Subscriber;
 
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Drupal\cas\CasRedirectData;
 use Drupal\cas\Service\CasRedirector;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\EventSubscriber\HttpExceptionSubscriberBase;
 use Drupal\Core\Session\AccountInterface;
 use Psr\Log\LogLevel;
-use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Condition\ConditionManager;
@@ -108,7 +108,7 @@ class CasForcedAuthSubscriber extends HttpExceptionSubscriberBase {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // Run before DynamicPageCacheSubscriber (27) and
     // CasGatewayAuthSubscriber (28)
     // but after important services like RouterListener (32) and
@@ -122,10 +122,10 @@ class CasForcedAuthSubscriber extends HttpExceptionSubscriberBase {
   /**
    * Respond to kernel request set forced auth redirect response.
    *
-   * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   The event.
    */
-  public function onRequest(GetResponseEvent $event) {
+  public function onRequest(RequestEvent $event) {
     // Don't do anything if this is a sub request and not a master request.
     if ($event->getRequestType() != HttpKernelInterface::MASTER_REQUEST) {
       return;
@@ -188,10 +188,10 @@ class CasForcedAuthSubscriber extends HttpExceptionSubscriberBase {
    * instances we handle the forced login redirect if applicable here instead,
    * using an exception subscriber.
    *
-   * @param \Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\ExceptionEvent $event
    *   The event to process.
    */
-  public function on403(GetResponseForExceptionEvent $event) {
+  public function on403(ExceptionEvent $event) {
     $this->onRequest($event);
   }
 

@@ -2,7 +2,7 @@
 
 namespace Drupal\cas\Event;
 
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 use Drupal\cas\CasPropertyBag;
 
 /**

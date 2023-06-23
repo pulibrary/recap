@@ -46,7 +46,8 @@ class CasGatewayAuthSubscriberTest extends CasBrowserTestBase {
       'gateway[paths][pages]' => "/node/1\n/node/2",
       'gateway[method]' => CasHelper::GATEWAY_SERVER_SIDE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
 
     // Check that settings saved correctly.
     $config = $this->config('cas.settings');
@@ -99,7 +100,8 @@ class CasGatewayAuthSubscriberTest extends CasBrowserTestBase {
     $edit = [
       'gateway[recheck_time]' => "-1",
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->drupalLogout();
     $this->disableRedirects();
     $this->prepareRequest();
@@ -124,7 +126,8 @@ class CasGatewayAuthSubscriberTest extends CasBrowserTestBase {
     $edit = [
       'gateway[paths][pages]' => '/node/1',
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->drupalLogout();
     $this->disableRedirects();
     $this->prepareRequest();
@@ -138,7 +141,8 @@ class CasGatewayAuthSubscriberTest extends CasBrowserTestBase {
     $edit = [
       'gateway[enabled]' => FALSE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->drupalLogout();
     $this->disableRedirects();
     $this->prepareRequest();
@@ -155,7 +159,8 @@ class CasGatewayAuthSubscriberTest extends CasBrowserTestBase {
       'gateway[recheck_time]' => "-1",
       'gateway[method]' => CasHelper::GATEWAY_CLIENT_SIDE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->assertSession()->pageTextContains('The "Every page request" recheck time is not compatible with the "Client-side" method');
 
     // Enable client side redirect and confirm that the user is not redirected
@@ -166,7 +171,8 @@ class CasGatewayAuthSubscriberTest extends CasBrowserTestBase {
       'gateway[recheck_time]' => 720,
       'gateway[method]' => CasHelper::GATEWAY_CLIENT_SIDE,
     ];
-    $this->drupalPostForm('/admin/config/people/cas', $edit, 'Save configuration');
+    $this->drupalGet('/admin/config/people/cas');
+    $this->submitForm($edit, 'Save configuration');
     $this->drupalLogout();
     $this->disableRedirects();
     $this->prepareRequest();

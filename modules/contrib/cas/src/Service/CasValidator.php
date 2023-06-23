@@ -101,7 +101,7 @@ class CasValidator {
     // Allow modules to modify the server config before it's used to validate
     // the login ticket.
     $event = new CasPreValidateServerConfigEvent($casServerConfig);
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_VALIDATE_SERVER_CONFIG, $event);
+    $this->eventDispatcher->dispatch($event, CasHelper::EVENT_PRE_VALIDATE_SERVER_CONFIG);
 
     // Determine the path to send the validation request to on the CAS server.
     $path = '';
@@ -139,7 +139,7 @@ class CasValidator {
     // Dispatch an event that allows modules to alter the validation path or
     // URL parameters.
     $pre_validate_event = new CasPreValidateEvent($path, $params);
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_PRE_VALIDATE, $pre_validate_event);
+    $this->eventDispatcher->dispatch($pre_validate_event, CasHelper::EVENT_PRE_VALIDATE);
     $validate_url = $casServerConfig->getServerBaseUrl() . $pre_validate_event->getValidationPath();
     if (!empty($pre_validate_event->getParameters())) {
       $validate_url .= '?' . UrlHelper::buildQuery($pre_validate_event->getParameters());
@@ -178,7 +178,7 @@ class CasValidator {
 
     // Dispatch an event that allows modules to alter the CAS property bag.
     $event = new CasPostValidateEvent($response_data, $cas_property_bag);
-    $this->eventDispatcher->dispatch(CasHelper::EVENT_POST_VALIDATE, $event);
+    $this->eventDispatcher->dispatch($event, CasHelper::EVENT_POST_VALIDATE);
     return $event->getCasPropertyBag();
   }
 

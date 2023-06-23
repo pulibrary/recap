@@ -56,6 +56,7 @@ class TermTest extends TaxonomyTestBase {
 
     $this->drupalLogin($this->drupalCreateUser([
       'administer taxonomy',
+      'access taxonomy overview',
       'bypass node access',
     ]));
     $this->vocabulary = $this->createVocabulary();
@@ -349,6 +350,9 @@ class TermTest extends TaxonomyTestBase {
     $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary->id() . '/add');
     $this->submitForm($edit, 'Save');
 
+    // Ensure form redirected back to term add page.
+    $this->assertSession()->addressEquals('admin/structure/taxonomy/manage/' . $this->vocabulary->id() . '/add');
+
     $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties([
       'name' => $edit['name[0][value]'],
     ]);
@@ -372,6 +376,9 @@ class TermTest extends TaxonomyTestBase {
     // Edit the term.
     $this->drupalGet('taxonomy/term/' . $term->id() . '/edit');
     $this->submitForm($edit, 'Save');
+
+    // Ensure form redirected back to term view.
+    $this->assertSession()->addressEquals('taxonomy/term/' . $term->id());
 
     // Check that the term is still present at admin UI after edit.
     $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary->id() . '/overview');
@@ -430,6 +437,15 @@ class TermTest extends TaxonomyTestBase {
     // Validate that "Save and go to list" doesn't exist when destination
     // parameter is present.
     $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary->id() . '/add', ['query' => ['destination' => 'node/add']]);
+    $this->assertSession()->pageTextNotContains('Save and go to list');
+
+    // Validate that "Save and go to list" doesn't exist when missing permission
+    // 'access taxonomy overview'.
+    $this->drupalLogin($this->drupalCreateUser([
+      'administer taxonomy',
+      'bypass node access',
+    ]));
+    $this->drupalGet('admin/structure/taxonomy/manage/' . $this->vocabulary->id() . '/add');
     $this->assertSession()->pageTextNotContains('Save and go to list');
   }
 
