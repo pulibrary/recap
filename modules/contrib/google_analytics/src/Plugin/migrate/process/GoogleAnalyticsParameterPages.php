@@ -5,7 +5,6 @@ namespace Drupal\google_analytics\Plugin\migrate\process;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\migrate\MigrateExecutableInterface;
-use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrateProcessInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\ProcessPluginBase;
@@ -13,13 +12,13 @@ use Drupal\migrate\Row;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Prefixes paths with a slash.
+ * Converts D7 dimension and metric to D8 in a single field.
  *
  * @MigrateProcessPlugin(
- *   id = "google_analytics_visibility_pages"
+ *   id = "google_analytics_parameter_pages"
  * )
  */
-class GoogleAnalyticsVisibilityPages extends ProcessPluginBase implements ContainerFactoryPluginInterface {
+class GoogleAnalyticsParameterPages extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * The module handler.
@@ -70,28 +69,25 @@ class GoogleAnalyticsVisibilityPages extends ProcessPluginBase implements Contai
    * {@inheritdoc}
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
-    [$old_visibility, $pages] = $value;
-
-    $request_path_pages = '';
-
-    if ($pages) {
-      // 2 == BLOCK_VISIBILITY_PHP in Drupal 6 and 7.
-      if ($old_visibility == 2) {
-        // Skip the row if we're configured to. If not, we don't need to do
-        // anything else -- the block will simply have no PHP or request_path
-        // visibility configuration. You will need to manually migrate PHP code.
-        throw new MigrateSkipRowException();
-      }
-      else {
-        $paths = preg_split("(\r\n?|\n)", $pages);
-        foreach ($paths as $key => $path) {
-          $paths[$key] = $path === '<front>' ? $path : '/' . ltrim($path, '/');
-        }
-        $request_path_pages = implode("\n", $paths);
-      }
+    [$dimensions, $metrics] = $value;
+    $return_array = [];
+    foreach ($dimensions as $dimension) {
+      $index = 'dimension' . $dimension['index'];
+      $return_array[$index] = [
+        'type'  => 'dimension',
+        'name'  => $index,
+        'value'  => $dimension['value'],
+      ];
     }
-
-    return $request_path_pages;
+    foreach ($metrics as $metric) {
+      $index = 'metric' . $metric['index'];
+      $return_array[$index] = [
+        'type'  => 'metric',
+        'name'  => $index,
+        'value'  => $metric['value'],
+      ];
+    }
+    return $return_array;
   }
 
 }
