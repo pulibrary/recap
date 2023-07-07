@@ -3,6 +3,8 @@ lock "~> 3.16"
 
 set :branch, ENV["BRANCH"] || "main"
 
+# set verify_host_key: :never
+
 set :application, "recap"
 set :repo_url, "https://github.com/pulibrary/recap.git"
 
@@ -41,8 +43,8 @@ namespace :drupal do
   desc "Link settings.php"
   task :link_settings do
     on roles(:app) do |host|
-      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && ln -sf #{fetch(:drupal_settings)} settings.php"
-      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && ln -sf #{fetch(:drupal_services)} services.yml"
+      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && cp #{fetch(:drupal_settings)} settings.php"
+      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && cp #{fetch(:drupal_services)} services.yml"
       execute "cd #{release_path}/drush && ln -sf #{fetch(:drush_recap_aliases)} drushrc.php"
       execute "cd #{release_path}/drush/sites && ln -sf #{fetch(:drush_recap_site)} drushrc.php"
       info "linked settings into #{release_path}/sites/#{fetch(:drupal_site)} site"
