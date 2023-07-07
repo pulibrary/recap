@@ -104,7 +104,7 @@
     "prettier": "^2.1.2",
     "shepherd.js": "9.1.x",
     "sortablejs": "1.15.x",
-    "stylelint": "^14.0.1",
+    "stylelint": "^15.10.1",
     "stylelint-checkstyle-formatter": "^0.1.2",
     "stylelint-config-standard": "^29.0.0",
     "stylelint-order": "^5.0.0",
