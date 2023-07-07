@@ -3,6 +3,8 @@ lock "~> 3.16"
 
 set :branch, ENV["BRANCH"] || "main"
 
+# set verify_host_key: :never
+
 set :application, "recap"
 set :repo_url, "https://github.com/pulibrary/recap.git"
 
@@ -21,32 +23,8 @@ set :cas_cert_location, "/etc/ssl/certs/ssl-cert-snakeoil.pem"
 
 set :user, "deploy"
 
-# Default value for :format is :airbrussh.
-# set :format, :airbrussh
+set :keep_releases, 5
 
-# You can configure the Airbrussh format using :format_options.
-# These are the defaults.
-# set :format_options, command_output: true, log_file: "log/capistrano.log", color: :auto, truncate: :auto
-
-# Default value for :pty is false
-# set :pty, true
-
-# Default value for :linked_files is []
-# append :linked_files, "config/database.yml"
-
-# Default value for linked_dirs is []
-# append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/system"
-
-# Default value for default_env is {}
-# set :default_env, { path: "/opt/ruby/bin:$PATH" }
-
-# Default value for local_user is ENV['USER']
-# set :local_user, -> { `git config user.name`.chomp }
-
-# Default value for keep_releases is 5
-# set :keep_releases, 5
-
-# Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
 
 namespace :drupal do
@@ -65,8 +43,8 @@ namespace :drupal do
   desc "Link settings.php"
   task :link_settings do
     on roles(:app) do |host|
-      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && ln -sf #{fetch(:drupal_settings)} settings.php"
-      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && ln -sf #{fetch(:drupal_services)} services.yml"
+      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && cp #{fetch(:drupal_settings)} settings.php"
+      execute "cd #{release_path}/sites/#{fetch(:drupal_site)} && cp #{fetch(:drupal_services)} services.yml"
       execute "cd #{release_path}/drush && ln -sf #{fetch(:drush_recap_aliases)} drushrc.php"
       execute "cd #{release_path}/drush/sites && ln -sf #{fetch(:drush_recap_site)} drushrc.php"
       info "linked settings into #{release_path}/sites/#{fetch(:drupal_site)} site"
