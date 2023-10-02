@@ -1,0 +1,18 @@
+uuid: ccb4be9e-80f8-4c05-b403-3deced7164f8
+langcode: en
+status: true
+dependencies:
+  theme:
+    - stable
+id: stable_page_title
+theme: stable
+region: content
+weight: -50
+provider: null
+plugin: page_title_block
+settings:
+  id: page_title_block
+  label: 'Page title'
+  label_display: '0'
+  provider: core
+visibility: {  }

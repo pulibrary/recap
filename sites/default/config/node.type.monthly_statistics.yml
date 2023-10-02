@@ -1,0 +1,17 @@
+uuid: 520b540f-eff0-416f-a609-9a1a22d2c7db
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Statistics
+type: monthly_statistics
+description: 'ReCAP monthly statistics showing total items accessioned and total items retrieved & attach other statistics as spreadsheets.'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: false

@@ -1,0 +1,14 @@
+uuid: 576607b9-8bf8-43cb-a800-a8073800fc83
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.web_editor
+  module:
+    - user
+id: user_add_role_action.web_editor
+label: 'Add the Web Editor role to the selected users'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: web_editor

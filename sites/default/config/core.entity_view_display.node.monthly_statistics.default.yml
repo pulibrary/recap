@@ -1,0 +1,24 @@
+uuid: ffbed2a5-2455-426a-8215-21f32b7bf0e6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.monthly_statistics.body
+    - node.type.monthly_statistics
+  module:
+    - text
+    - user
+id: node.monthly_statistics.default
+targetEntityType: node
+bundle: monthly_statistics
+mode: default
+content:
+  body:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  links: true

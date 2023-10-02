@@ -1,0 +1,17 @@
+uuid: 85de6f30-6f07-4e1b-a51c-287c0786c5c6
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: 'Gallery Image'
+type: gallery_image
+description: 'Images for the gallery'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: false

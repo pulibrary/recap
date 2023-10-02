@@ -1,0 +1,25 @@
+uuid: 1d06b90d-7a1b-4ba5-8a18-c9754b37092b
+langcode: en
+status: false
+dependencies:
+  config:
+    - system.menu.footer
+  module:
+    - system
+  theme:
+    - pinwheel
+id: pinwheel_footer
+theme: pinwheel
+region: footer
+weight: -7
+provider: null
+plugin: 'system_menu_block:footer'
+settings:
+  id: 'system_menu_block:footer'
+  label: 'Footer menu'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: 0
+  expand_all_items: false
+visibility: {  }

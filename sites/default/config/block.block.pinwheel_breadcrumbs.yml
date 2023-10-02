@@ -1,0 +1,20 @@
+uuid: 2791689b-916b-4327-8b9d-de8c22c8b6f5
+langcode: en
+status: false
+dependencies:
+  module:
+    - system
+  theme:
+    - pinwheel
+id: pinwheel_breadcrumbs
+theme: pinwheel
+region: header
+weight: -3
+provider: null
+plugin: system_breadcrumb_block
+settings:
+  id: system_breadcrumb_block
+  label: Breadcrumbs
+  label_display: '0'
+  provider: system
+visibility: {  }

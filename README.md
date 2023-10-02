@@ -63,9 +63,9 @@
     ```
     $settings['hash_salt'] = 'abc123';
     ```
-1. Copy the same hash from above and add the value to `$settings['config_sync_directory']` in `sites/default/settings.php`. For example, if config directory in `sites/default/files` is `config_abc123`, then:
+1. Uncomment the line beginning with `$settings['config_sync_directory']` in `sites/default/settings.php`. It should look like :
     ```
-    $settings['config_sync_directory'] = 'sites/default/files/config_abc123'
+    $settings['config_sync_directory'] = 'sites/default/config'
     ```
 1. Create a `drush/drush.yml` file with the following
 ```
