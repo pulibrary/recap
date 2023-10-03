@@ -1,0 +1,67 @@
+uuid: 041adab2-be5f-4283-a007-07719ed9178c
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.basic_html
+  module:
+    - ckeditor
+    - editor_file
+third_party_settings:
+  editor_file:
+    status: true
+    scheme: public
+    directory: inline-files
+    extensions: 'pdf pptx ppsx xslx'
+format: basic_html
+editor: ckeditor
+settings:
+  toolbar:
+    rows:
+      -
+        -
+          name: Formatting
+          items:
+            - Bold
+            - Italic
+            - Underline
+        -
+          name: Linking
+          items:
+            - DrupalLink
+            - DrupalUnlink
+        -
+          name: Lists
+          items:
+            - BulletedList
+            - NumberedList
+        -
+          name: Media
+          items:
+            - Blockquote
+            - DrupalImage
+            - DrupalFile
+        -
+          name: 'Block Formatting'
+          items:
+            - Format
+        -
+          name: Tools
+          items:
+            - Source
+        -
+          name: Layout
+          items:
+            - JustifyLeft
+            - JustifyCenter
+            - JustifyRight
+            - Table
+  plugins: {  }
+image_upload:
+  status: true
+  scheme: public
+  directory: inline-images
+  max_size: ''
+  max_dimensions:
+    width: null
+    height: null

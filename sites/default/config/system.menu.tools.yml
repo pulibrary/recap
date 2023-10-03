@@ -1,0 +1,8 @@
+uuid: e8a2fbea-34cf-4568-8804-4d1eb4d2c953
+langcode: en
+status: true
+dependencies: {  }
+id: tools
+label: Tools
+description: 'User tool links, often added by modules'
+locked: true

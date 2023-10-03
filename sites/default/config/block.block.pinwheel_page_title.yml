@@ -1,0 +1,18 @@
+uuid: 6dd576fe-5da2-4652-ac0d-5f024cc66c65
+langcode: en
+status: false
+dependencies:
+  theme:
+    - pinwheel
+id: pinwheel_page_title
+theme: pinwheel
+region: content
+weight: -2
+provider: null
+plugin: page_title_block
+settings:
+  id: page_title_block
+  label: 'Page title'
+  label_display: '0'
+  provider: core
+visibility: {  }

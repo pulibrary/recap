@@ -1,0 +1,20 @@
+uuid: 25c9399e-43b2-4cde-851c-c938be271f75
+langcode: en
+status: true
+dependencies:
+  theme:
+    - pinwheel
+id: pinwheel_local_tasks
+theme: pinwheel
+region: content
+weight: -5
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: Tabs
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: true
+visibility: {  }

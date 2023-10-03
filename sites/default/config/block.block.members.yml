@@ -1,0 +1,25 @@
+uuid: 154cbc92-5b29-4255-9c0a-3f66d3aee147
+langcode: en
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:3b498fbf-502b-47ed-a096-2d8e65c22969'
+  module:
+    - block_content
+  theme:
+    - pinwheel
+id: members
+theme: pinwheel
+region: footer
+weight: 0
+provider: null
+plugin: 'block_content:3b498fbf-502b-47ed-a096-2d8e65c22969'
+settings:
+  id: 'block_content:3b498fbf-502b-47ed-a096-2d8e65c22969'
+  label: Members
+  label_display: '0'
+  provider: block_content
+  status: true
+  info: ''
+  view_mode: full
+visibility: {  }

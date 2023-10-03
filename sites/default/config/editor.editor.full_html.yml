@@ -1,0 +1,82 @@
+uuid: a7fb14fc-5a41-47b4-8b03-3d81933a42a0
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.full_html
+  module:
+    - ckeditor
+    - editor_file
+third_party_settings:
+  editor_file:
+    status: true
+    scheme: public
+    directory: inline-files
+    extensions: txt
+format: full_html
+editor: ckeditor
+settings:
+  toolbar:
+    rows:
+      -
+        -
+          name: Formatting
+          items:
+            - Bold
+            - Underline
+            - Italic
+            - Strike
+            - Superscript
+            - Subscript
+            - '-'
+            - RemoveFormat
+        -
+          name: Linking
+          items:
+            - DrupalLink
+            - DrupalUnlink
+        -
+          name: Lists
+          items:
+            - BulletedList
+            - NumberedList
+        -
+          name: Media
+          items:
+            - Blockquote
+            - DrupalImage
+            - Table
+            - HorizontalRule
+        -
+          name: 'Block Formatting'
+          items:
+            - Format
+        -
+          name: Tools
+          items:
+            - ShowBlocks
+            - Source
+        -
+          name: 'Justify - Indent'
+          items:
+            - JustifyLeft
+            - JustifyCenter
+            - JustifyRight
+            - JustifyBlock
+            - Outdent
+            - Indent
+        -
+          name: Styles
+          items:
+            - Styles
+  plugins:
+    stylescombo:
+      styles: ''
+image_upload:
+  status: true
+  scheme: public
+  directory: inline-images
+  max_size: ''
+  max_dimensions:
+    width: null
+    height: null

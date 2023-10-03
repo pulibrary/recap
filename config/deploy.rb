@@ -170,12 +170,11 @@ namespace :drupal do
   end
 
   desc "Revert the features to the code"
-  task :features_revert do
-      on release_roles :drupal_primary do
-          # todo features-revert-all is now something else
-          # execute "sudo -u www-data /usr/local/bin/drush -r #{release_path} -y features-revert-all"
-          # info "reverted the drupal features"
-        end
+  task :config_import do
+    on release_roles :drupal_primary do
+      execute "sudo -u www-data #{release_path}/vendor/bin/drush -r #{release_path} -y config:import"
+      info "imported the drupal config"
+    end
   end
 
   desc "Upload the files tar and install it FILES_DIR/FILES_GZ"
@@ -285,7 +284,7 @@ namespace :deploy do
       invoke! "drupal:update_directory_owner"
       invoke "drupal:start_apache2"
       invoke "drupal:cache_clear"
-      invoke "drupal:features_revert"
+      invoke "drupal:config_import"
       invoke "drupal:database:update"
       invoke! "drupal:cache_clear"
   end
