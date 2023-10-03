@@ -22,6 +22,7 @@
         "drupal/health_check": "^1.2",
         "drupal/juicebox": "^3.0@alpha",
         "drupal/libraries": "^3.0@alpha",
+        "drupal/stable" : "^2.0",
         "drupal/twitter_block": "3.0.0",
         "drupal/upgrade_status": "^3.4",
         "drush/drush": "^10.2"
