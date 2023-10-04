@@ -68,7 +68,7 @@ class SettingsForm extends ConfigFormBase {
     $settings = $this->config('juicebox.settings')->get();
     // If the base language list is not officially saved yet, we can get the
     // default value from the library settings.
-    if (empty($settings['base_languagelist'])) {
+    if (empty($settings['base_languagelist']) && isset($library['base_languagelist'])) {
       $settings['base_languagelist'] = $library['base_languagelist'];
     }
     $form['juicebox_admin_intro'] = [
@@ -113,7 +113,6 @@ class SettingsForm extends ConfigFormBase {
     $form['multilingual']['base_languagelist_suggestion'] = [
       '#type' => 'item',
       '#title' => $this->t('Suggested base string for currently detected Juicebox version (@version)', ['@version' => $version]),
-      '#description' => new FormattableMarkup('<pre>' . $library['base_languagelist'] . '</pre>', []),
       '#states' => [
         // Hide the settings when the translate option is disabled.
         'invisible' => [
@@ -121,7 +120,10 @@ class SettingsForm extends ConfigFormBase {
         ],
       ],
     ];
-    $multisize_disallowed = in_array('juicebox_multisize_image_style', $library['disallowed_conf']);
+    if (isset($library['base_languagelist'])) {
+      $form['multilingual']['base_languagelist_suggestion']['#description'] = new FormattableMarkup('<pre>' . $library['base_languagelist'] . '</pre>', []);
+    }
+    $multisize_disallowed = isset($library['disallowed_conf']) ? in_array('juicebox_multisize_image_style', $library['disallowed_conf']) : FALSE;
     $multisize_description = '<p>' . $this->t('Some versions of the Juicebox javascript library support "multi-size" (adaptive) image delivery. Individual galleries configured to use the <strong>Juicebox PRO multi-size (adaptive)</strong> image style allow for three different source derivatives to be defined per image, each of which can be configured below. The Juicebox javascript library will then choose between these depending on the active screen mode (i.e. viewport size) of each user. See the Juicebox javascript library documentation for more information.') . '</p>';
     if ($multisize_disallowed) {
       $multisize_description .= '<p><strong>' . $this->t('Your currently detected Juicebox version (@version) is not compatible with multi-size features, so the options below have been disabled.', ['@version' => $version]) . '</strong></p>';

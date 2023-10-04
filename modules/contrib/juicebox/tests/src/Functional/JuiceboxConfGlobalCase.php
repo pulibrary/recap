@@ -4,6 +4,7 @@ namespace Drupal\Tests\juicebox\Functional;
 
 use Drupal\file\Entity\File;
 use Drupal\Component\Utility\Html;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Tests global configuration logic for Juicebox galleries.
@@ -18,12 +19,12 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
    *
    * @var array
    */
-  public static $modules = ['node', 'field_ui', 'image', 'juicebox'];
+  protected static $modules = ['node', 'field_ui', 'image', 'juicebox'];
 
   /**
    * Define setup tasks.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     // Create and login user.
     // @todo Reactivate translation perms when issue #2573975 is resolved.
@@ -61,7 +62,7 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     // Do a control request of the XML as an anon user that will also prime any
     // caches.
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
-    $this->assertResponse(200, 'Control request of XML was successful.');
+    $this->assertSession()->statusCodeEquals(200);
     // Enable optional global settings.
     $this->drupalLogin($this->webUser);
     $edit = [
@@ -69,13 +70,13 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     ];
     $this->drupalGet('admin/config/media/juicebox');
     $this->submitForm($edit, 'Save configuration');
-    $this->assertText($this->t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
+    $this->assertSession()->pageTextContains('The Juicebox configuration options have been saved');
     // Now check the resulting XML again as an anon user.
     $this->drupalLogout();
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
     // Check the the XML now returns an 'Access-Control-Allow-Origin' header
     // for CORS support.
-    $this->assertEqual($this->drupalGetHeader('Access-Control-Allow-Origin'), '*', 'Expected CORS header found.');
+    $this->assertEquals($this->getSession()->getResponseHeader('Access-Control-Allow-Origin'), '*', 'Expected CORS header found.');
   }
 
   /**
@@ -88,7 +89,7 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     // Do a control request of the XML as an anon user that will also prime any
     // caches.
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
-    $this->assertResponse(200, 'Control request of XML was successful.');
+    $this->assertSession()->statusCodeEquals(200);
     // We want to be able to set translations.
     $this->drupalLogin($this->webUser);
     $edit = [
@@ -103,7 +104,7 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     ];
     $this->drupalGet('admin/config/media/juicebox');
     $this->submitForm($edit, 'Save configuration');
-    $this->assertText($this->t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
+    $this->assertSession()->pageTextContains('The Juicebox configuration options have been saved');
     // We need to set a translation for our languagelist string. There is
     // probably a good way to do this directly in code, but for now it's fairly
     // easy to just brute-force it via the UI. First we need to visit the
@@ -123,13 +124,13 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
       'strings[' . $matches[1] . '][translations][0]' => 'Translated|Lang|List',
     ];
     $this->submitForm($edit, 'Save translations');
-    $this->assertText($this->t('The strings have been saved'), 'Languagelist translation saved.');
+    $this->assertSession()->pageTextContains($this->t('The strings have been saved'));
     // Now check the resulting XML again as an anon user.
     $this->drupalLogout();
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
     // Check that the languagelist configuration option was both included and
     // translated in the XML.
-    $this->assertRaw('languagelist="Translated|Lang|List"', 'Translated languagelist value found in XML.');
+    $this->assertSession()->responseContains('languagelist="Translated|Lang|List"');
   }
 
   /**
@@ -140,7 +141,7 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     // Do a control request of the XML as an anon user that will also prime any
     // caches.
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
-    $this->assertResponse(200, 'Control request of XML was successful.');
+    $this->assertSession()->statusCodeEquals(200);
     // Customize one of our global multi-size settings from the default for a
     // true end-to-end test.
     $this->drupalLogin($this->webUser);
@@ -149,7 +150,7 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
     ];
     $this->drupalGet('admin/config/media/juicebox');
     $this->submitForm($edit, 'Save configuration');
-    $this->assertText($this->t('The Juicebox configuration options have been saved'), 'Custom global options saved.');
+    $this->assertSession()->pageTextContains('The Juicebox configuration options have been saved');
     // Alter field formatter specific settings to use multi-size style.
     $this->drupalGet('admin/structure/types/manage/' . $this->instBundle . '/display');
     $this->submitForm([], $this->instFieldName . '_settings_edit', 'entity-view-display-edit-form');
@@ -157,19 +158,20 @@ class JuiceboxConfGlobalCase extends JuiceboxCaseTestBase {
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][image_style]' => 'juicebox_multisize',
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertText($this->t('Your settings have been saved.'), 'Gallery configuration changes saved.');
+    $this->assertSession()->pageTextContains('Your settings have been saved.');
     // Calculate the multi-size styles that should be found in the XML.
     $uri = File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
-    $formatted_image_small = entity_load('image_style', 'juicebox_small')->buildUrl($uri);
-    $formatted_image_medium = entity_load('image_style', 'juicebox_medium')->buildUrl($uri);
-    $formatted_image_large = entity_load('image_style', 'large')->buildUrl($uri);
+
+    $formatted_image_small = ImageStyle::load('juicebox_small')->buildUrl($uri);
+    $formatted_image_medium = ImageStyle::load('juicebox_medium')->buildUrl($uri);
+    $formatted_image_large = ImageStyle::load('juicebox_large')->buildUrl($uri);
     // Now check the resulting XML again as an anon user.
     $this->drupalLogout();
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
     // Check that the expected images are found in the XML.
-    $this->assertRaw('smallImageURL="' . Html::escape($formatted_image_small), 'Test small image found in XML.');
-    $this->assertRaw('imageURL="' . Html::escape($formatted_image_medium), 'Test medium image found in XML.');
-    $this->assertRaw('largeImageURL="' . Html::escape($formatted_image_large), 'Test large image found in XML.');
+    $this->assertSession()->responseContains('smallImageURL="' . Html::escape($formatted_image_small));
+    $this->assertSession()->responseContains('imageURL="' . Html::escape($formatted_image_medium));
+    $this->assertSession()->responseContains('largeImageURL="' . Html::escape($formatted_image_large));
   }
 
 }

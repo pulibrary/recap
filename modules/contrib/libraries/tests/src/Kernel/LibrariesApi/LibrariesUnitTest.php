@@ -14,7 +14,7 @@ class LibrariesUnitTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['libraries'];
+  protected static $modules = ['libraries'];
 
   /**
    * Tests libraries_get_path().

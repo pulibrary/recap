@@ -1,0 +1,15 @@
+{
+  "name": "drupal/health_check",
+  "type": "drupal-module",
+  "description": "Health check for load balancers",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://www.drupal.org/project/health_check",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/health_check",
+    "source": "https://git.drupalcode.org/project/health_check"
+  },
+  "require": {
+    "php": "^8.0",
+    "drupal/core": "^9.4 || ^10"
+  }
+}

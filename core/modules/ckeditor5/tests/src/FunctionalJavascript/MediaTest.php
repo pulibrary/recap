@@ -375,16 +375,16 @@ class MediaTest extends WebDriverTestBase {
     // Wrap the existing drupal-media tag with a div and an a that include
     // attributes allowed via GHS.
     $original_value = $this->host->body->value;
-    $this->host->body->value = '<div data-bar="baz"><a href="https://drupal.org" data-foo="bar">' . $original_value . '</a></div>';
+    $this->host->body->value = '<div data-bar="baz"><a href="https://example.com" data-foo="bar">' . $original_value . '</a></div>';
     $this->host->save();
     $this->drupalGet($this->host->toUrl('edit-form'));
 
     // Confirm data-foo is present in the editing view.
-    $this->assertNotEmpty($link = $assert_session->waitForElementVisible('css', 'a[href="https://drupal.org"]'));
+    $this->assertNotEmpty($link = $assert_session->waitForElementVisible('css', 'a[href="https://example.com"]'));
     $this->assertEquals('bar', $link->getAttribute('data-foo'));
 
     // Confirm that the media is wrapped by the div on the editing view.
-    $assert_session->elementExists('css', 'div[data-bar="baz"] > .drupal-media > a[href="https://drupal.org"] > div[data-drupal-media-preview]');
+    $assert_session->elementExists('css', 'div[data-bar="baz"] > .drupal-media > a[href="https://example.com"] > div[data-drupal-media-preview]');
 
     // Confirm that drupal-media is wrapped by the div and a, and that GHS has
     // retained arbitrary HTML allowed by source editing.
@@ -639,12 +639,12 @@ class MediaTest extends WebDriverTestBase {
     $this->pressEditorButton('Link');
     $this->assertVisibleBalloon('.ck-link-form');
     $link_input = $page->find('css', '.ck-balloon-panel .ck-link-form input[type=text]');
-    $link_input->setValue('https://drupal.org');
+    $link_input->setValue('https://example.com');
     $page->find('css', '.ck-balloon-panel .ck-link-form button[type=submit]')->click();
     $this->assertNotEmpty($assert_session->waitForElement('css', '.drupal-media figcaption > a'));
-    $this->assertEquals('<a class="ck-link_selected" href="https://drupal.org">Llamas are the most awesome ever</a>', $figcaption->getHtml());
+    $this->assertEquals('<a class="ck-link_selected" href="https://example.com">Llamas are the most awesome ever</a>', $figcaption->getHtml());
     $editor_dom = $this->getEditorDataAsDom();
-    $this->assertEquals('<a href="https://drupal.org">Llamas are the most awesome ever</a>', $editor_dom->getElementsByTagName('drupal-media')->item(0)->getAttribute('data-caption'));
+    $this->assertEquals('<a href="https://example.com">Llamas are the most awesome ever</a>', $editor_dom->getElementsByTagName('drupal-media')->item(0)->getAttribute('data-caption'));
   }
 
   /**
@@ -1606,7 +1606,10 @@ class MediaTest extends WebDriverTestBase {
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', '.ck-widget.drupal-media img'));
     $this->click('.ck-widget.drupal-media');
     $this->assertVisibleBalloon('[aria-label="Drupal Media toolbar"]');
-    $this->click('.ck-widget.drupal-media');
+
+    $this->assertNotEmpty($dropdown = $this->getBalloonButton('View Mode 1'));
+    $dropdown->click();
+
     // Check that all three view modes exist including the default view mode
     // that was not originally included in the allowed_view_modes.
     $this->assertNotEmpty($this->getBalloonButton('View Mode 1'));
@@ -1668,6 +1671,27 @@ class MediaTest extends WebDriverTestBase {
 })()
 JS;
     return $this->getSession()->evaluateScript($javascript);
+  }
+
+  /**
+   * Ensure media preview isn't clickable.
+   */
+  public function testMediaPointerEvent() {
+    $entityViewDisplay = EntityViewDisplay::load('media.image.view_mode_1');
+    $thumbnail = $entityViewDisplay->getComponent('thumbnail');
+    $thumbnail['settings']['image_link'] = 'file';
+    $entityViewDisplay->setComponent('thumbnail', $thumbnail);
+    $entityViewDisplay->save();
+
+    $assert_session = $this->assertSession();
+    $page = $this->getSession()->getPage();
+    $url = $this->host->toUrl('edit-form');
+    $this->drupalGet($url);
+    $this->waitForEditor();
+    $assert_session->waitForLink('default alt');
+    $page->find('css', '.ck .drupal-media')->click();
+    // Assert that the media preview is not clickable by comparing the URL.
+    $this->assertEquals($url->toString(), $this->getUrl());
   }
 
 }

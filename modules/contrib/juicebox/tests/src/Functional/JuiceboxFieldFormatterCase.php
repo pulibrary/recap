@@ -4,6 +4,8 @@ namespace Drupal\Tests\juicebox\Functional;
 
 use Drupal\file\Entity\File;
 use Drupal\Component\Utility\Html;
+use Drupal\image\Entity\ImageStyle;
+use Drupal\node\NodeInterface;
 use Drupal\Tests\Traits\Core\CronRunTrait;
 
 /**
@@ -20,7 +22,7 @@ class JuiceboxFieldFormatterCase extends JuiceboxCaseTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'field_ui',
     'image',
@@ -32,7 +34,7 @@ class JuiceboxFieldFormatterCase extends JuiceboxCaseTestBase {
   /**
    * Define setup tasks.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     // Create and login user.
     $this->webUser = $this->drupalCreateUser([
@@ -66,9 +68,9 @@ class JuiceboxFieldFormatterCase extends JuiceboxCaseTestBase {
     // Do a set of control requests as an anon user that will also prime any
     // caches.
     $this->drupalGet('node/' . $node->id());
-    $this->assertResponse(200, 'Control request of test node was successful.');
+    $this->assertSession()->statusCodeEquals(200);
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
-    $this->assertResponse(200, 'Control request of XML was successful.');
+    $this->assertSession()->statusCodeEquals(200);
     // Alter field formatter specific settings to contain custom values.
     $this->drupalLogin($this->webUser);
     $this->drupalGet('admin/structure/types/manage/' . $this->instBundle . '/display');
@@ -80,24 +82,24 @@ class JuiceboxFieldFormatterCase extends JuiceboxCaseTestBase {
       'fields[' . $this->instFieldName . '][settings_edit_form][settings][title_source]' => 'title',
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertText($this->t('Your settings have been saved.'), 'Gallery configuration changes saved.');
+    $this->assertSession()->pageTextContains('Your settings have been saved.');
     // Get the urls to the image and thumb derivatives expected.
     $uri = File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
-    $test_formatted_image_url = file_create_url($uri);
-    $test_formatted_thumb_url = entity_load('image_style', 'thumbnail')->buildUrl($uri);
+    $test_formatted_image_url = \Drupal::service('file_url_generator')->generateAbsoluteString($uri);
+    $test_formatted_thumb_url = ImageStyle::load('thumbnail')->buildUrl($uri);
     // Check for correct embed markup as anon user.
     $this->drupalLogout();
     $this->drupalGet('node/' . $node->id());
-    $this->assertRaw(Html::escape(file_url_transform_relative($test_formatted_image_url)), 'Test styled image found in embed code');
+    $this->assertSession()->responseContains(Html::escape(\Drupal::service('file_url_generator')->generateString($test_formatted_image_url)));
     // Check for correct XML.
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
-    $this->assertRaw('imageURL="' . Html::escape($test_formatted_image_url), 'Test styled image found in XML.');
-    $this->assertRaw('thumbURL="' . Html::escape($test_formatted_thumb_url), 'Test styled thumbnail found in XML.');
+    $this->assertSession()->responseContains('imageURL="' . Html::escape($test_formatted_image_url));
+    $this->assertSession()->responseContains('thumbURL="' . Html::escape($test_formatted_thumb_url));
     // Note the intended title and caption text does not contain any block-level
     // tags as long as the global title and caption output filter is working.
     // So this acts as a test for that feature as well.
-    $this->assertRaw('<title><![CDATA[Some title text for field ' . $this->instFieldName . ' on node ' . $node->id() . ']]></title>', 'Image title text found in XML');
-    $this->assertRaw('<caption><![CDATA[Some alt text for field ' . $this->instFieldName . ' on node ' . $node->id() . ' &lt;strong&gt;with formatting&lt;/strong&gt;]]></caption>', 'Image caption text found in XML');
+    $this->assertSession()->responseContains('<title><![CDATA[Some title text for field ' . $this->instFieldName . ' on node ' . $node->id() . ']]></title>');
+    $this->assertSession()->responseContains('<caption><![CDATA[Some alt text for field ' . $this->instFieldName . ' on node ' . $node->id() . ' &lt;strong&gt;with formatting&lt;/strong&gt;]]></caption>');
     // Now that we have title and caption data set, also ensure this text can
     // be found in search results. First we update the search index by marking
     // our test node as dirty and running cron.
@@ -107,10 +109,10 @@ class JuiceboxFieldFormatterCase extends JuiceboxCaseTestBase {
     $this->cronRun();
     $this->drupalGet('search');
     $this->submitForm(['keys' => '"Some title text"'], 'Search');
-    $this->assertText('Test Juicebox Gallery Node', 'Juicebox node found in search for title text.');
+    $this->assertSession()->pageTextContains('Test Juicebox Gallery Node');
     // The Juicebox javascript should have been excluded from the search results
     // page.
-    $this->assertNoRaw('"configUrl":"', 'Juicebox Drupal.settings vars not included on search result page.');
+    $this->assertSession()->responseNotContains('"configUrl":"');
   }
 
   /**
@@ -120,22 +122,22 @@ class JuiceboxFieldFormatterCase extends JuiceboxCaseTestBase {
     $node = $this->node;
     // The node and XML should be initially accessible (control test).
     $this->drupalGet('node/' . $node->id());
-    $this->assertResponse(200, 'Access allowed for published node.');
+    $this->assertSession()->statusCodeEquals(200);
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
-    $this->assertRaw('<?xml version="1.0" encoding="UTF-8"', 'XML access allowed to published node (valid XML detected).');
+    $this->assertSession()->responseContains('<?xml version="1.0" encoding="UTF-8"');
     // Now unpublish the node as a way of making it inaccessible to
     // non-privileged users. There are unlimited ways that access can be
     // restricted, such as other perm settings, contrb module controls for
     // entities (node_access, tac, etc.), contrb module controls for fields
     // (field_permissions), etc. We can't test them all here, but we can run
     // this basic check to ensure that XML access restrictions kick-in.
-    $node->status = NODE_NOT_PUBLISHED;
+    $node->status = NodeInterface::NOT_PUBLISHED;
     $node->save();
     // Re-check access.
     $this->drupalGet('node/' . $node->id());
-    $this->assertResponse(403, 'Access blocked for unpublished node.');
+    $this->assertSession()->statusCodeEquals(403);
     $this->drupalGet('juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/full');
-    $this->assertResponse(403, 'XML access blocked for unpublished node.');
+    $this->assertSession()->statusCodeEquals(403);
   }
 
 }

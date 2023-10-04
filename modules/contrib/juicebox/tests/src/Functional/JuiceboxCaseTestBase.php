@@ -2,6 +2,10 @@
 
 namespace Drupal\Tests\juicebox\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Tests\TestFileCreationTrait;
@@ -14,6 +18,8 @@ use Drupal\Tests\TestFileCreationTrait;
 abstract class JuiceboxCaseTestBase extends BrowserTestBase {
 
   use TestFileCreationTrait;
+
+  protected $defaultTheme = 'stark';
 
   /**
    * Common variables.
@@ -72,7 +78,7 @@ abstract class JuiceboxCaseTestBase extends BrowserTestBase {
       'settings' => $field_storage_settings,
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
     ];
-    entity_create('field_storage_config', $field_storage)->save();
+    FieldStorageConfig::create($field_storage)->save();
     // Prep a field instance.
     $field_settings = [];
     if ($this->instFieldType == 'image') {
@@ -93,16 +99,16 @@ abstract class JuiceboxCaseTestBase extends BrowserTestBase {
       'required' => FALSE,
       'settings' => $field_settings,
     ];
-    entity_create('field_config', $field)->save();
+    FieldConfig::create($field)->save();
     // Setup widget.
-    entity_get_form_display('node', $this->instBundle, 'default')
+    EntityFormDisplay::load("node.$this->instBundle.default")
       ->setComponent($this->instFieldName, [
         'type' => 'file_generic',
         'settings' => [],
       ])
       ->save();
     // Clear some caches for good measure.
-    $entity_manager = $this->container->get('entity.manager');
+    $entity_manager = $this->container->get('entity_type.manager');
     $entity_manager->getStorage('field_storage_config')->resetCache();
     $entity_manager->getStorage('field_config')->resetCache();
   }
@@ -111,7 +117,7 @@ abstract class JuiceboxCaseTestBase extends BrowserTestBase {
    * Helper to activate a Juicebox field formatter on a field.
    */
   protected function activateJuiceboxFieldFormatter() {
-    entity_get_display('node', $this->instBundle, 'default')
+    EntityViewDisplay::load("node.$this->instBundle.default")
       ->setComponent($this->instFieldName, [
         'type' => 'juicebox_formatter',
         'settings' => [],
@@ -154,7 +160,7 @@ abstract class JuiceboxCaseTestBase extends BrowserTestBase {
       $this->submitForm($edit, 'Save');
       // Clear some caches for good measure and save the node object for
       // reference during tests.
-      $node_storage = $this->container->get('entity.manager')->getStorage('node');
+      $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
       $node_storage->resetCache([$nid]);
       $this->node = $node_storage->load($nid);
       return TRUE;

@@ -8,6 +8,7 @@
 namespace Drupal\Tests\Core\Config\Entity;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
+use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Config\Schema\SchemaIncompleteException;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -19,6 +20,7 @@ use Drupal\Core\Test\TestKernel;
 use Drupal\Tests\Core\Config\Entity\Fixtures\ConfigEntityBaseWithPluginCollections;
 use Drupal\Tests\Core\Plugin\Fixtures\TestConfigurablePlugin;
 use Drupal\Tests\UnitTestCase;
+use Drupal\TestTools\Random;
 
 /**
  * @coversDefaultClass \Drupal\Core\Config\Entity\ConfigEntityBase
@@ -114,6 +116,8 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->id = $this->randomMachineName();
     $values = [
       'id' => $this->id,
@@ -220,7 +224,6 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
    */
   public function testAddDependency() {
     $method = new \ReflectionMethod('\Drupal\Core\Config\Entity\ConfigEntityBase', 'addDependency');
-    $method->setAccessible(TRUE);
     $method->invoke($this->entity, 'module', $this->provider);
     $method->invoke($this->entity, 'module', 'core');
     $method->invoke($this->entity, 'module', 'node');
@@ -289,8 +292,8 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
    */
   public function providerCalculateDependenciesWithPluginCollections() {
     // Start with 'a' so that order of the dependency array is fixed.
-    $instance_dependency_1 = 'a' . $this->randomMachineName(10);
-    $instance_dependency_2 = 'a' . $this->randomMachineName(11);
+    $instance_dependency_1 = 'a' . Random::machineName(10);
+    $instance_dependency_2 = 'a' . Random::machineName(11);
 
     return [
       // Tests that the plugin provider is a module dependency.
@@ -517,11 +520,11 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
         ],
       ]);
 
-    $entity_a = $this->createMock('\Drupal\Core\Config\Entity\ConfigEntityInterface');
+    $entity_a = $this->createMock(ConfigEntityBase::class);
     $entity_a->expects($this->atLeastOnce())
       ->method('label')
       ->willReturn('foo');
-    $entity_b = $this->createMock('\Drupal\Core\Config\Entity\ConfigEntityInterface');
+    $entity_b = $this->createMock(ConfigEntityBase::class);
     $entity_b->expects($this->atLeastOnce())
       ->method('label')
       ->willReturn('bar');
@@ -610,7 +613,7 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
     // Test setThirdPartySetting().
     $this->entity->setThirdPartySetting($third_party, $key, $value);
     $this->assertEquals($value, $this->entity->getThirdPartySetting($third_party, $key));
-    $this->assertEquals($value, $this->entity->getThirdPartySetting($third_party, $key, $this->randomGenerator->string()));
+    $this->assertEquals($value, $this->entity->getThirdPartySetting($third_party, $key, $this->getRandomGenerator()->string()));
 
     // Test getThirdPartySettings().
     $this->entity->setThirdPartySetting($third_party, 'test2', 'value2');
@@ -647,6 +650,8 @@ class TestConfigEntityWithPluginCollections extends ConfigEntityBaseWithPluginCo
   protected $pluginCollection;
 
   protected $pluginManager;
+
+  protected $the_plugin_collection_config;
 
   public function setPluginManager(PluginManagerInterface $plugin_manager) {
     $this->pluginManager = $plugin_manager;

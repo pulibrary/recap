@@ -12,17 +12,10 @@ class HealthController extends ControllerBase {
 
   /**
    * Health check.
-   *
-   * @return \Symfony\Component\HttpFoundation\Response
-   *   The response.
    */
-  public function content() {
+  public function content(): Response {
     // Use plain response with timestamp.
-    $response = new Response();
-    $response->headers->set('Content-Type', 'text/plain');
-    $response->setContent(time());
-
-    return $response;
+    return new Response(time(), 200, ['Content-Type' => 'text/plain']);
   }
 
 }

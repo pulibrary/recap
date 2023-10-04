@@ -524,6 +524,13 @@ function template_preprocess_views_view_table(&$variables) {
         // Improves accessibility of complex tables.
         $variables['header'][$field]['attributes']['id'] = Html::getUniqueId('view-' . $field . '-table-column');
       }
+      // aria-sort is a WAI-ARIA property that indicates if items in a table
+      // or grid are sorted in ascending or descending order. See
+      // http://www.w3.org/TR/wai-aria/states_and_properties#aria-sort
+      if ($active == $field) {
+        $variables['header'][$field]['attributes']['aria-sort'] = ($order == 'asc') ? 'ascending' : 'descending';
+      }
+
       // Check if header label is not empty.
       if (!empty($variables['header'][$field]['content'])) {
         $has_header_labels = TRUE;
@@ -791,6 +798,37 @@ function template_preprocess_views_view_grid(&$variables) {
   }
 
   // Add items to the variables array.
+  $variables['items'] = $items;
+}
+
+/**
+ * Prepares variables for views grid - responsive style templates.
+ *
+ * Default template: views-view-grid-responsive.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: The view object.
+ *   - rows: An array of row items. Each row is an array of content.
+ */
+function template_preprocess_views_view_grid_responsive(&$variables) {
+  $variables['options'] = $variables['view']->style_plugin->options;
+  $view = $variables['view'];
+
+  $items = [];
+
+  foreach ($variables['rows'] as $id => $item) {
+
+    $attribute = new Attribute();
+    if ($row_class = $view->style_plugin->getRowClass($id)) {
+      $attribute->addClass($row_class);
+    }
+    $items[$id] = [
+      'content' => $item,
+      'attributes' => $attribute,
+    ];
+  }
+
   $variables['items'] = $items;
 }
 
