@@ -24,6 +24,7 @@
         "drupal/health_check": "^3.0",
         "drupal/juicebox": "^4.0@alpha",
         "drupal/libraries": "^4.0",
+        "drupal/profile_switcher": "^1.0@alpha",
         "drupal/seven": "^1.0",
         "drupal/stable": "^2.0",
         "drupal/twitter_block": "3.0.0",
