@@ -13,7 +13,8 @@
     "require": {
         "composer/installers": "^1.9",
         "drupal/cas": "^2.2",
-	"drupal/core": "^10.0",
+        "drupal/classy": "^1.0",
+        "drupal/core": "^10.0",
         "drupal/core-composer-scaffold": "^10",
         "drupal/core-project-message": "^10",
         "drupal/core-recommended": "^10",
@@ -23,6 +24,7 @@
         "drupal/health_check": "^3.0",
         "drupal/juicebox": "^4.0@alpha",
         "drupal/libraries": "^4.0",
+        "drupal/seven": "^1.0",
         "drupal/stable": "^2.0",
         "drupal/twitter_block": "3.0.0",
         "drush/drush": "^12"
