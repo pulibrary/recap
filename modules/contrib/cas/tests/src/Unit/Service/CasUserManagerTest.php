@@ -140,7 +140,7 @@ class CasUserManagerTest extends UnitTestCase {
       ->willReturn($this->account);
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(['randomPassword'])
+      ->onlyMethods(['randomPassword'])
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
@@ -172,7 +172,7 @@ class CasUserManagerTest extends UnitTestCase {
     ]);
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(['storeLoginSessionData', 'register'])
+      ->onlyMethods(['storeLoginSessionData', 'register'])
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
@@ -218,7 +218,7 @@ class CasUserManagerTest extends UnitTestCase {
     ]);
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(['storeLoginSessionData', 'register'])
+      ->onlyMethods(['storeLoginSessionData', 'register'])
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
@@ -254,7 +254,7 @@ class CasUserManagerTest extends UnitTestCase {
       ->method('userLoginFinalize');
 
     $this->expectException('Drupal\cas\Exception\CasLoginException');
-    $this->expectExceptionMessage('Cannot register user, an event listener denied access.');
+    $this->expectExceptionMessage("Registration of user 'test' denied by an event listener.");
 
     $cas_user_manager->login(new CasPropertyBag('test'), 'ticket');
   }
@@ -275,7 +275,7 @@ class CasUserManagerTest extends UnitTestCase {
     ]);
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(['storeLoginSessionData', 'randomPassword'])
+      ->onlyMethods(['storeLoginSessionData', 'randomPassword'])
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
@@ -347,7 +347,7 @@ class CasUserManagerTest extends UnitTestCase {
     ]);
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(['storeLoginSessionData', 'randomPassword'])
+      ->onlyMethods(['storeLoginSessionData', 'randomPassword'])
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
@@ -422,7 +422,7 @@ class CasUserManagerTest extends UnitTestCase {
    */
   public function testEventListenerPreventsLogin() {
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(['storeLoginSessionData'])
+      ->onlyMethods(['storeLoginSessionData'])
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
@@ -473,7 +473,7 @@ class CasUserManagerTest extends UnitTestCase {
    */
   public function testExistingAccountIsLoggedIn() {
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(['storeLoginSessionData'])
+      ->onlyMethods(['storeLoginSessionData'])
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
@@ -525,7 +525,7 @@ class CasUserManagerTest extends UnitTestCase {
    */
   public function testBlockedAccountIsNotLoggedIn() {
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
-      ->setMethods(['storeLoginSessionData'])
+      ->onlyMethods(['storeLoginSessionData'])
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,

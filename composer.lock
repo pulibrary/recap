@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bbcc2204f99b4da59b8dac4f198bafe1",
+    "content-hash": "b51f94bff73812bd616c48950794f9e7",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1227,30 +1227,30 @@
         },
         {
             "name": "drupal/cas",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/cas.git",
-                "reference": "2.1.0"
+                "reference": "2.2.0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/cas-2.1.0.zip",
-                "reference": "2.1.0",
-                "shasum": "6cef4515da7da20ba0d5c853d05d96f954476e88"
+                "url": "https://ftp.drupal.org/files/projects/cas-2.2.0.zip",
+                "reference": "2.2.0",
+                "shasum": "146f724bf674da2da4690463d7aebff376ee8534"
             },
             "require": {
                 "drupal/core": "^9 || ^10",
                 "drupal/externalauth": "^2.0"
             },
             "require-dev": {
-                "drupal/cas_mock_server": "dev-1.x"
+                "drupal/cas_mock_server": "^2.0"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "2.1.0",
-                    "datestamp": "1664808426",
+                    "version": "2.2.0",
+                    "datestamp": "1694709912",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
