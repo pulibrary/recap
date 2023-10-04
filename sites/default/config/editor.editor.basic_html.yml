@@ -32,6 +32,12 @@ settings:
       - '|'
       - code
   plugins:
+    ckeditor5_alignment:
+      enabled_alignments:
+        - left
+        - center
+        - right
+        - justify
     ckeditor5_heading:
       enabled_headings:
         - heading2
@@ -39,6 +45,11 @@ settings:
         - heading4
         - heading5
         - heading6
+    ckeditor5_imageResize:
+      allow_resize: true
+    ckeditor5_list:
+      reversed: false
+      startIndex: true
     ckeditor5_sourceEditing:
       allowed_tags:
         - '<cite>'
@@ -55,17 +66,6 @@ settings:
         - '<h5 id>'
         - '<h6 id>'
         - '<a hreflang data-entity-type data-entity-uuid>'
-    ckeditor5_list:
-      reversed: false
-      startIndex: true
-    ckeditor5_alignment:
-      enabled_alignments:
-        - left
-        - center
-        - right
-        - justify
-    ckeditor5_imageResize:
-      allow_resize: true
 image_upload:
   status: true
   scheme: public

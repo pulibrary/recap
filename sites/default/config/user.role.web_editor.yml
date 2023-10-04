@@ -11,6 +11,7 @@ dependencies:
     - taxonomy.vocabulary.tags
   module:
     - contextual
+    - file
     - filter
     - node
     - search
@@ -28,6 +29,7 @@ permissions:
   - 'create page content'
   - 'delete any monthly_statistics content'
   - 'delete own article content'
+  - 'delete own files'
   - 'delete own gallery_image content'
   - 'delete own monthly_statistics content'
   - 'delete own page content'
