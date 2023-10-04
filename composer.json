@@ -19,7 +19,7 @@
         "drupal/core-vendor-hardening": "^10",
         "drupal/externalauth": "^2.0",
         "drupal/google_analytics": "^4.0.2",
-        "drupal/health_check": "^1.2",
+        "drupal/health_check": "^3.0.0",
         "drupal/juicebox": "^3.0@alpha",
         "drupal/libraries": "^4.0",
         "drupal/seven": "^1.0",
