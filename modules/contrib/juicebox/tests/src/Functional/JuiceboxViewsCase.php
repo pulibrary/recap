@@ -2,8 +2,10 @@
 
 namespace Drupal\Tests\juicebox\Functional;
 
+use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\Component\Utility\Html;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Tests integration with Views module.
@@ -17,7 +19,7 @@ class JuiceboxViewsCase extends JuiceboxCaseTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'text',
     'field',
@@ -50,7 +52,7 @@ class JuiceboxViewsCase extends JuiceboxCaseTestBase {
   /**
    * Define setup tasks.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     // Create and login user.
@@ -84,27 +86,27 @@ class JuiceboxViewsCase extends JuiceboxCaseTestBase {
     $this->drupalLogin($this->webUser);
     $node = $this->node;
     $xml_path = 'juicebox/xml/viewsstyle/juicebox_views_test/page_2';
-    $xml_url = \Drupal::url('juicebox.xml_viewsstyle',
+    $xml_url = Url::fromRoute('juicebox.xml_viewsstyle',
      ['viewName' => 'juicebox_views_test', 'displayName' => 'page_2']);
     // Get the urls to the test image and thumb derivative used by default.
     $uri = File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
-    $test_image_url = entity_load('image_style', 'juicebox_medium')->buildUrl($uri);
-    $test_thumb_url = entity_load('image_style', 'juicebox_square_thumb')->buildUrl($uri);
+    $test_image_url = ImageStyle::load('juicebox_medium')->buildUrl($uri);
+    $test_thumb_url = ImageStyle::load('juicebox_square_thumb')->buildUrl($uri);
     // Check for correct embed markup.
     $this->drupalGet('juicebox-views-test-advanced');
-    $this->assertRaw(trim(json_encode(['configUrl' => $xml_url]), '{}"'), 'Gallery setting found in Drupal.settings.');
-    $this->assertRaw('juicebox-views-test--page-2', 'Embed code wrapper found.');
-    $this->assertRaw(Html::escape(file_url_transform_relative($test_image_url)), 'Test image found in embed code');
+    $this->assertSession()->responseContains(trim(json_encode(['configUrl' => $xml_url]), '{}"'));
+    $this->assertSession()->responseContains('juicebox-views-test--page-2');
+    $this->assertSession()->responseContains(Html::escape(\Drupal::service('file_url_generator')->generateString($test_image_url)));
     // Check for correct XML.
     $this->drupalGet($xml_path);
-    $this->assertRaw('<?xml version="1.0" encoding="UTF-8"?>', 'Valid XML detected.');
-    $this->assertRaw('imageURL="' . Html::escape($test_image_url), 'Test image found in XML.');
-    $this->assertRaw('thumbURL="' . Html::escape($test_thumb_url), 'Test thumbnail found in XML.');
+    $this->assertSession()->responseContains('<?xml version="1.0" encoding="UTF-8"?>');
+    $this->assertSession()->responseContains('imageURL="' . Html::escape($test_image_url));
+    $this->assertSession()->responseContains('thumbURL="' . Html::escape($test_thumb_url));
     // Logout and test that XML access is restricted. Note that this test view
     // is setup to limit view access only to admins.
     $this->drupalLogout();
     $this->drupalGet('juicebox/xml/viewsstyle/juicebox_views_test/page_2');
-    $this->assertResponse(403, 'XML access blocked for access-restricted view.');
+    $this->assertSession()->statusCodeEquals(403);
   }
 
 }

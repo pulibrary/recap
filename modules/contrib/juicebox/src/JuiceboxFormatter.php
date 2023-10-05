@@ -194,6 +194,7 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface, TrustedCallbackIn
    * {@inheritdoc}
    */
   public function getLibrary($force_local = FALSE, $reset = FALSE) {
+    $library = [];
     // We "default" to sites/all/libraries and that will override
     // anything in /libraries. Rationale is that sites/all/libraries
     // was the original location for these files theoretically,
@@ -359,23 +360,23 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface, TrustedCallbackIn
     $image_data = [];
     $image_data['juicebox_compatible'] = TRUE;
     // Set the normal, unstyled, url for reference.
-    $image_data['unstyled_src'] = file_create_url($file->getFileUri());
+    $image_data['unstyled_src'] = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
     // Check compatibility if configured and if the library info contains
     // mimetype compatibitly information.
     if ($check_compatible && !empty($library['compatible_mimetypes']) && !in_array($mimetype, $library['compatible_mimetypes'])) {
       // If the item is not compatible, find the substitute mimetype icon.
       $image_data['juicebox_compatible'] = FALSE;
-      $icon_dir = drupal_get_path('module', 'juicebox') . '/images/mimetypes';
+      $icon_dir = \Drupal::service('extension.list.module')->getPath('juicebox') . '/images/mimetypes';
       // We only have icons for each major type, so simplify accordingly.
       // file_icon_class() could also be useful here but would require
       // supporting icons for more package types.
       $type_parts = explode('/', $mimetype);
       $icon_path = $icon_dir . '/' . reset($type_parts) . '.png';
       if (file_exists($icon_path)) {
-        $image_data['imageURL'] = file_create_url($icon_path);
+        $image_data['imageURL'] = \Drupal::service('file_url_generator')->generateAbsoluteString($icon_path);
       }
       else {
-        $image_data['imageURL'] = file_create_url($icon_dir . '/general.png');
+        $image_data['imageURL'] = \Drupal::service('file_url_generator')->generateAbsoluteString($icon_dir . '/general.png');
       }
     }
     // If the item is compatible, style it.
@@ -661,7 +662,7 @@ class JuiceboxFormatter implements JuiceboxFormatterInterface, TrustedCallbackIn
     // Get available image style presets.
     $presets = image_style_options(FALSE);
     // If multisize is allowed, include it with the normal styles.
-    if ($allow_multisize && !in_array('juicebox_multisize_image_style', $library['disallowed_conf'])) {
+    if ($allow_multisize && (!isset($library['disallowed_cont']) || !in_array('juicebox_multisize_image_style', $library['disallowed_conf']))) {
       $presets = ['juicebox_multisize' => $this->t('Juicebox PRO multi-size (adaptive)')] + $presets;
     }
     return $presets;

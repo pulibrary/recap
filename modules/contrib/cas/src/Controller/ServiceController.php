@@ -294,7 +294,12 @@ class ServiceController implements ContainerInjectionInterface {
         $error_level = LogLevel::INFO;
       }
 
-      $this->casHelper->log($error_level, $e->getMessage());
+      $message = $e->getMessage();
+      $reason = $e->getSubscriberCancelReason();
+      if ($reason) {
+        $message .= " (Reason: $reason)";
+      }
+      $this->casHelper->log($error_level, $message);
 
       // Display error message to the user, unless this login failure originated
       // from a gateway login. No sense in showing them an error when the login

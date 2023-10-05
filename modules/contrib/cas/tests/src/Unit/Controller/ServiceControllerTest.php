@@ -157,7 +157,7 @@ class ServiceControllerTest extends UnitTestCase {
     $storage = $this->createMock('\Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage');
     $session = $this->getMockBuilder('\Symfony\Component\HttpFoundation\Session\Session')
       ->setConstructorArgs([$storage])
-      ->setMethods(NULL)
+      ->onlyMethods([])
       ->getMock();
     $session->start();
 

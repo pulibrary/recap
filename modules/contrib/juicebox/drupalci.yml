@@ -1,0 +1,41 @@
+build:
+  assessment:
+    validate_codebase:
+      phplint:
+      csslint:
+        halt-on-fail: false
+      eslint:
+        halt-on-fail: false
+      phpcs:
+        sniff-all-files: false
+        halt-on-fail: false
+    testing:
+      container_command:
+        commands: "sudo -u www-data mkdir -p cd ${SOURCE_DIR}/libraries && cd ${SOURCE_DIR}/libraries && sudo -u www-data curl -L https://github.com/maxstrim/juicebox/archive/refs/tags/1.5.1.tar.gz --output 1.5.1.tar.gz && sudo -u www-data tar -zxf 1.5.1.tar.gz && mv juicebox-1.5.1 juicebox"
+      run_tests.phpunit:
+        types: 'PHPUnit-Unit'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false
+      run_tests.kernel:
+        types: 'PHPUnit-Kernel'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false
+      run_tests.simpletest:
+         types: 'Simpletest'
+         testgroups: '--all'
+         suppress-deprecations: false
+         halt-on-fail: false
+      run_tests.functional:
+        types: 'PHPUnit-Functional'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false
+      run_tests.javascript:
+        concurrency: 1
+        types: 'PHPUnit-FunctionalJavascript'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false
+      nightwatchjs:

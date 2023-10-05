@@ -1,0 +1,10 @@
+{
+    "name": "drupal/juicebox",
+    "description": "Provides an integration between the Juicebox HTML5 responsive gallery library and Drupal.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/juicebox",
+        "source": "https://git.drupalcode.org/project/juicebox"
+    }
+}

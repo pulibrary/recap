@@ -13,13 +13,13 @@ Core committers
 The Drupal core committers oversee the development of Drupal as a whole. The
 core committers for Drupal are (in alphabetical order):
 
-BDFL
+Project Lead
 - Dries Buytaert 'dries' https://www.drupal.org/u/dries
 
 Product managers
 - Dries Buytaert 'dries' https://www.drupal.org/u/dries
-- Angela Byron 'webchick' https://www.drupal.org/u/webchick
 - Gábor Hojtsy 'Gábor Hojtsy' https://www.drupal.org/u/gábor-hojtsy
+- Lauri Eskola 'lauriii' https://www.drupal.org/u/lauriii
 - Roy Scholten 'yoroy' https://www.drupal.org/u/yoroy
 
 Framework managers
@@ -31,24 +31,26 @@ Framework managers
   - Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
 
   Frontend
-  - Lauri Eskola 'lauriii' https://www.drupal.org/u/lauriii
+  - Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
   - (provisional) Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
   - (provisional) Cristina Chumillas 'ckrina' https://www.drupal.org/u/ckrina
-  - (provisional) Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
   - (provisional) Sally Young 'justafish' https://www.drupal.org/u/justafish
 
 Release managers
 - Nathaniel Catchpole 'catch' https://www.drupal.org/u/catch
 - Jess Myrbo 'xjm' https://www.drupal.org/u/xjm
+- Victoria Spagnolo 'quietone' https://www.drupal.org/u/quietone
 - (provisional) Dave Long 'longwave' https://www.drupal.org/u/longwave
-- (provisional) Victoria Spagnolo 'quietone' https://www.drupal.org/u/quietone
 
 Core JavaScript packages
- - Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
- - Sally Young 'justafish' https://www.drupal.org/u/justafish
+- Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
+- Sally Young 'justafish' https://www.drupal.org/u/justafish
 
 Committer team facilitators
 - Pamela Barone 'pameeela' https://www.drupal.org/u/pameeela
+
+Core initiative facilitators
+- Gábor Hojtsy 'Gábor Hojtsy' https://www.drupal.org/u/gábor-hojtsy
 
 Subsystem maintainers
 ---------------------
@@ -58,10 +60,7 @@ subsystems. See https://www.drupal.org/contribute/core-maintainers for more
 information on their responsibilities, and to find out how to become a subsystem
 maintainer. Current subsystem maintainers:
 
-Actions
-- ?
-
-Aggregator
+Actions UI
 - ?
 
 Ajax
@@ -80,11 +79,8 @@ Automated Cron
 Ban
 - ?
 
-Bartik
-- Emma Maria Karayiannis 'emma.maria' https://www.drupal.org/u/emma.maria
-
 Base system
-- ?
+- See "Framework managers" above.
 
 Basic Auth
 - Juampy Novillo Requena 'juampy' https://www.drupal.org/u/juampy
@@ -117,11 +113,6 @@ Breakpoint
 Cache
 - Nathaniel Catchpole 'catch' https://www.drupal.org/u/catch
 
-CKEditor
-- Henrik Danielsson 'TwoD' https://www.drupal.org/u/TwoD
-- Wim Leers 'Wim Leers' https://www.drupal.org/u/wim-leers
-- Marek 'mlewand' Lewandowski https://www.drupal.org/u/mlewand
-
 CKEditor 5
 - Lauri Eskola 'lauriii' https://www.drupal.org/u/lauriii
 - Wim Leers 'Wim Leers' https://www.drupal.org/u/wim-leers
@@ -132,12 +123,6 @@ Claro
 - Sascha Eggenberger 'saschaeggi' https://www.drupal.org/u/saschaeggi
 - Lauri Eskola 'lauriii' https://www.drupal.org/u/lauriii
 - Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
-
-Classy
-- David Hernandez 'davidhernandez' https://www.drupal.org/u/davidhernandez
-
-Color
-- ?
 
 Comment
 - Lee Rowlands 'larowlan' https://www.drupal.org/u/larowlan
@@ -243,13 +228,7 @@ Form API
 History
 - Andrey Postnikov 'andypost' https://www.drupal.org/u/andypost
 
-Hypertext Application Language (HAL)
-- ?
-
 Help
-- ?
-
-Help Topics
 - Amber Matz 'Amber Himes Matz' https://www.drupal.org/u/amber-himes-matz
 - Andrey Postnikov 'andypost' https://www.drupal.org/u/andypost
 
@@ -359,13 +338,6 @@ Plugin
 Queue
 - James Gilliland 'neclimdul' https://www.drupal.org/u/neclimdul
 
-Quick Edit
-- Wim Leers 'Wim Leers' https://www.drupal.org/u/wim-leers
-- Théodore Biadala 'nod_' https://www.drupal.org/u/nod_
-
-RDF
-- ?
-
 Render API
 - Alex Bronstein 'effulgentsia' https://www.drupal.org/u/effulgentsia
 - Moshe Weitzman 'moshe weitzman' https://www.drupal.org/u/moshe-weitzman
@@ -393,14 +365,8 @@ Serialization
 Settings Tray
 - Ted Bowman 'tedbow' https://www.drupal.org/u/tedbow
 
-Seven
-- ?
-
 Shortcut
 - Jibran Ijaz 'jibran' https://www.drupal.org/u/jibran
-
-Stable
-- ?
 
 Stark
 - John Albin Wilkins 'JohnAlbin' https://www.drupal.org/u/johnalbin
@@ -420,12 +386,6 @@ Taxonomy
 
 Telephone
 - Stephen Mustgrave 'smustgrave' https://www.drupal.org/u/smustgrave
-
-Testing framework
-- Alex Pott 'alexpott' https://www.drupal.org/u/alexpott
-- Sascha Grossenbacher 'Berdir' https://www.drupal.org/u/berdir
-- Daniel Wehner 'dawehner' https://www.drupal.org/u/dawehner
-- Alberto M. 'mondrake' https://www.drupal.org/u/mondrake
 
 Text Field
 - Stephen Mustgrave 'smustgrave' https://www.drupal.org/u/smustgrave
@@ -490,7 +450,7 @@ Accessibility
 - Rain Breaw Michaels 'rainbreaw' https://www.drupal.org/u/rainbreaw
 - Mike Gifford 'mgifford' https://www.drupal.org/u/mgifford
 - Andrew Macpherson 'andrewmacpherson' https://www.drupal.org/u/andrewmacpherson
-- (provisional) Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
+- Ben Mullins 'bnjmnm' https://www.drupal.org/u/bnjmnm
 
 Documentation
 - ?
@@ -499,7 +459,10 @@ Performance
 - Nathaniel Catchpole 'catch' https://www.drupal.org/u/catch
 
 Testing
-- ?
+- Alex Pott 'alexpott' https://www.drupal.org/u/alexpott
+- Sascha Grossenbacher 'Berdir' https://www.drupal.org/u/berdir
+- Daniel Wehner 'dawehner' https://www.drupal.org/u/dawehner
+- Alberto M. 'mondrake' https://www.drupal.org/u/mondrake
 
 Usability
 - Cristina Chumillas 'ckrina' https://www.drupal.org/u/ckrina

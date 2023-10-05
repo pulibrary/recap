@@ -71,6 +71,9 @@ class CasRouteEnhancerTest extends UnitTestCase {
       ->with('is_cas_user')
       ->willReturn($is_cas_user);
     $this->request->expects($this->any())
+      ->method('hasSession')
+      ->willReturn(TRUE);
+    $this->request->expects($this->any())
       ->method('getSession')
       ->willReturn($session);
     $this->route->expects($this->any())

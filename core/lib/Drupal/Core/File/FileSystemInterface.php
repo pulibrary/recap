@@ -37,14 +37,14 @@ interface FileSystemInterface {
    *
    * @see \Drupal\Core\File\FileSystemInterface::INSECURE_EXTENSION_REGEX
    */
-  public const INSECURE_EXTENSIONS = ['phar', 'php', 'pl', 'py', 'cgi', 'asp', 'js', 'htaccess'];
+  public const INSECURE_EXTENSIONS = ['phar', 'php', 'pl', 'py', 'cgi', 'asp', 'js', 'htaccess', 'phtml'];
 
   /**
    * The regex pattern used when checking for insecure file types.
    *
    * @see \Drupal\Core\File\FileSystemInterface::INSECURE_EXTENSIONS
    */
-  public const INSECURE_EXTENSION_REGEX = '/\.(phar|php|pl|py|cgi|asp|js|htaccess)(\.|$)/i';
+  public const INSECURE_EXTENSION_REGEX = '/\.(phar|php|pl|py|cgi|asp|js|htaccess|phtml)(\.|$)/i';
 
   /**
    * Moves an uploaded file to a new location.
@@ -360,7 +360,7 @@ interface FileSystemInterface {
   /**
    * Saves a file to the specified destination without invoking file API.
    *
-   * This function is identical to file_save_data() except the file will not be
+   * This function is identical to writeData() except the file will not be
    * saved to the {file_managed} table and none of the file_* hooks will be
    * called.
    *

@@ -363,9 +363,7 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
       ];
     }
     else {
-      // @todo Use a <button> link here, and delete
-      // seven_preprocess_fieldset__media_library_widget(), when
-      // https://www.drupal.org/project/drupal/issues/2999549 lands.
+      // @todo Use a <button> link here.
       $multiple_items = count($referenced_entities) > 1;
       $element['#field_prefix']['weight_toggle'] = [
         '#type' => 'html_tag',
@@ -1006,6 +1004,11 @@ class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface 
   public static function validateRequired(array $element, FormStateInterface $form_state, array $form) {
     // If a remove button triggered submit, this validation isn't needed.
     if (in_array([static::class, 'removeItem'], $form_state->getSubmitHandlers(), TRUE)) {
+      return;
+    }
+
+    // If user has no access, the validation isn't needed.
+    if (isset($element['#access']) && !$element['#access']) {
       return;
     }
 

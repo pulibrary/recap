@@ -3,7 +3,7 @@ type: module
 description: 'Support for testing insertion of user interaction into the flow.'
 package: Testing
 
-# Information added by Drupal.org packaging script on 2022-10-03
-version: '2.1.0'
+# Information added by Drupal.org packaging script on 2023-09-14
+version: '2.2.0'
 project: 'cas'
-datestamp: 1664808430
+datestamp: 1694709914

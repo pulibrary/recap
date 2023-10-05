@@ -1,4 +1,4 @@
-# Introduction
+# CAS
 
 As described in the official CAS protocol documentation:
 
@@ -9,9 +9,9 @@ and password) only once to a central CAS Server application."
 
 Using a single-sign on service like CAS is a beneficial because it provides:
 
-* Convenience. Your users don't need to remember credentials for multiple
+- Convenience. Your users don't need to remember credentials for multiple
   different web services.
-* Security. Your Drupal website never sees a user's password.
+- Security. Your Drupal website never sees a user's password.
 
 This module implements version 1 and version 2 of the CAS protocol:
 http://jasig.github.io/cas/4.1.x/protocol/CAS-Protocol-Specification.html
@@ -19,31 +19,39 @@ http://jasig.github.io/cas/4.1.x/protocol/CAS-Protocol-Specification.html
 Not all parts of the specification are implemented, but the core functionality
 that the protocol describes works well.
 
-# Requirements
+For a full description of the module, visit the
+[project page](https://www.drupal.org/project/cas).
+
+Submit bug reports and feature suggestions, or track changes in the
+[issue queue](https://www.drupal.org/project/issues/cas).
+
+
+## Requirements
 
 This module requires the following modules:
 
-* External Authentication (https://drupal.org/project/externalauth)
+- [External Authentication](https://www.drupal.org/project/externalauth)
 
-# Recommended Modules
 
-* CAS Attributes (http://drupal.org/project/cas_attributes) allows user
-  attributes and roles to be set based on attributes provided by the cas
-  server.
+## Recommended Modules
 
-# Installation
+- [CAS Attributes](http://drupal.org/project/cas_attributes) allows user
+attributes and roles to be set based on attributes provided by the cas server.
 
-Download and install the module as you would with any other Drupal module:
 
-* Download this module and move the folder it the DRUPAL_ROOT/modules
-  directory. Using composer to download modules is the best practice.
-* Enable the module in your Drupal admin interface.
-* The configuration page for this module is in /admin/config/people/cas,
-  and can be accessed in the admin menu under Configuration -> People -> CAS
+## Installation
 
-# Configuration
+Install as you would normally install a contributed Drupal module. For further
+information, see
+[Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
 
-## Getting Started and Basic Usage
+
+## Configuration
+
+The configuration page for this module is in /admin/config/people/cas, and can be accessed in the admin menu under Configuration -> People -> CAS.
+
+
+### Getting Started and Basic Usage
 
 All of the settings for this module are on the single configuration page
 described above. To get started, you simply need to configure the settings
@@ -68,7 +76,8 @@ authenticated.
 You can create a login button on your website that links directly to this
 path to provide a way for your users to easily login.
 
-## Account Handling & Auto Registration
+
+### Account Handling & Auto Registration
 
 Local Drupal accounts must exist for users that authenticate with CAS.
 This module simply provides a way to authenticate these users.
@@ -86,12 +95,14 @@ using the password reset form, changing their email, and logging in using the
 normal Drupal login form. All of those options are recommended and enabled
 by default.
 
-## Forced Login
+
+### Forced Login
 
 You can enable the Forced Login feature to force anonymous users to
 authenticate via CAS when they visit all or some of the pages on your site.
 
-## Gateway Login
+
+### Gateway Login
 
 With this feature enabled, anonymous users that visit some or all pages on
 your site will automatically be logged in IF they already have an active
@@ -110,7 +121,9 @@ to login if they do not already have an active CAS server session.
 *This feature is not currently compatible with any form of page caching
 and is not recommended.*
 
-## SSL Verification Setting
+
+### SSL Verification Setting
+
 This module makes an HTTP request to your CAS server during the authentication
 process, and since CAS servers must be accessed over HTTPS, this module needs
 to know how to verify the SSL/TLS certificate of your CAS server to be
@@ -127,7 +140,9 @@ Further discussion of this topic is beyond the scope of this documentation,
 but web hosts and system administrators should have a deep understanding
 of this topic to help further.
 
-## Integration with the "Redirect 402 to User Login" (r4032login) module
+
+### Integration with the "Redirect 402 to User Login" (r4032login) module
+
 It is often useful to have access denied pages automatically attempt to
 authenticate users via CAS. This provides a seamless login experience for
 your visitors when they try and access a page that is restricted.
@@ -145,7 +160,8 @@ To enable this behavior, enable the r4032login module and configure it as such:
 1. Set the "Path to user login form" to "/caslogin"
 
 
-## Proxy
+### Proxy
+
 Initializing a CAS client as a proxy allows the client to make web service calls
 to other sites or web pages that are protected by cas authentication.  It
 is often used in portal applications allowing the portal product to get
@@ -160,15 +176,19 @@ Configuring this module to "Allow this client to be proxied" lets the
 specified sites use this site as a resource for portal channels or other
 web services.
 
-# Troubleshooting
+
+## Troubleshooting
+
 The fastest way to determine why the module is not behaving as expected it to
 enable the debug logging in this module's settings page. Messages related to
 the authentication process, including errors, will be logged. To view these
 logs, enable the Database Logging module or the Syslog module.
 
-# API
 
-## Events
+## API
+
+### Events
+
 Modules may subscribe to events to alter the behavior of the CAS module or
 act on the data it provides.
 
@@ -176,7 +196,8 @@ All of the events that this module dispatches are located in the `src/Event`
 folder. Please see the comments in each of those event classes for details about
 what each event does and the common use cases for subscribing to them.
 
-## Forcing authentication yourself
+### Forcing authentication yourself
+
 The CAS module will always attempt to authenticate a user when they visit the
 /cas (or /caslogin) path, or if they visit a Forced Login or Gateway path that's
 configured in the module's settings.
@@ -189,10 +210,10 @@ Inject this service class into one of your own services (like a kernel event
 subscriber) and call the `buildRedirectResponse` method to create the response
 object.
 
-## Constructing a link that returns user to a specific page after login
+### Constructing a link that returns user to a specific page after login
+
 It is often useful to provide a login link on your site that, when clicked,
 will authenticate users via CAS and then return them to a specific page.
 
 You can use the standard Drupal "destination" parameter to accomplish this:
-
-https://yoursite.com/caslogin?destination=/node/1
+`https://yoursite.com/caslogin?destination=/node/1`

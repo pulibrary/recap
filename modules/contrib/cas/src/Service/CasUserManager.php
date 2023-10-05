@@ -205,8 +205,10 @@ class CasUserManager {
         }
         else {
           $reason = $cas_pre_register_event->getCancelRegistrationReason();
-          throw (new CasLoginException("Cannot register user, an event listener denied access.", CasLoginException::SUBSCRIBER_DENIED_REG))
-            ->setSubscriberCancelReason($reason);
+          throw (new CasLoginException(
+            sprintf("Registration of user '%s' denied by an event listener.", $property_bag->getUsername()),
+            CasLoginException::SUBSCRIBER_DENIED_REG
+          ))->setSubscriberCancelReason($reason);
         }
       }
       else {
@@ -262,11 +264,12 @@ class CasUserManager {
    */
   protected function storeLoginSessionData($session_id, $ticket) {
     if ($this->settings->get('cas.settings')->get('logout.enable_single_logout') === TRUE) {
-      $this->connection->insert('cas_login_data')
+      $this->connection->upsert('cas_login_data')
         ->fields(
           ['sid', 'plainsid', 'ticket', 'created'],
           [Crypt::hashBase64($session_id), $session_id, $ticket, time()]
         )
+        ->key('sid')
         ->execute();
     }
   }

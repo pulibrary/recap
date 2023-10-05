@@ -2,8 +2,10 @@
 
 namespace Drupal\Tests\juicebox\Functional;
 
+use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\Component\Utility\Html;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Tests the Juicebox XML generation via a sub-request.
@@ -30,7 +32,7 @@ class JuiceboxSubRequestCase extends JuiceboxCaseTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'text',
     'field',
@@ -62,7 +64,7 @@ class JuiceboxSubRequestCase extends JuiceboxCaseTestBase {
   /**
    * Define setup tasks.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     // Create and login user.
     $this->webUser = $this->drupalCreateUser([
@@ -88,7 +90,7 @@ class JuiceboxSubRequestCase extends JuiceboxCaseTestBase {
   public function testSubRequestDependent() {
     $node = $this->node;
     $xml_path = 'juicebox/xml/field/node/' . $node->id() . '/' . $this->instFieldName . '/_custom';
-    $xml_url = \Drupal::url('juicebox.xml_field', [
+    $xml_url = Url::fromRoute('juicebox.xml_field', [
       'entityType' => 'node',
       'entityId' => $node->id(),
       'fieldName' => $this->instFieldName,
@@ -96,13 +98,13 @@ class JuiceboxSubRequestCase extends JuiceboxCaseTestBase {
     ]);
     // Get the urls to the test image and thumb derivative used by default.
     $uri = File::load($node->{$this->instFieldName}[0]->target_id)->getFileUri();
-    $test_image_url = entity_load('image_style', 'juicebox_medium')->buildUrl($uri);
-    $test_thumb_url = entity_load('image_style', 'juicebox_square_thumb')->buildUrl($uri);
+    $test_image_url = ImageStyle::load('juicebox_medium')->buildUrl($uri);
+    $test_thumb_url = ImageStyle::load('juicebox_square_thumb')->buildUrl($uri);
     // Check for correct embed markup. This will also prime the cache.
     $content = $this->drupalGet('juicebox_test_row_formatter');
-    $this->assertRaw(trim(json_encode(['configUrl' => $xml_url]), '{}"'), 'Gallery setting found in Drupal.settings.');
-    $this->assertRaw('id="node--' . $node->id() . '--' . str_replace('_', '-', $this->instFieldName) . '---custom"', 'Embed code wrapper found.');
-    $this->assertRaw(Html::escape($test_image_url), 'Test image found in embed code');
+    $this->assertSession()->responseContains(trim(json_encode(['configUrl' => $xml_url]), '{}"'));
+    $this->assertSession()->responseContains('id="node--' . $node->id() . '--' . str_replace('_', '-', $this->instFieldName) . '---custom"');
+    $this->assertSession()->responseContains(Html::escape($test_image_url));
     // Extract the xml-source values from the XML.
     $matches = [];
     // In the pattern below we have to use four (yeah, FOUR) backslashes to
@@ -120,10 +122,10 @@ class JuiceboxSubRequestCase extends JuiceboxCaseTestBase {
         'xml-source-id' => $matches[2],
       ],
     ]);
-    $this->assertRaw('<?xml version="1.0" encoding="UTF-8"?>', 'Valid XML detected.');
-    $this->assertRaw('imageURL="' . Html::escape($test_image_url), 'Test image found in XML.' . $test_image_url);
-    $this->assertRaw('thumbURL="' . Html::escape($test_thumb_url), 'Test thumbnail found in XML.' . $test_thumb_url);
-    $this->assertRaw('backgroundcolor="green"', 'Custom background setting from pseudo field instance config found in XML.');
+    $this->assertSession()->responseContains('<?xml version="1.0" encoding="UTF-8"?>');
+    $this->assertSession()->responseContains('imageURL="' . Html::escape($test_image_url));
+    $this->assertSession()->responseContains('thumbURL="' . Html::escape($test_thumb_url));
+    $this->assertSession()->responseContains('backgroundcolor="green"');
   }
 
 }

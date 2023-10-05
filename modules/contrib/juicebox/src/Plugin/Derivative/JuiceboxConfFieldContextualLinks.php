@@ -59,7 +59,7 @@ class JuiceboxConfFieldContextualLinks extends DeriverBase implements ContainerD
     // route to the edit display screen is different for each entity type.
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       // Only fieldable entity are candidates.
-      if ($entity_type->isSubclassOf('\Drupal\Core\Entity\ContentEntityInterface')) {
+      if ($entity_type->entityClassImplements('\Drupal\Core\Entity\ContentEntityInterface')) {
         $bundle_entity_type = $entity_type->getBundleEntityType();
         $this->derivatives['juicebox.conf_field_' . $entity_type_id]['title'] = $this->t('Configure galleries of this field instance');
         $this->derivatives['juicebox.conf_field_' . $entity_type_id]['route_name'] = 'entity.entity_view_display.' . $entity_type_id . '.view_mode';
