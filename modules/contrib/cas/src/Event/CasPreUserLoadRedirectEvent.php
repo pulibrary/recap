@@ -3,8 +3,8 @@
 namespace Drupal\cas\Event;
 
 use Drupal\cas\CasPropertyBag;
-use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Allows third-party code to inject user interaction into the flow.

@@ -51,3 +51,12 @@ function cas_post_update_8002() {
     ->clear('gateway.check_frequency')
     ->save();
 }
+
+/**
+ * Set the auto_register_follow_registration_policy setting.
+ */
+function cas_post_update_8003(): void {
+  \Drupal::configFactory()->getEditable('cas.settings')
+    ->set('user_accounts.auto_register_follow_registration_policy', FALSE)
+    ->save();
+}

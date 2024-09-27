@@ -2,20 +2,20 @@
 
 namespace Drupal\Tests\cas\Unit\Controller;
 
-use Drupal\Core\Logger\LoggerChannelFactory;
-use Drupal\Core\Utility\Token;
-use Drupal\Tests\UnitTestCase;
 use Drupal\cas\CasPropertyBag;
 use Drupal\cas\Controller\ServiceController;
 use Drupal\cas\Event\CasPreUserLoadRedirectEvent;
 use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\Exception\CasValidateException;
 use Drupal\cas\Service\CasHelper;
+use Drupal\Core\Logger\LoggerChannelFactory;
+use Drupal\Core\Utility\Token;
 use Drupal\externalauth\ExternalAuthInterface;
+use Drupal\Tests\UnitTestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * ServiceController unit tests.

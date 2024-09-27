@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\cas\Unit\Routing;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\cas\Routing\CasRouteEnhancer;
+use Drupal\Tests\UnitTestCase;
 use Symfony\Component\HttpFoundation\Session\Session;
 
 /**

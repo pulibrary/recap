@@ -2,19 +2,19 @@
 
 namespace Drupal\cas\Subscriber;
 
-use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Drupal\cas\CasRedirectData;
+use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Service\CasRedirector;
+use Drupal\Core\Condition\ConditionManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\EventSubscriber\HttpExceptionSubscriberBase;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Psr\Log\LogLevel;
-use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Condition\ConditionManager;
-use Drupal\cas\Service\CasHelper;
+use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Event subscriber for implementing CAS forced authentication.

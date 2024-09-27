@@ -6,25 +6,25 @@ use Drupal\cas\Event\CasPreUserLoadEvent;
 use Drupal\cas\Event\CasPreUserLoadRedirectEvent;
 use Drupal\cas\Exception\CasLoginException;
 use Drupal\cas\Exception\CasSloException;
-use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Exception\CasValidateException;
+use Drupal\cas\Service\CasHelper;
+use Drupal\cas\Service\CasLogout;
 use Drupal\cas\Service\CasUserManager;
+use Drupal\cas\Service\CasValidator;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\externalauth\ExternalAuthInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\cas\Service\CasValidator;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\cas\Service\CasLogout;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Messenger\MessengerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Controller used when redirect back from CAS authentication.
@@ -92,7 +92,7 @@ class ServiceController implements ContainerInjectionInterface {
   /**
    * The event dispatcher service.
    *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
   protected $eventDispatcher;
 
@@ -123,7 +123,7 @@ class ServiceController implements ContainerInjectionInterface {
    *   The config factory.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher service.
    * @param \Drupal\externalauth\ExternalAuthInterface $external_auth
    *   The external auth service.
@@ -395,6 +395,12 @@ class ServiceController implements ContainerInjectionInterface {
       case CasLoginException::USERNAME_ALREADY_EXISTS:
         $msgKey = 'message_username_already_exists';
         break;
+
+      case CasLoginException::ADMIN_APPROVAL_REQUIRED:
+        // Don't show any message. User feedback is deferred to the CAS event
+        // subscriber.
+        // @see \Drupal\cas\Subscriber\CasAdminApprovalRegistrationSubscriber
+        return '';
     }
 
     if (!empty($msgKey)) {

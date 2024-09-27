@@ -3,6 +3,7 @@
 namespace Drupal\Tests\cas\Functional;
 
 use Drupal\cas\CasPropertyBag;
+use Drupal\cas\Exception\CasLoginException;
 use Drupal\Tests\cas\Traits\CasTestTrait;
 
 /**
@@ -41,12 +42,26 @@ class CasEventsTest extends CasBrowserTestBase {
     /** @var \Drupal\user\UserInterface $account */
     $account = user_load_by_name('testing_foo');
     $this->assertNotFalse($account, 'User with name "testing_foo" was not found.');
+    $this->assertTrue($account->isActive());
 
     /** @var \Drupal\externalauth\AuthmapInterface $authmap */
     $authmap = \Drupal::service('externalauth.authmap');
 
     // Check that the external name has been registered correctly.
     $this->assertSame('foo', $authmap->get($account->id(), 'cas'));
+
+    // Assert the status property is maintained during the registration process.
+    \Drupal::state()->set('cas_test.blocked_status', TRUE);
+    $cas_property_bag = new CasPropertyBag('blocked_foo');
+    try {
+      // We will get a login exception due to the blocked status.
+      \Drupal::service('cas.user_manager')->login($cas_property_bag, 'fake_ticket_string');
+    }
+    catch (CasLoginException $e) {
+      // We do nothing with the exception.
+    }
+    $account = user_load_by_name('testing_blocked_foo');
+    $this->assertFalse($account->isActive());
   }
 
   /**

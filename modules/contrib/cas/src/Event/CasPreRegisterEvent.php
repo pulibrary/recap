@@ -2,8 +2,8 @@
 
 namespace Drupal\cas\Event;
 
-use Symfony\Contracts\EventDispatcher\Event;
 use Drupal\cas\CasPropertyBag;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Class CasPreRegisterEvent.

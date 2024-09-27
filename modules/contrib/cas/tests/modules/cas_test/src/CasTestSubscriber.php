@@ -43,6 +43,11 @@ class CasTestSubscriber implements EventSubscriberInterface {
     elseif ($flag === 'cancel register with message') {
       $event->cancelAutomaticRegistration('Cancelled with a custom message.');
     }
+
+    $blocked = \Drupal::state()->get('cas_test.blocked_status');
+    if ($blocked) {
+      $event->setPropertyValue('status', 0);
+    }
   }
 
   /**

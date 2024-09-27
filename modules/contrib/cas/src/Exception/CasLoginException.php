@@ -38,6 +38,11 @@ class CasLoginException extends \Exception {
   const USERNAME_ALREADY_EXISTS = 6;
 
   /**
+   * Cannot log in until admins are not unblocking the new account.
+   */
+  const ADMIN_APPROVAL_REQUIRED = 7;
+
+  /**
    * A user message when login failed on a subscriber cancellation.
    *
    * @var \Drupal\Component\Render\MarkupInterface|string

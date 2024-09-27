@@ -2,7 +2,7 @@
  * @file
  * JS to redirect user to CAS for gateway auth check.
  */
-(function (cookies, drupalSettings) {
+((cookies, drupalSettings) => {
   // We rely on cookies for checking if we've already performed the gateway redirect
   // and for logging into Drupal in general. Do nothing if Cookies are disabled on
   // the user agent.
@@ -13,7 +13,7 @@
   if (drupalSettings.cas && drupalSettings.cas.gatewayRedirectUrl) {
     // Don't perform gateway check if request is from a crawler.
     if (drupalSettings.cas.knownCrawlers) {
-      let uaRegex = new RegExp(drupalSettings.cas.knownCrawlers, 'i');
+      const uaRegex = new RegExp(drupalSettings.cas.knownCrawlers, 'i');
       if (uaRegex.test(navigator.userAgent)) {
         return;
       }
@@ -33,7 +33,9 @@
     // indicate we use a session cookie, which is supposed to go away when user closes
     // their browser. But most browsers don't respect that and keep session cookies around
     // to support their "pick up where I left off" features.
-    const expiresDate = new Date(new Date().getTime() + (drupalSettings.cas.recheckTime * 60 * 1000));
+    const expiresDate = new Date(
+      new Date().getTime() + drupalSettings.cas.recheckTime * 60 * 1000,
+    );
     cookies.set('cas_gateway_checked_cs', 1, { expires: expiresDate });
     window.location.replace(drupalSettings.cas.gatewayRedirectUrl);
   }

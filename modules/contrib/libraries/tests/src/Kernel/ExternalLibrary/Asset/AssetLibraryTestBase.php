@@ -33,4 +33,11 @@ abstract class AssetLibraryTestBase extends LibraryTypeKernelTestBase {
     $this->coreLibraryDiscovery = $this->container->get('library.discovery');
   }
 
+  /**
+   * Get license name.
+   */
+  public function getLicenseName(): string {
+    return version_compare(\Drupal::VERSION, '10.3.0', '<') ? 'GNU-GPL-2.0-or-later' : 'GPL-2.0-or-later';
+  }
+
 }

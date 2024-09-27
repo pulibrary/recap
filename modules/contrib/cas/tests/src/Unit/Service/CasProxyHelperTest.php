@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\cas\Unit\Service;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\cas\Service\CasProxyHelper;
+use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;

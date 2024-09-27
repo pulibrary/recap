@@ -78,18 +78,4 @@ class CasUserInteractionTest extends CasBrowserTestBase {
     $this->traitCasLogin('beavis@example.com', 'needtp');
   }
 
-  /**
-   * Asserts that the user is logged in.
-   */
-  protected function assertUserLoggedIn() {
-    $this->assertSession()->linkExists('My account');
-  }
-
-  /**
-   * Asserts that the user is not logged in.
-   */
-  protected function assertUserNotLoggedIn() {
-    $this->assertSession()->linkExists('Log in');
-  }
-
 }

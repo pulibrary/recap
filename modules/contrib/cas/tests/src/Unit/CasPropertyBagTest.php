@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\cas\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\cas\CasPropertyBag;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * CasPropertyBag unit tests.

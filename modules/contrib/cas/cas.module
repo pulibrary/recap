@@ -5,10 +5,10 @@
  * Provides CAS authentication for Drupal.
  */
 
-use Drupal\user\RoleInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
+use Drupal\user\RoleInterface;
 
 /**
  * Implements hook_cron().
