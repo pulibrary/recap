@@ -26,7 +26,7 @@
       _.chain(storage)
         .keys()
         .each((key) => {
-          if (key.substring(0, 18) === 'Drupal.contextual.') {
+          if (key.startsWith('Drupal.contextual.')) {
             storage.removeItem(key);
           }
         });
@@ -71,7 +71,8 @@
       $trigger.addClass('visually-hidden');
 
       // Adjust nested contextual link's position.
-      $nestedContextual.css({ top: $nestedContextual.position().top + height });
+      $nestedContextual[0].style.top =
+        $nestedContextual.position().top + height;
     }
   }
 
@@ -103,7 +104,7 @@
     )}`;
     $contextual.find('.contextual-links a').each(function () {
       const url = this.getAttribute('href');
-      const glue = url.indexOf('?') === -1 ? '?' : '&';
+      const glue = url.includes('?') ? '&' : '?';
       this.setAttribute('href', url + glue + destination);
     });
 
@@ -142,7 +143,7 @@
         },
         deprecatedProperty: 'model',
         message:
-          'The model property is deprecated in drupal:9.4.0 and is removed from drupal:11.0.0. There is no replacement.',
+          'The model property is deprecated in drupal:9.4.0 and is removed from drupal:12.0.0. There is no replacement.',
       }),
     );
 
@@ -258,7 +259,7 @@
      *
      * @type {Array}
      *
-     * @deprecated in drupal:9.4.0 and is removed from drupal:11.0.0. There is no
+     * @deprecated in drupal:9.4.0 and is removed from drupal:12.0.0. There is no
      *  replacement.
      */
     views: [],
@@ -269,7 +270,7 @@
      *
      * @type {Array}
      *
-     * @deprecated in drupal:9.4.0 and is removed from drupal:11.0.0. There is no
+     * @deprecated in drupal:9.4.0 and is removed from drupal:12.0.0. There is no
      *  replacement.
      */
     regionViews: [],
@@ -280,7 +281,7 @@
    *
    * @type {Backbone.Collection}
    *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:11.0.0. There is no
+   * @deprecated in drupal:9.4.0 and is removed from drupal:12.0.0. There is no
    *  replacement.
    */
   Drupal.contextual.collection = new Backbone.Collection([], {

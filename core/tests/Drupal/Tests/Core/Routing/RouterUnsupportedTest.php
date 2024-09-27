@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Routing;
 
 use Drupal\Core\Path\CurrentPathStack;
@@ -21,7 +23,7 @@ class RouterUnsupportedTest extends UnitTestCase {
   /**
    * @covers ::generate
    */
-  public function testGenerateUnsupported() {
+  public function testGenerateUnsupported(): void {
     $this->expectException(\BadMethodCallException::class);
     $route_provider = $this->prophesize(RouteProviderInterface::class);
     $current_path_stack = $this->prophesize(CurrentPathStack::class);
@@ -39,7 +41,7 @@ class RouterUnsupportedTest extends UnitTestCase {
    * @covers ::addDeprecatedRouteFilter
    * @covers ::addDeprecatedRouteEnhancer
    */
-  public function testDeprecatedAdd() {
+  public function testDeprecatedAdd(): void {
     // Test needs access to router's protected properties.
     $filters = new \ReflectionProperty(Router::class, 'filters');
     $enhancers = new \ReflectionProperty(Router::class, 'enhancers');

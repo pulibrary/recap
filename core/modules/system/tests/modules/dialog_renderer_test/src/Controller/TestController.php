@@ -126,7 +126,9 @@ class TestController {
           'class' => ['use-ajax'],
           'data-dialog-type' => 'modal',
           'data-dialog-options' => Json::encode([
-            'dialogClass' => 'no-close',
+            'classes' => [
+              'ui-dialog' => 'no-close',
+            ],
           ]),
         ],
         '#attached' => [
@@ -179,6 +181,54 @@ class TestController {
         '#attributes' => [
           'class' => ['use-ajax'],
           'data-dialog-type' => 'modal',
+        ],
+        '#attached' => [
+          'library' => [
+            'core/drupal.ajax',
+          ],
+        ],
+      ],
+      'auto_buttons_default' => [
+        '#title' => 'Auto buttons default!',
+        '#type' => 'link',
+        '#url' => Url::fromRoute('dialog_renderer_test.modal_form'),
+        '#attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+        ],
+        '#attached' => [
+          'library' => [
+            'core/drupal.ajax',
+          ],
+        ],
+      ],
+      'auto_buttons_false' => [
+        '#title' => 'Auto buttons false!',
+        '#type' => 'link',
+        '#url' => Url::fromRoute('dialog_renderer_test.modal_form'),
+        '#attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+          'data-dialog-options' => Json::encode([
+            'drupalAutoButtons' => FALSE,
+          ]),
+        ],
+        '#attached' => [
+          'library' => [
+            'core/drupal.ajax',
+          ],
+        ],
+      ],
+      'auto_buttons_true' => [
+        '#title' => 'Auto buttons true!',
+        '#type' => 'link',
+        '#url' => Url::fromRoute('dialog_renderer_test.modal_form'),
+        '#attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+          'data-dialog-options' => Json::encode([
+            'drupalAutoButtons' => TRUE,
+          ]),
         ],
         '#attached' => [
           'library' => [

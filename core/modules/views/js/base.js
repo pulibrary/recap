@@ -20,9 +20,8 @@
    */
   Drupal.Views.parseQueryString = function (query) {
     const args = {};
-    const pos = query.indexOf('?');
-    if (pos !== -1) {
-      query = query.substring(pos + 1);
+    if (query.includes('?')) {
+      query = query.substring(query.indexOf('?') + 1);
     }
     let pair;
     const pairs = query.split('&');
@@ -60,7 +59,7 @@
       drupalSettings.path.baseUrl.length,
     );
     // Ensure we have a correct path.
-    if (viewHref && path.substring(0, viewHref.length + 1) === `${viewHref}/`) {
+    if (viewHref && path.startsWith(`${viewHref}/`)) {
       returnObj.view_args = decodeURIComponent(
         path.substring(viewHref.length + 1, path.length),
       );
@@ -81,7 +80,7 @@
   Drupal.Views.pathPortion = function (href) {
     // Remove e.g. http://example.com if present.
     const protocol = window.location.protocol;
-    if (href.substring(0, protocol.length) === protocol) {
+    if (href.startsWith(protocol)) {
       // 2 is the length of the '//' that normally follows the protocol.
       href = href.substring(href.indexOf('/', protocol.length + 2));
     }
@@ -100,14 +99,14 @@
   Drupal.Views.getPath = function (href) {
     href = Drupal.Views.pathPortion(href);
     href = href.substring(drupalSettings.path.baseUrl.length, href.length);
-    // 3 is the length of the '?q=' added to the URL without clean URLs.
-    if (href.substring(0, 3) === '?q=') {
+    if (href.startsWith('?q=')) {
+      // 3 is the length of the '?q=' added to the URL without clean URLs.
       href = href.substring(3, href.length);
     }
     const chars = ['#', '?', '&'];
     for (let i = 0; i < chars.length; i++) {
-      if (href.indexOf(chars[i]) > -1) {
-        href = href.substr(0, href.indexOf(chars[i]));
+      if (href.includes(chars[i])) {
+        href = href.substring(0, href.indexOf(chars[i]));
       }
     }
     return href;

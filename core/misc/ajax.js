@@ -362,7 +362,7 @@
    * @prop {string} [progress.type='throbber']
    *   Type of progress element, core provides `'bar'`, `'throbber'` and
    *   `'fullscreen'`.
-   * @prop {string} [progress.message=Drupal.t('Please wait...')]
+   * @prop {string} [progress.message=Drupal.t('Processing...')]
    *   Custom message to be used with the bar indicator.
    * @prop {object} [submit]
    *   Extra data to be sent with the Ajax request.
@@ -407,7 +407,7 @@
       method: 'replaceWith',
       progress: {
         type: 'throbber',
-        message: Drupal.t('Please wait...'),
+        message: Drupal.t('Processing...'),
       },
       submit: {
         js: true,
@@ -443,6 +443,13 @@
     this.element = element;
 
     /**
+     * The last focused element right before processing ajax response.
+     *
+     * @type {string|null}
+     */
+    this.preCommandsFocusedElementSelector = null;
+
+    /**
      * @type {Drupal.Ajax~elementSettings}
      */
     this.elementSettings = elementSettings;
@@ -459,7 +466,7 @@
     // If no Ajax callback URL was given, use the link href or form action.
     if (!this.url) {
       const $element = $(this.element);
-      if ($element.is('a')) {
+      if (this.element.tagName === 'A') {
         this.url = $element.attr('href');
       } else if (this.element && element.form) {
         this.url = this.$form.attr('action');
@@ -533,6 +540,7 @@
       },
       beforeSubmit(formValues, elementSettings, options) {
         ajax.ajaxing = true;
+        ajax.preCommandsFocusedElementSelector = null;
         return ajax.beforeSubmit(formValues, elementSettings, options);
       },
       beforeSend(xmlhttprequest, options) {
@@ -540,6 +548,9 @@
         return ajax.beforeSend(xmlhttprequest, options);
       },
       success(response, status, xmlhttprequest) {
+        ajax.preCommandsFocusedElementSelector =
+          document.activeElement.getAttribute('data-drupal-selector');
+
         // Sanity check for browser support (object expected).
         // When using iFrame uploads, responses must be returned as a string.
         if (typeof response === 'string') {
@@ -608,7 +619,7 @@
 
     // Ensure that we have a valid URL by adding ? when no query parameter is
     // yet available, otherwise append using &.
-    if (ajax.options.url.indexOf('?') === -1) {
+    if (!ajax.options.url.includes('?')) {
       ajax.options.url += '?';
     } else {
       ajax.options.url += '&';
@@ -713,7 +724,7 @@
    * The Ajax object will, if instructed, bind to a key press response. This
    * will test to see if the key press is valid to trigger this event and
    * if it is, trigger it for us and prevent other keypresses from triggering.
-   * In this case we're handling RETURN and SPACEBAR keypresses (event codes 13
+   * In this case we're handling RETURN and SPACE BAR keypresses (event codes 13
    * and 32. RETURN is often used to submit a form when in a textfield, and
    * SPACE is often used to activate an element without submitting.
    *
@@ -728,7 +739,7 @@
 
     // Detect enter key and space bar and allow the standard response for them,
     // except for form elements of type 'text', 'tel', 'number' and 'textarea',
-    // where the spacebar activation causes inappropriate activation if
+    // where the space bar activation causes inappropriate activation if
     // #ajax['keypress'] is TRUE. On a text-type widget a space should always
     // be a space.
     if (
@@ -824,6 +835,7 @@
 
     // Allow Drupal to return new JavaScript and CSS files to load without
     // returning the ones already loaded.
+    // @see \Drupal\Core\StackMiddleWare\AjaxPageState
     // @see \Drupal\Core\Theme\AjaxBasePageNegotiator
     // @see \Drupal\Core\Asset\LibraryDependencyResolverInterface::getMinimalRepresentativeSubset()
     // @see system_js_settings_alter()
@@ -1073,7 +1085,9 @@
     const focusChanged = Object.keys(response || {}).some((key) => {
       const { command, method } = response[key];
       return (
-        command === 'focusFirst' || (command === 'invoke' && method === 'focus')
+        command === 'focusFirst' ||
+        command === 'openDialog' ||
+        (command === 'invoke' && method === 'focus')
       );
     });
 
@@ -1083,19 +1097,30 @@
         // the triggering element or one of its parents if that element does not
         // exist anymore.
         .then(() => {
-          if (
-            !focusChanged &&
-            this.element &&
-            !$(this.element).data('disable-refocus')
-          ) {
+          if (!focusChanged) {
             let target = false;
-
-            for (let n = elementParents.length - 1; !target && n >= 0; n--) {
-              target = document.querySelector(
-                `[data-drupal-selector="${elementParents[n].getAttribute(
-                  'data-drupal-selector',
-                )}"]`,
-              );
+            if (this.element) {
+              if (
+                $(this.element).data('refocus-blur') &&
+                this.preCommandsFocusedElementSelector
+              ) {
+                target = document.querySelector(
+                  `[data-drupal-selector="${this.preCommandsFocusedElementSelector}"]`,
+                );
+              }
+              if (!target && !$(this.element).data('disable-refocus')) {
+                for (
+                  let n = elementParents.length - 1;
+                  !target && n >= 0;
+                  n--
+                ) {
+                  target = document.querySelector(
+                    `[data-drupal-selector="${elementParents[n].getAttribute(
+                      'data-drupal-selector',
+                    )}"]`,
+                  );
+                }
+              }
             }
             if (target) {
               $(target).trigger('focus');
@@ -1207,7 +1232,7 @@
    * @param {object} response
    *   The response from the Ajax request.
    *
-   * @deprecated in drupal:8.6.0 and is removed from drupal:10.0.0.
+   * @deprecated in drupal:8.6.0 and is removed from drupal:12.0.0.
    *   Use data with desired wrapper.
    *
    * @see https://www.drupal.org/node/2940704
@@ -1238,7 +1263,7 @@
    * @param {jQuery} $elements
    *   Response elements after parsing.
    *
-   * @deprecated in drupal:8.6.0 and is removed from drupal:10.0.0.
+   * @deprecated in drupal:8.6.0 and is removed from drupal:12.0.0.
    *   Use data with desired wrapper.
    *
    * @see https://www.drupal.org/node/2940704
@@ -1352,17 +1377,18 @@
         $newContent[effect.showEffect](effect.showSpeed);
       }
 
-      // Attach all JavaScript behaviors to the new content, if it was
-      // successfully added to the page, this if statement allows
-      // `#ajax['wrapper']` to be optional.
-      if ($newContent.parents('html').length) {
-        // Attach behaviors to all element nodes.
-        $newContent.each((index, element) => {
-          if (element.nodeType === Node.ELEMENT_NODE) {
-            Drupal.attachBehaviors(element, settings);
-          }
-        });
-      }
+      // Attach behaviors to all element nodes.
+      $newContent.each((index, element) => {
+        if (
+          element.nodeType === Node.ELEMENT_NODE &&
+          // Attach all JavaScript behaviors to the new content, if it was
+          // successfully added to the page, this condition allows
+          // `#ajax['wrapper']` to be optional.
+          document.documentElement.contains(element)
+        ) {
+          Drupal.attachBehaviors(element, settings);
+        }
+      });
     },
 
     /**
@@ -1486,6 +1512,7 @@
      *   The XMLHttpRequest status.
      */
     css(ajax, response, status) {
+      // eslint-disable-next-line jquery/no-css
       $(response.selector).css(response.argument);
     },
 
@@ -1690,7 +1717,8 @@
 
       const allUniqueBundleIds = response.data.map(function (style) {
         const uniqueBundleId = style.href + ajax.instanceIndex;
-        loadjs(style.href, uniqueBundleId, {
+        // Force file to load as a CSS stylesheet using 'css!' flag.
+        loadjs(`css!${style.href}`, uniqueBundleId, {
           before(path, styleEl) {
             // This allows all attributes to be added, like media.
             Object.keys(style).forEach((attributeKey) => {
@@ -1834,9 +1862,13 @@
       while ($(scrollTarget).scrollTop() === 0 && $(scrollTarget).parent()) {
         scrollTarget = $(scrollTarget).parent();
       }
+
       // Only scroll upward.
       if (offset.top - 10 < $(scrollTarget).scrollTop()) {
-        $(scrollTarget).animate({ scrollTop: offset.top - 10 }, 500);
+        scrollTarget.get(0).scrollTo({
+          top: offset.top - 10,
+          behavior: 'smooth',
+        });
       }
     },
   };

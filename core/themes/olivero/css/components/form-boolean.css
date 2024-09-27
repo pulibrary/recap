@@ -23,7 +23,6 @@ input[type="radio"] {
   background-repeat: no-repeat;
   background-position: 50% 50%;
   background-size: var(--sp1) var(--sp1);
-  -webkit-appearance: none;
   appearance: none;
 }
 
@@ -102,12 +101,16 @@ input[type="radio"]:focus {
   border-width: 2px;
   border-color: var(--color--primary-50);
   outline-color: transparent;
-  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color--primary-50);
+  box-shadow:
+    0 0 0 2px white,
+    0 0 0 4px var(--color--primary-50);
 }
 
 input.error[type="radio"]:focus {
   outline-color: transparent;
-  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color--red);
+  box-shadow:
+    0 0 0 2px white,
+    0 0 0 4px var(--color--red);
 }
 
 .form-type-boolean {

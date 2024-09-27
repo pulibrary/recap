@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Entity;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -12,6 +14,7 @@ use Drupal\Tests\BrowserTestBase;
  * Tests deleting a revision with revision delete form.
  *
  * @group Entity
+ * @group #slow
  * @coversDefaultClass \Drupal\Core\Entity\Form\RevisionDeleteForm
  */
 class RevisionDeleteFormTest extends BrowserTestBase {
@@ -51,6 +54,7 @@ class RevisionDeleteFormTest extends BrowserTestBase {
    * @dataProvider providerPageTitle
    */
   public function testPageTitle(string $entityTypeId, string $expectedQuestion): void {
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = \Drupal::entityTypeManager()->getStorage($entityTypeId);
 
     $entity = $storage->create([
@@ -83,7 +87,7 @@ class RevisionDeleteFormTest extends BrowserTestBase {
   /**
    * Data provider for testPageTitle.
    */
-  public function providerPageTitle(): array {
+  public static function providerPageTitle(): array {
     return [
       ['entity_test_rev', 'Are you sure you want to delete the revision?'],
       ['entity_test_revlog', 'Are you sure you want to delete the revision from Sun, 01/11/2009 - 16:00?'],
@@ -95,7 +99,7 @@ class RevisionDeleteFormTest extends BrowserTestBase {
    *
    * @covers \Drupal\Core\Entity\EntityAccessControlHandler::checkAccess
    */
-  public function testAccessDeleteLatest(): void {
+  public function testAccessDeleteLatestDefault(): void {
     /** @var \Drupal\entity_test\Entity\EntityTestRev $entity */
     $entity = EntityTestRev::create();
     $entity->setName('delete revision');
@@ -106,6 +110,32 @@ class RevisionDeleteFormTest extends BrowserTestBase {
 
     $this->drupalGet($entity->toUrl('revision-delete-form'));
     $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
+   * Ensure that forward revision can be deleted.
+   *
+   * @covers \Drupal\Core\Entity\EntityAccessControlHandler::checkAccess
+   */
+  public function testAccessDeleteLatestForwardRevision(): void {
+    /** @var \Drupal\entity_test\Entity\EntityTestRevPub $entity */
+    $entity = EntityTestRevPub::create();
+    $entity->setName('delete revision');
+    $entity->save();
+
+    $entity->isDefaultRevision(TRUE);
+    $entity->setPublished();
+    $entity->setNewRevision();
+    $entity->save();
+
+    $entity->isDefaultRevision(FALSE);
+    $entity->setUnpublished();
+    $entity->setNewRevision();
+    $entity->save();
+
+    $this->drupalGet($entity->toUrl('revision-delete-form'));
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertTrue($entity->access('delete revision', $this->rootUser, FALSE));
   }
 
   /**
@@ -131,14 +161,16 @@ class RevisionDeleteFormTest extends BrowserTestBase {
     $entity->save();
 
     // Reload the entity.
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_test_revpub');
     /** @var \Drupal\entity_test\Entity\EntityTestRevPub $revision */
-    $revision = \Drupal::entityTypeManager()->getStorage('entity_test_revpub')
-      ->loadRevision($revisionId);
+    $revision = $storage->loadRevision($revisionId);
     // Check default but not latest.
     $this->assertTrue($revision->isDefaultRevision());
     $this->assertFalse($revision->isLatestRevision());
-    $this->drupalGet($entity->toUrl('revision-delete-form'));
+    $this->drupalGet($revision->toUrl('revision-delete-form'));
     $this->assertSession()->statusCodeEquals(403);
+    $this->assertFalse($revision->access('delete revision', $this->rootUser, FALSE));
   }
 
   /**
@@ -158,10 +190,12 @@ class RevisionDeleteFormTest extends BrowserTestBase {
     $entity->save();
 
     // Reload the entity.
-    $revision = \Drupal::entityTypeManager()->getStorage('entity_test_rev')
-      ->loadRevision($revisionId);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_test_rev');
+    $revision = $storage->loadRevision($revisionId);
     $this->drupalGet($revision->toUrl('revision-delete-form'));
     $this->assertSession()->statusCodeEquals(200);
+    $this->assertTrue($revision->access('delete revision', $this->rootUser, FALSE));
   }
 
   /**
@@ -190,6 +224,7 @@ class RevisionDeleteFormTest extends BrowserTestBase {
     if (count($permissions) > 0) {
       $this->drupalLogin($this->createUser($permissions));
     }
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = \Drupal::entityTypeManager()->getStorage($entityTypeId);
 
     $entity = $storage->create([
@@ -243,7 +278,7 @@ class RevisionDeleteFormTest extends BrowserTestBase {
   /**
    * Data provider for testSubmitForm.
    */
-  public function providerSubmitForm(): array {
+  public static function providerSubmitForm(): array {
     $data = [];
 
     $data['not supporting revision log, one revision remaining after delete, no view access'] = [

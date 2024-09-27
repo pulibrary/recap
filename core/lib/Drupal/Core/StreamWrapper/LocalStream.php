@@ -198,8 +198,8 @@ abstract class LocalStream implements StreamWrapperInterface {
    * {@inheritdoc}
    */
   public function stream_seek($offset, $whence = SEEK_SET) {
-    // fseek returns 0 on success and -1 on a failure.
-    // stream_seek   1 on success and  0 on a failure.
+    // fseek() returns 0 on success and -1 on a failure.
+    // stream_seek()   1 on success and  0 on a failure.
     return !fseek($this->handle, $offset, $whence);
   }
 
@@ -335,18 +335,18 @@ abstract class LocalStream implements StreamWrapperInterface {
     if ($recursive) {
       // $this->getLocalPath() fails if $uri has multiple levels of directories
       // that do not yet exist.
-      $localpath = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
+      $local_path = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
     }
     else {
-      $localpath = $this->getLocalPath($uri);
+      $local_path = $this->getLocalPath($uri);
     }
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
     $file_system = \Drupal::service('file_system');
     if ($options & STREAM_REPORT_ERRORS) {
-      return $file_system->mkdir($localpath, $mode, $recursive);
+      return $file_system->mkdir($local_path, $mode, $recursive);
     }
     else {
-      return @$file_system->mkdir($localpath, $mode, $recursive);
+      return @$file_system->mkdir($local_path, $mode, $recursive);
     }
   }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional;
 
 use Drupal\block_content\Entity\BlockContentType;
@@ -13,9 +15,7 @@ use Drupal\Tests\content_translation\Functional\ContentTranslationUITestBase;
 class BlockContentTranslationUITest extends ContentTranslationUITestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'language',
@@ -51,6 +51,7 @@ class BlockContentTranslationUITest extends ContentTranslationUITestBase {
     $this->bundle = 'basic';
     $this->testLanguageSelector = FALSE;
     parent::setUp();
+    $this->doSetup();
 
     $this->drupalPlaceBlock('page_title_block');
   }
@@ -88,7 +89,7 @@ class BlockContentTranslationUITest extends ContentTranslationUITestBase {
    * {@inheritdoc}
    */
   protected function getNewEntityValues($langcode) {
-    return ['info' => mb_strtolower($this->randomMachineName())] + parent::getNewEntityValues($langcode);
+    return ['info' => $this->randomMachineName()] + parent::getNewEntityValues($langcode);
   }
 
   /**

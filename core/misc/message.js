@@ -37,13 +37,27 @@
      *   The default destination for JavaScript messages.
      */
     static defaultWrapper() {
-      let wrapper = document.querySelector('[data-drupal-messages]');
+      // Search for the element with '[data-drupal-messages]' selector.
+      // If not found then only try to search for fallback element.
+      let wrapper =
+        document.querySelector('[data-drupal-messages]') ||
+        document.querySelector('[data-drupal-messages-fallback]');
       if (!wrapper) {
-        wrapper = document.querySelector('[data-drupal-messages-fallback]');
+        // If no status messages element is found, a fallback element is created to prevent
+        // execution-breaking JS errors when attempting to report a problem.
+        // This scenario can occur on any page that does not include a status_messages
+        // render element.
+        wrapper = document.createElement('div');
+        document.body.appendChild(wrapper);
+      }
+
+      if (wrapper.hasAttribute('data-drupal-messages-fallback')) {
+        // Remove the fallback attribute if it exists.
         wrapper.removeAttribute('data-drupal-messages-fallback');
-        wrapper.setAttribute('data-drupal-messages', '');
         wrapper.classList.remove('hidden');
       }
+      wrapper.setAttribute('data-drupal-messages', '');
+
       return wrapper.innerHTML === ''
         ? Drupal.Message.messageInternalWrapper(wrapper)
         : wrapper.firstElementChild;
@@ -73,8 +87,8 @@
      * @param {object} [options]
      *   The context of the message.
      * @param {string} [options.id]
-     *   The message ID, it can be a simple value: `'filevalidationerror'`
-     *   or several values separated by a space: `'mymodule formvalidation'`
+     *   The message ID, it can be a simple value: `'file_validation_error'`
+     *   or several values separated by a space: `'my_module form_validation'`
      *   which can be used as an explicit selector for a message.
      * @param {string} [options.type=status]
      *   Message type, can be either 'status', 'error' or 'warning'.
@@ -139,16 +153,16 @@
     }
 
     /**
-     * Removes messages from the message area.
+     * Removes a message element from the message area.
      *
      * @name Drupal.Message~messageDefinition.remove
      *
      * @param {string} id
-     *   Index of the message to remove, as returned by
+     *   The unique identifier of the message to remove, as returned by
      *   {@link Drupal.Message~messageDefinition.add}.
      *
-     * @return {number}
-     *   Number of removed messages.
+     * @return {Element}
+     *   Returns the removed message element.
      */
     remove(id) {
       return this.messageWrapper.removeChild(this.select(id));

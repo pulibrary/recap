@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\CommentInterface;
@@ -31,12 +33,17 @@ class CommentStatisticsTest extends CommentTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    // Add more permissions the admin user.
+    $this->adminUser->addRole($this->drupalCreateRole([
+      'administer permissions',
+      'access administration pages',
+      'administer site configuration',
+    ]))->save();
     // Create a second user to post comments.
     $this->webUser2 = $this->drupalCreateUser([
       'post comments',
       'create article content',
       'edit own comments',
-      'post comments',
       'skip comment approval',
       'access comments',
       'access content',
@@ -46,15 +53,13 @@ class CommentStatisticsTest extends CommentTestBase {
   /**
    * Tests the node comment statistics.
    */
-  public function testCommentNodeCommentStatistics() {
+  public function testCommentNodeCommentStatistics(): void {
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     // Set comments to have subject and preview disabled.
-    $this->drupalLogin($this->adminUser);
     $this->setCommentPreview(DRUPAL_DISABLED);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(FALSE);
     $this->setCommentSettings('default_mode', CommentManagerInterface::COMMENT_MODE_THREADED, 'Comment paging changed.');
-    $this->drupalLogout();
 
     // Checks the initial values of node comment statistics with no comment.
     $node = $node_storage->load($this->node->id());
@@ -75,11 +80,13 @@ class CommentStatisticsTest extends CommentTestBase {
     $this->assertSame('', $node->get('comment')->last_comment_name, 'The value of node last_comment_name should be an empty string.');
     $this->assertEquals($this->webUser2->id(), $node->get('comment')->last_comment_uid, 'The value of node last_comment_uid is the comment #1 uid.');
     $this->assertEquals(1, $node->get('comment')->comment_count, 'The value of node comment_count is 1.');
+    $this->drupalLogout();
 
     // Prepare for anonymous comment submission (comment approval enabled).
     // Note we don't use user_role_change_permissions(), because that caused
     // random test failures.
-    $this->drupalLogin($this->rootUser);
+    $this->drupalLogin($this->adminUser);
+
     $this->drupalGet('admin/people/permissions');
     $edit = [
       'anonymous[access comments]' => 1,
@@ -108,7 +115,7 @@ class CommentStatisticsTest extends CommentTestBase {
     // Prepare for anonymous comment submission (no approval required).
     // Note we don't use user_role_change_permissions(), because that caused
     // random test failures.
-    $this->drupalLogin($this->rootUser);
+    $this->drupalLogin($this->adminUser);
     $this->drupalGet('admin/people/permissions');
     $edit = [
       'anonymous[skip comment approval]' => 1,

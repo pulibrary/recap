@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Extension;
 
 use Drupal\Tests\UnitTestCase;
@@ -43,7 +45,7 @@ class ExtensionSerializationTest extends UnitTestCase {
    * @covers ::__sleep
    * @covers ::__wakeup
    */
-  public function testServiceAppRouteUsage() {
+  public function testServiceAppRouteUsage(): void {
     $container = new ContainerBuilder();
     // Set a dummy container app.root to test against.
     $container->setParameter('app.root', 'vfs://dummy_app_root');
@@ -68,7 +70,7 @@ class ExtensionSerializationTest extends UnitTestCase {
    * @covers ::__sleep
    * @covers ::__wakeup
    */
-  public function testPublicProperties() {
+  public function testPublicProperties(): void {
     $container = new ContainerBuilder();
     // Set a dummy container app.root to test against.
     $container->setParameter('app.root', 'vfs://dummy_app_root');

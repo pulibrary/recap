@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Asset;
 
 use Drupal\Core\Asset\AssetCollectionGrouperInterface;
@@ -36,7 +38,7 @@ class CssCollectionOptimizerUnitTest extends UnitTestCase {
    *
    * @group legacy
    */
-  public function testCssImport() {
+  public function testCssImport(): void {
     $mock_grouper = $this->createMock(AssetCollectionGrouperInterface::class);
     $mock_grouper->method('group')
       ->willReturnCallback(function ($assets) {
@@ -63,7 +65,7 @@ class CssCollectionOptimizerUnitTest extends UnitTestCase {
     $mock_file_system = $this->createMock(FileSystemInterface::class);
     $this->optimizer = new CssCollectionOptimizer($mock_grouper, $mock_optimizer, $mock_dumper, $mock_state, $mock_file_system);
     $gpl_license = [
-      'name' => 'GNU-GPL-2.0-or-later',
+      'name' => 'GPL-2.0-or-later',
       'url' => 'https://www.drupal.org/licensing/faq',
       'gpl-compatible' => TRUE,
     ];
@@ -93,7 +95,7 @@ class CssCollectionOptimizerUnitTest extends UnitTestCase {
    *
    * @group legacy
    */
-  public function testCssLicenseAggregation() {
+  public function testCssLicenseAggregation(): void {
     $mock_grouper = $this->createMock(AssetCollectionGrouperInterface::class);
     $mock_grouper->method('group')
       ->willReturnCallback(function ($assets) {
@@ -121,7 +123,7 @@ class CssCollectionOptimizerUnitTest extends UnitTestCase {
     $mock_file_system = $this->createMock(FileSystemInterface::class);
     $this->optimizer = new CssCollectionOptimizer($mock_grouper, $mock_optimizer, $mock_dumper, $mock_state, $mock_file_system);
     $gpl_license = [
-      'name' => 'GNU-GPL-2.0-or-later',
+      'name' => 'GPL-2.0-or-later',
       'url' => 'https://www.drupal.org/licensing/faq',
       'gpl-compatible' => TRUE,
     ];

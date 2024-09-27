@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\editor\Unit\EditorXssFilter;
 
 use Drupal\editor\EditorXssFilter\Standard;
@@ -56,7 +58,7 @@ class StandardTest extends UnitTestCase {
    *
    * @see \Drupal\Tests\editor\Unit\editor\EditorXssFilter\StandardTest::testFilterXss()
    */
-  public function providerTestFilterXss() {
+  public static function providerTestFilterXss() {
     $data = [];
     $data[] = ['<p>Hello, world!</p><unknown>Pink Fairy Armadillo</unknown>', '<p>Hello, world!</p><unknown>Pink Fairy Armadillo</unknown>'];
     $data[] = ['<p style="color:red">Hello, world!</p><unknown>Pink Fairy Armadillo</unknown>', '<p>Hello, world!</p><unknown>Pink Fairy Armadillo</unknown>'];
@@ -491,7 +493,7 @@ xss:ex/*XSS*//*/*/pression(alert("XSS"))\'>',
 
     // Cookie manipulation.
     // @see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#Cookie_manipulation
-    $data[] = ['<META HTTP-EQUIV="Set-Cookie" Content="USERID=<SCRIPT>alert(\'XSS\')</SCRIPT>">', '<META http-equiv="Set-Cookie">alert(\'XSS\')"&gt;'];
+    $data[] = ['<META HTTP-EQUIV="Set-Cookie" Content="UserID=<SCRIPT>alert(\'XSS\')</SCRIPT>">', '<META http-equiv="Set-Cookie">alert(\'XSS\')"&gt;'];
 
     // UTF-7 encoding.
     // @see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#UTF-7_encoding
@@ -517,12 +519,12 @@ xss:ex/*XSS*//*/*/pression(alert("XSS"))\'>',
     // @see \Drupal\editor\EditorXssFilter::filterXssDataAttributes()
 
     // The following two test cases verify that XSS attack vectors are filtered.
-    $data[] = ['<img src="butterfly.jpg" data-caption="&lt;script&gt;alert();&lt;/script&gt;" />', '<img src="butterfly.jpg" data-caption="alert();" />'];
-    $data[] = ['<img src="butterfly.jpg" data-caption="&lt;EMBED SRC=&quot;http://ha.ckers.org/xss.swf&quot; AllowScriptAccess=&quot;always&quot;&gt;&lt;/EMBED&gt;" />', '<img src="butterfly.jpg" data-caption="" />'];
+    $data[] = ['<img src="butterfly.jpg" data-caption="&lt;script&gt;alert();&lt;/script&gt;" />', '<img src="butterfly.jpg" data-caption="alert();">'];
+    $data[] = ['<img src="butterfly.jpg" data-caption="&lt;EMBED SRC=&quot;http://ha.ckers.org/xss.swf&quot; AllowScriptAccess=&quot;always&quot;&gt;&lt;/EMBED&gt;" />', '<img src="butterfly.jpg" data-caption>'];
 
     // When including HTML-tags as visible content, they are double-escaped.
     // This test case ensures that we leave that content unchanged.
-    $data[] = ['<img src="butterfly.jpg" data-caption="&amp;lt;script&amp;gt;alert();&amp;lt;/script&amp;gt;" />', '<img src="butterfly.jpg" data-caption="&amp;lt;script&amp;gt;alert();&amp;lt;/script&amp;gt;" />'];
+    $data[] = ['<img src="butterfly.jpg" data-caption="&amp;lt;script&amp;gt;alert();&amp;lt;/script&amp;gt;" />', '<img src="butterfly.jpg" data-caption="&amp;lt;script&amp;gt;alert();&amp;lt;/script&amp;gt;">'];
 
     return $data;
   }
@@ -537,7 +539,7 @@ xss:ex/*XSS*//*/*/pression(alert("XSS"))\'>',
    *
    * @dataProvider providerTestFilterXss
    */
-  public function testFilterXss($input, $expected_output) {
+  public function testFilterXss($input, $expected_output): void {
     $output = Standard::filterXss($input, $this->format);
     $this->assertSame($expected_output, $output);
   }
@@ -561,7 +563,7 @@ xss:ex/*XSS*//*/*/pression(alert("XSS"))\'>',
    *
    * @dataProvider providerTestBlackListMode
    */
-  public function testBlacklistMode($value, $expected, $message, array $disallowed_tags) {
+  public function testBlacklistMode($value, $expected, $message, array $disallowed_tags): void {
     $value = Standard::filter($value, $disallowed_tags);
     $this->assertSame($expected, $value, $message);
   }
@@ -578,7 +580,7 @@ xss:ex/*XSS*//*/*/pression(alert("XSS"))\'>',
    *     - The assertion message.
    *     - (optional) The disallowed HTML tags to be passed to \Drupal\Component\Utility\Xss::filter().
    */
-  public function providerTestBlackListMode() {
+  public static function providerTestBlackListMode() {
     return [
       [
         '<unknown style="visibility:hidden">Pink Fairy Armadillo</unknown><video src="gerenuk.mp4"><script>alert(0)</script>',

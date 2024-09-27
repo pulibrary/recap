@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\field\Entity\FieldConfig;
@@ -52,7 +54,6 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('user_role');
     $this->installEntitySchema('entity_test');
-    $this->installSchema('system', ['sequences']);
     $this->installConfig(['field', 'filter_test', 'system', 'user']);
 
     $this->container
@@ -63,7 +64,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
   /**
    * Tests an import with invalid data and checks error messages.
    */
-  public function test1() {
+  public function test1(): void {
     // Make sure that a user with uid 2 exists.
     $this->container
       ->get('entity_type.manager')
@@ -118,7 +119,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
   /**
    * Tests an import with invalid data and checks error messages.
    */
-  public function test2() {
+  public function test2(): void {
     $long_username = $this->randomString(61);
     $username_constraint = new UserNameConstraint();
 
@@ -161,7 +162,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
   /**
    * Tests validation for entities that are instances of EntityOwnerInterface.
    */
-  public function testEntityOwnerValidation() {
+  public function testEntityOwnerValidation(): void {
     // Text format access is impacted by user permissions.
     $filter_test_format = FilterFormat::load('filter_test');
     assert($filter_test_format instanceof FilterFormatInterface);
@@ -180,8 +181,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
       'name' => 'foobar',
       'mail' => 'foobar@example.com',
     ]);
-    $admin_user->addRole($role->id());
-    $admin_user->save();
+    $admin_user->addRole($role->id())->save();
     $normal_user = User::create([
       'name' => 'normal user',
       'mail' => 'normal@example.com',
@@ -189,7 +189,7 @@ class MigrateEntityContentValidationTest extends KernelTestBase {
     $normal_user->save();
 
     // Add a "body" field with the text format.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',

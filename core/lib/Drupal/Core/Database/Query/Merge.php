@@ -106,10 +106,10 @@ class Merge extends Query implements ConditionInterface {
    *
    * This variable is a nested array in the following format:
    * @code
-   * <some field> => array(
+   * <some field> => [
    *  'condition' => <condition to execute, as a string>,
    *  'arguments' => <array of arguments for condition, or NULL for none>,
-   * );
+   * ];
    * @endcode
    *
    * @var array
@@ -193,7 +193,7 @@ class Merge extends Query implements ConditionInterface {
    * @return $this
    *   The called object.
    */
-  public function expression($field, $expression, array $arguments = NULL) {
+  public function expression($field, $expression, ?array $arguments = NULL) {
     $this->expressionFields[$field] = [
       'expression' => $expression,
       'arguments' => $arguments,
@@ -333,6 +333,7 @@ class Merge extends Query implements ConditionInterface {
   public function key($field, $value = NULL) {
     // @todo D9: Remove this backwards-compatibility shim.
     if (is_array($field)) {
+      @trigger_error("Passing an array to the \$field argument of " . __METHOD__ . '() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/2205327', E_USER_DEPRECATED);
       $this->keys($field, $value ?? []);
     }
     else {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Annotation;
 
 use Drupal\Core\Annotation\Translation;
@@ -34,7 +36,7 @@ class TranslationTest extends UnitTestCase {
    *
    * @dataProvider providerTestGet
    */
-  public function testGet(array $values, $expected) {
+  public function testGet(array $values, $expected): void {
     $container = new ContainerBuilder();
     $container->set('string_translation', $this->translationManager);
     \Drupal::setContainer($container);

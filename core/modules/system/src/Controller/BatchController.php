@@ -4,6 +4,7 @@ namespace Drupal\system\Controller;
 
 use Drupal\Core\Batch\BatchStorageInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,12 +15,14 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  */
 class BatchController implements ContainerInjectionInterface {
 
+  use StringTranslationTrait;
+
   /**
    * Constructs a new BatchController.
    */
   public function __construct(
     protected string $root,
-    protected BatchStorageInterface $batchStorage
+    protected BatchStorageInterface $batchStorage,
   ) {
     require_once $this->root . '/core/includes/batch.inc';
   }

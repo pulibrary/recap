@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Ajax;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -31,7 +33,7 @@ class ThrobberTest extends WebDriverTestBase {
   /**
    * Tests theming throbber element.
    */
-  public function testThemingThrobberElement() {
+  public function testThemingThrobberElement(): void {
     $session = $this->getSession();
     $web_assert = $this->assertSession();
     $page = $session->getPage();

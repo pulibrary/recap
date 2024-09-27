@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional;
 
+use Drupal\block_content\BlockContentInterface;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\Core\Database\Database;
+
+// cspell:ignore testblock
 
 /**
  * Create a block and test saving it.
@@ -13,7 +18,7 @@ use Drupal\Core\Database\Database;
 class BlockContentCreationTest extends BlockContentTestBase {
 
   /**
-   * Modules to enable.
+   * Modules to install.
    *
    * Enable dummy module that implements hook_block_insert() for exceptions and
    * field_ui to edit display settings.
@@ -50,7 +55,7 @@ class BlockContentCreationTest extends BlockContentTestBase {
   /**
    * Creates a "Basic block" block and verifies its consistency in the database.
    */
-  public function testBlockContentCreation() {
+  public function testBlockContentCreation(): void {
     $this->drupalLogin($this->adminUser);
 
     // Create a block.
@@ -67,17 +72,14 @@ class BlockContentCreationTest extends BlockContentTestBase {
     $this->assertSession()->fieldNotExists('settings[view_mode]');
 
     // Check that the block exists in the database.
-    $blocks = \Drupal::entityTypeManager()
-      ->getStorage('block_content')
-      ->loadByProperties(['info' => $edit['info[0][value]']]);
-    $block = reset($blocks);
+    $block = $this->getBlockByLabel($edit['info[0][value]']);
     $this->assertNotEmpty($block, 'Content Block found in database.');
   }
 
   /**
    * Creates a "Basic page" block with multiple view modes.
    */
-  public function testBlockContentCreationMultipleViewModes() {
+  public function testBlockContentCreationMultipleViewModes(): void {
     // Add a new view mode and verify if it is selected as expected.
     $this->drupalLogin($this->drupalCreateUser(['administer display modes']));
     $this->drupalGet('admin/structure/display-modes/view/add/block_content');
@@ -95,10 +97,7 @@ class BlockContentCreationTest extends BlockContentTestBase {
     $edit['info[0][value]'] = 'Test Block';
     $edit['body[0][value]'] = $this->randomMachineName(16);
     $this->drupalGet('block/add/basic');
-    $this->submitForm($edit, 'Save');
-
-    // Check that the Basic block has been created.
-    $this->assertSession()->pageTextContains('basic ' . $edit['info[0][value]'] . ' has been created.');
+    $this->submitForm($edit, 'Save and configure');
 
     // Save our block permanently
     $this->submitForm(['region' => 'content'], 'Save block');
@@ -136,11 +135,58 @@ class BlockContentCreationTest extends BlockContentTestBase {
     $this->assertSession()->fieldValueEquals('settings[view_mode]', 'test_view_mode');
 
     // Check that the block exists in the database.
-    $blocks = \Drupal::entityTypeManager()
-      ->getStorage('block_content')
-      ->loadByProperties(['info' => $edit['info[0][value]']]);
-    $block = reset($blocks);
+    $block = $this->getBlockByLabel($edit['info[0][value]']);
     $this->assertNotEmpty($block, 'Content Block found in database.');
+  }
+
+  /**
+   * Tests the redirect workflow of creating a block_content and block.
+   */
+  public function testBlockContentFormSubmitHandlers(): void {
+    $this->drupalLogin($this->adminUser);
+
+    // Create a block and place in block layout.
+    $this->drupalGet('/admin/content/block');
+    $this->clickLink('Add content block');
+    // Verify destination URL, when clicking "Save and configure" this
+    // destination will be ignored.
+    $base = base_path();
+    $url = 'block/add?destination=' . $base . 'admin/content/block';
+    $this->assertSession()->addressEquals($url);
+    $edit = [];
+    $edit['info[0][value]'] = 'Test Block';
+    $edit['body[0][value]'] = $this->randomMachineName(16);
+    $this->submitForm($edit, 'Save and configure');
+    $this->assertSession()->pageTextContains('basic ' . $edit['info[0][value]'] . ' has been created.');
+    $this->assertSession()->pageTextContains('Configure block');
+
+    // Verify when editing a block "Save and configure" does not appear.
+    $this->drupalGet('/admin/content/block/1');
+    $this->assertSession()->buttonNotExists('Save and configure');
+
+    // Create a block but go back to block library.
+    $edit = [];
+    $edit['info[0][value]'] = 'Test Block';
+    $edit['body[0][value]'] = $this->randomMachineName(16);
+    $this->drupalGet('block/add/basic');
+    $this->submitForm($edit, 'Save');
+    // Check that the Basic block has been created.
+    $this->assertSession()->pageTextContains('basic ' . $edit['info[0][value]'] . ' has been created.');
+    $this->assertSession()->addressEquals('/admin/content/block');
+
+    // Check that the user is redirected to the block library on edit.
+    $block = $this->getBlockByLabel($edit['info[0][value]']);
+    $this->drupalGet($block->toUrl('edit-form'));
+    $this->submitForm([
+      'info[0][value]' => 'Test Block Updated',
+    ], 'Save');
+    $this->assertSession()->addressEquals('admin/content/block');
+
+    // Test with user who doesn't have permission to place a block.
+    $this->drupalLogin($this->drupalCreateUser(['administer block content']));
+    $this->drupalGet('block/add/basic');
+    $this->assertSession()->buttonNotExists('Save and configure');
+
   }
 
   /**
@@ -149,7 +195,7 @@ class BlockContentCreationTest extends BlockContentTestBase {
    * Creates a content block from defaults and ensures that the 'basic block'
    * type is being used.
    */
-  public function testDefaultBlockContentCreation() {
+  public function testDefaultBlockContentCreation(): void {
     $edit = [];
     $edit['info[0][value]'] = $this->randomMachineName(8);
     $edit['body[0][value]'] = $this->randomMachineName(16);
@@ -161,17 +207,14 @@ class BlockContentCreationTest extends BlockContentTestBase {
     $this->assertSession()->pageTextContains('basic ' . $edit['info[0][value]'] . ' has been created.');
 
     // Check that the block exists in the database.
-    $blocks = \Drupal::entityTypeManager()
-      ->getStorage('block_content')
-      ->loadByProperties(['info' => $edit['info[0][value]']]);
-    $block = reset($blocks);
+    $block = $this->getBlockByLabel($edit['info[0][value]']);
     $this->assertNotEmpty($block, 'Default Content Block found in database.');
   }
 
   /**
    * Verifies that a transaction rolls back the failed creation.
    */
-  public function testFailedBlockCreation() {
+  public function testFailedBlockCreation(): void {
     // Create a block.
     try {
       $this->createBlockContent('fail_creation');
@@ -195,7 +238,7 @@ class BlockContentCreationTest extends BlockContentTestBase {
   /**
    * Tests deleting a block.
    */
-  public function testBlockDelete() {
+  public function testBlockDelete(): void {
     // Create a block.
     $edit = [];
     $edit['info[0][value]'] = $this->randomMachineName(8);
@@ -258,7 +301,7 @@ class BlockContentCreationTest extends BlockContentTestBase {
   /**
    * Tests placed content blocks create a dependency in the block placement.
    */
-  public function testConfigDependencies() {
+  public function testConfigDependencies(): void {
     $block = $this->createBlockContent();
     // Place the block.
     $block_placement_id = mb_strtolower($block->label());
@@ -275,6 +318,19 @@ class BlockContentCreationTest extends BlockContentTestBase {
     $dependencies = \Drupal::service('config.manager')->findConfigEntityDependenciesAsEntities('content', [$block->getConfigDependencyName()]);
     $block_placement = reset($dependencies);
     $this->assertEquals($block_placement_id, $block_placement->id(), "The block placement config entity has a dependency on the block content entity.");
+  }
+
+  /**
+   * Load a block based on the label.
+   */
+  private function getBlockByLabel(string $label): ?BlockContentInterface {
+    $blocks = \Drupal::entityTypeManager()
+      ->getStorage('block_content')
+      ->loadByProperties(['info' => $label]);
+    if (empty($blocks)) {
+      return NULL;
+    }
+    return reset($blocks);
   }
 
 }

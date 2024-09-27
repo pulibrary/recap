@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -47,7 +49,7 @@ class ItemLayoutFieldBlockTest extends WebDriverTestBase {
   /**
    * Tests configuring a field block for a user field.
    */
-  public function testAddAjaxBlock() {
+  public function testAddAjaxBlock(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

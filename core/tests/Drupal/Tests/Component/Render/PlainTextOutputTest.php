@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Render;
 
 use Drupal\Component\Render\PlainTextOutput;
@@ -28,7 +30,7 @@ class PlainTextOutputTest extends TestCase {
    * @covers ::renderFromHtml
    * @dataProvider providerRenderFromHtml
    */
-  public function testRenderFromHtml($expected, $string, $args = []) {
+  public function testRenderFromHtml($expected, $string, $args = []): void {
     $markup = new FormattableMarkup($string, $args);
     $output = PlainTextOutput::renderFromHtml($markup);
     $this->assertSame($expected, $output);

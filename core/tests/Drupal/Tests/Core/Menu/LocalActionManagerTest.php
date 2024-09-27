@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Menu;
 
 use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
@@ -135,7 +137,7 @@ class LocalActionManagerTest extends UnitTestCase {
   /**
    * @covers ::getTitle
    */
-  public function testGetTitle() {
+  public function testGetTitle(): void {
     $local_action = $this->createMock('Drupal\Core\Menu\LocalActionInterface');
     $local_action->expects($this->once())
       ->method('getTitle')
@@ -154,7 +156,7 @@ class LocalActionManagerTest extends UnitTestCase {
    *
    * @dataProvider getActionsForRouteProvider
    */
-  public function testGetActionsForRoute($route_appears, array $plugin_definitions, array $expected_actions) {
+  public function testGetActionsForRoute($route_appears, array $plugin_definitions, array $expected_actions): void {
     $this->discovery->expects($this->any())
       ->method('getDefinitions')
       ->willReturn($plugin_definitions);
@@ -392,7 +394,7 @@ class TestLocalActionManager extends LocalActionManager {
     $this->routeMatch = $route_match;
     $this->moduleHandler = $module_handler;
     $this->alterInfo('menu_local_actions');
-    $this->setCacheBackend($cache_backend, 'local_action_plugins', ['local_action']);
+    $this->setCacheBackend($cache_backend, 'local_action_plugins');
   }
 
 }

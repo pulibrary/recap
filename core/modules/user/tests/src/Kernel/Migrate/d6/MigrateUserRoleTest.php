@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -100,7 +102,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
   /**
    * Data provider for user role migration tests.
    */
-  public function providerTestUserRole() {
+  public static function providerTestUserRole() {
     return [
       'filter only' => [
         'modules' => [],
@@ -110,7 +112,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
         ],
         'role_data' => [
           'anonymous' => [
-            'rid' => '1',
+            'rid' => 1,
             'valid' => [
               'access content',
               'use text format filtered_html',
@@ -120,7 +122,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             ],
           ],
           'authenticated' => [
-            'rid' => '2',
+            'rid' => 2,
             'valid' => [
               'access content',
               'use text format filtered_html',
@@ -133,7 +135,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             ],
           ],
           'migrate_test_role_1' => [
-            'rid' => '3',
+            'rid' => 3,
             'valid' => [
               'use text format full_html',
               'use text format php_code',
@@ -143,7 +145,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             ],
           ],
           'migrate_test_role_2' => [
-            'rid' => '4',
+            'rid' => 4,
             'valid' => [
               'access content overview',
               'administer nodes',
@@ -166,7 +168,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             ],
           ],
           'migrate_test_role_3_that_is_longer_than_thirty_two_characters' => [
-            'rid' => '5',
+            'rid' => 5,
             'valid' => [
               'use text format php_code',
             ],
@@ -200,7 +202,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
         ],
         'role_data' => [
           'anonymous' => [
-            'rid' => '1',
+            'rid' => 1,
             'valid' => [
               'access content',
               'use text format filtered_html',
@@ -210,7 +212,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             ],
           ],
           'authenticated' => [
-            'rid' => '2',
+            'rid' => 2,
             'valid' => [
               'access comments',
               'access content',
@@ -223,7 +225,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             ],
           ],
           'migrate_test_role_1' => [
-            'rid' => '3',
+            'rid' => 3,
             'valid' => [
               'use text format full_html',
               'use text format php_code',
@@ -233,7 +235,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             ],
           ],
           'migrate_test_role_2' => [
-            'rid' => '4',
+            'rid' => 4,
             'valid' => [
               'access content overview',
               'administer contact forms',
@@ -256,7 +258,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
             ],
           ],
           'migrate_test_role_3_that_is_longer_than_thirty_two_characters' => [
-            'rid' => '5',
+            'rid' => 5,
             'valid' => [
               'use text format php_code',
             ],
@@ -281,7 +283,7 @@ class MigrateUserRoleTest extends MigrateDrupal6TestBase {
    *
    * @dataProvider providerTestUserRole
    */
-  public function testUserRole(array $modules, array $migrations, array $role_data) {
+  public function testUserRole(array $modules, array $migrations, array $role_data): void {
     if ($modules) {
       // Install modules that have migrations that may provide permissions.
       \Drupal::service('module_installer')->install($modules);

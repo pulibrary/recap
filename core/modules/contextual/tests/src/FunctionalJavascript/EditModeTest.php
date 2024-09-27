@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\contextual\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -65,7 +67,7 @@ class EditModeTest extends WebDriverTestBase {
   /**
    * Tests enabling and disabling edit mode.
    */
-  public function testEditModeEnableDisable() {
+  public function testEditModeEnableDisable(): void {
     $web_assert = $this->assertSession();
     $page = $this->getSession()->getPage();
     // Get the page twice to ensure edit mode remains enabled after a new page
@@ -76,7 +78,9 @@ class EditModeTest extends WebDriverTestBase {
 
       // After the page loaded we need to additionally wait until the settings
       // tray Ajax activity is done.
-      $web_assert->assertWaitOnAjaxRequest();
+      if ($page_get_count === 0) {
+        $web_assert->assertWaitOnAjaxRequest();
+      }
 
       if ($page_get_count == 0) {
         $unrestricted_tab_count = $this->getTabbableElementsCount();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Entity\Entity\EntityFormMode;
@@ -32,6 +34,14 @@ class EntityFormModeValidationTest extends ConfigEntityValidationTestBase {
       'targetEntityType' => 'user',
     ]);
     $this->entity->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function testImmutableProperties(array $valid_values = []): void {
+    $valid_values['id'] = 'user.test_changed';
+    parent::testImmutableProperties($valid_values);
   }
 
 }

@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * A SharedTempStore can be used to make temporary, non-cache data available
  * across requests. The data for the SharedTempStore is stored in one key/value
  * collection. SharedTempStore data expires automatically after a given
- * timeframe.
+ * time frame.
  *
  * The SharedTempStore is different from a cache, because the data in it is not
  * yet saved permanently and so it cannot be rebuilt. Typically, the
@@ -299,10 +299,8 @@ class SharedTempStore {
    * This method should be called when a value is set.
    */
   protected function ensureAnonymousSession() {
-    // If this is being run from the CLI then the request will not have a
-    // session.
-    if ($this->currentUser->isAnonymous() && $this->requestStack->getCurrentRequest()->hasSession()) {
-      $this->requestStack->getCurrentRequest()->getSession()->set('core.tempstore.shared.owner', $this->owner);
+    if ($this->currentUser->isAnonymous()) {
+      $this->requestStack->getSession()->set('core.tempstore.shared.owner', $this->owner);
     }
   }
 

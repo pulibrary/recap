@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Diff\Engine;
 
 use Drupal\Component\Diff\Engine\DiffOp;
@@ -29,7 +31,7 @@ class DiffOpTest extends TestCase {
    *
    * @covers ::reverse
    */
-  public function testReverse() {
+  public function testReverse(): void {
     $this->expectDeprecation('Drupal\Component\Diff\Engine\DiffOp::reverse() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3337942');
     $this->expectError();
     $op = new DiffOp();

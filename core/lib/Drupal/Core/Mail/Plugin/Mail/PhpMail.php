@@ -2,21 +2,24 @@
 
 namespace Drupal\Core\Mail\Plugin\Mail;
 
+use Drupal\Core\Mail\Attribute\Mail;
 use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\Core\Mail\MailInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\Mime\Header\Headers;
 use Symfony\Component\Mime\Header\UnstructuredHeader;
 
+// cspell:ignore windir
+
 /**
  * Defines the default Drupal mail backend, using PHP's native mail() function.
- *
- * @Mail(
- *   id = "php_mail",
- *   label = @Translation("Default PHP mailer"),
- *   description = @Translation("Sends the message as plain text, using PHP's native mail() function.")
- * )
  */
+#[Mail(
+  id: 'php_mail',
+  label: new TranslatableMarkup('Default PHP Mailer'),
+  description: new TranslatableMarkup("Sends the message as plain text, using PHP's native mail() function."),
+)]
 class PhpMail implements MailInterface {
 
   /**
@@ -61,10 +64,8 @@ class PhpMail implements MailInterface {
     // Join the body array into one string.
     $message['body'] = implode("\n\n", $message['body']);
 
-    // Convert any HTML to plain-text.
+    // Convert any HTML to plain text (which also wraps the mail body).
     $message['body'] = MailFormatHelper::htmlToText($message['body']);
-    // Wrap the mail body for sending.
-    $message['body'] = MailFormatHelper::wrapMail($message['body']);
 
     return $message;
   }

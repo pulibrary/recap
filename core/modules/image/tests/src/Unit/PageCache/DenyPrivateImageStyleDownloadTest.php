@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Unit\PageCache;
 
 use Drupal\Core\PageCache\ResponsePolicyInterface;
@@ -60,7 +62,7 @@ class DenyPrivateImageStyleDownloadTest extends UnitTestCase {
    * @dataProvider providerPrivateImageStyleDownloadPolicy
    * @covers ::check
    */
-  public function testPrivateImageStyleDownloadPolicy($expected_result, $route_name) {
+  public function testPrivateImageStyleDownloadPolicy($expected_result, $route_name): void {
     $this->routeMatch->expects($this->once())
       ->method('getRouteName')
       ->willReturn($route_name);
@@ -75,7 +77,7 @@ class DenyPrivateImageStyleDownloadTest extends UnitTestCase {
    * @return array
    *   Data and expected results.
    */
-  public function providerPrivateImageStyleDownloadPolicy() {
+  public static function providerPrivateImageStyleDownloadPolicy() {
     return [
       [ResponsePolicyInterface::DENY, 'image.style_private'],
       [NULL, 'some.other.route'],

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Unit\Plugin\Validation\Constraint;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -56,7 +58,7 @@ class UserMailRequiredValidatorTest extends UnitTestCase {
    *
    * @dataProvider providerTestValidate
    */
-  public function testValidate($items, $expected_violation, $is_admin = FALSE) {
+  public function testValidate($items, $expected_violation, $is_admin = FALSE): void {
     $constraint = new UserMailRequired();
 
     // If a violation is expected, then the context's addViolation method will
@@ -111,7 +113,7 @@ class UserMailRequiredValidatorTest extends UnitTestCase {
     $items->isEmpty()->willReturn(TRUE);
     $cases['Existing users without an email should add a violation'] = [$items->reveal(), TRUE];
 
-    // Case 4: New user with an e-mail is valid.
+    // Case 4: New user with an email is valid.
     $items = $prophet->prophesize(FieldItemListInterface::class);
     $account = $prophet->prophesize(UserInterface::class);
     $account->isNew()->willReturn(TRUE);
@@ -121,7 +123,7 @@ class UserMailRequiredValidatorTest extends UnitTestCase {
     $account->getFieldDefinition("mail")->willReturn($field_definition->reveal())->shouldBeCalledTimes(1);
     $items->getEntity()->willReturn($account->reveal())->shouldBeCalledTimes(1);
     $items->isEmpty()->willReturn(FALSE);
-    $cases['New user with an e-mail is valid'] = [$items->reveal(), FALSE];
+    $cases['New user with an email is valid'] = [$items->reveal(), FALSE];
 
     // Case 5: Existing users with an email should be ignored.
     $items = $prophet->prophesize(FieldItemListInterface::class);

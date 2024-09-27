@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Kernel\Normalizer;
 
 use Drupal\Component\Serialization\Json;
@@ -30,6 +32,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * @coversDefaultClass \Drupal\jsonapi\Normalizer\JsonApiDocumentTopLevelNormalizer
  * @group jsonapi
+ * @group #slow
  *
  * @internal
  */
@@ -135,12 +138,12 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
     $this->installEntitySchema('taxonomy_term');
     $this->installEntitySchema('file');
     // Add the additional table schemas.
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
     $this->installSchema('user', ['users_data']);
     $this->installSchema('file', ['file_usage']);
     $type = NodeType::create([
       'type' => 'article',
+      'name' => 'Article',
     ]);
     $type->save();
     $this->createEntityReferenceField(
@@ -155,7 +158,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
     );
     $this->createTextField('node', 'article', 'body', 'Body');
 
-    $this->createImageField('field_image', 'article');
+    $this->createImageField('field_image', 'node', 'article');
 
     $this->user = User::create([
       'name' => 'user1',
@@ -196,7 +199,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
       'uid' => $this->user,
       'body' => [
         'format' => 'plain_text',
-        'value' => $this->randomStringValidate(42),
+        'value' => $this->randomString(),
       ],
       'field_tags' => [
         ['target_id' => $this->term1->id()],
@@ -258,7 +261,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
   /**
    * @covers ::normalize
    */
-  public function testNormalize() {
+  public function testNormalize(): void {
     $resource_type = $this->container->get('jsonapi.resource_type.repository')->get('node', 'article');
 
     $resource_object = ResourceObject::createFromEntity($resource_type, $this->node);
@@ -342,7 +345,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
     $this->assertSame($this->term1->uuid(), $normalized['included'][1]['id']);
     $this->assertSame('taxonomy_term--tags', $normalized['included'][1]['type']);
     $this->assertSame($this->term1->label(), $normalized['included'][1]['attributes']['name']);
-    $this->assertCount(12, $normalized['included'][1]['attributes']);
+    $this->assertCount(11, $normalized['included'][1]['attributes']);
     $this->assertTrue(!isset($normalized['included'][1]['attributes']['created']));
     // Make sure that the cache tags for the includes and the requested entities
     // are bubbling as expected.
@@ -359,7 +362,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
   /**
    * @covers ::normalize
    */
-  public function testNormalizeUuid() {
+  public function testNormalizeUuid(): void {
     $resource_type = $this->container->get('jsonapi.resource_type.repository')->get('node', 'article');
     $resource_object = ResourceObject::createFromEntity($resource_type, $this->node);
     $include_param = 'uid,field_tags';
@@ -388,7 +391,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
     $this->assertArrayNotHasKey('meta', $normalized);
     $this->assertEquals($this->user->uuid(), $normalized['included'][0]['id']);
     $this->assertCount(1, $normalized['included'][0]['attributes']);
-    $this->assertCount(12, $normalized['included'][1]['attributes']);
+    $this->assertCount(11, $normalized['included'][1]['attributes']);
     // Make sure that the cache tags for the includes and the requested entities
     // are bubbling as expected.
     $this->assertEqualsCanonicalizing(
@@ -400,7 +403,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
   /**
    * @covers ::normalize
    */
-  public function testNormalizeException() {
+  public function testNormalizeException(): void {
     $normalized = $this
       ->container
       ->get('jsonapi.serializer')
@@ -424,7 +427,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
   /**
    * Tests the message and exceptions when requesting a Label only resource.
    */
-  public function testAliasFieldRouteException() {
+  public function testAliasFieldRouteException(): void {
     $this->assertSame('uid', $this->resourceTypeRepository->getByTypeName('node--article')->getPublicName('uid'));
     $this->assertSame('roles', $this->resourceTypeRepository->getByTypeName('user--user')->getPublicName('roles'));
     $resource_type_field_aliases = [
@@ -488,7 +491,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
   /**
    * @covers ::normalize
    */
-  public function testNormalizeConfig() {
+  public function testNormalizeConfig(): void {
     $resource_type = $this->container->get('jsonapi.resource_type.repository')->get('node_type', 'node_type');
     $resource_object = ResourceObject::createFromEntity($resource_type, $this->nodeType);
     $document_wrapper = new JsonApiDocumentTopLevel(new ResourceObjectData([$resource_object], 1), new NullIncludedData(), new LinkCollection([]));
@@ -519,7 +522,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
    *
    * @covers ::denormalize
    */
-  public function testDenormalize() {
+  public function testDenormalize(): void {
     $payload = '{"data":{"type":"article","attributes":{"title":"Testing article"}}}';
 
     $resource_type = $this->container->get('jsonapi.resource_type.repository')->get('node', 'article');
@@ -537,7 +540,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
    *
    * @covers ::denormalize
    */
-  public function testDenormalizeUuid() {
+  public function testDenormalizeUuid(): void {
     $configurations = [
       // Good data.
       [
@@ -631,7 +634,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
   /**
    * Tests denormalization for related resources with missing or invalid types.
    */
-  public function testDenormalizeInvalidTypeAndNoType() {
+  public function testDenormalizeInvalidTypeAndNoType(): void {
     $payload_data = [
       'data' => [
         'type' => 'node--article',
@@ -755,7 +758,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
    *
    * @dataProvider testCacheableMetadataProvider
    */
-  public function testCacheableMetadata(CacheableMetadata $expected_metadata) {
+  public function testCacheableMetadata(CacheableMetadata $expected_metadata): void {
     $resource_type = $this->container->get('jsonapi.resource_type.repository')->get('node', 'article');
     $resource_object = ResourceObject::createFromEntity($resource_type, $this->node);
     $context = [
@@ -775,7 +778,7 @@ class JsonApiDocumentTopLevelNormalizerTest extends JsonapiKernelTestBase {
   /**
    * Provides test cases for asserting cacheable metadata behavior.
    */
-  public function testCacheableMetadataProvider() {
+  public static function testCacheableMetadataProvider() {
     $cacheable_metadata = function ($metadata) {
       return CacheableMetadata::createFromRenderArray(['#cache' => $metadata]);
     };

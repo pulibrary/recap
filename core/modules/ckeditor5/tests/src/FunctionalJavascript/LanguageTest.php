@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
@@ -82,7 +82,7 @@ JS;
    *
    * @return string[][]
    */
-  public function provider(): array {
+  public static function provider(): array {
     return [
       'Language code both in Drupal and CKEditor' => [
         'langcode' => 'th',

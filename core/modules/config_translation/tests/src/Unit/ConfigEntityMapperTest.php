@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Unit;
 
 use Drupal\config_translation\ConfigEntityMapper;
@@ -111,7 +113,7 @@ class ConfigEntityMapperTest extends UnitTestCase {
   /**
    * Tests ConfigEntityMapper::setEntity() and ConfigEntityMapper::getEntity().
    */
-  public function testEntityGetterAndSetter() {
+  public function testEntityGetterAndSetter(): void {
     $this->entity
       ->expects($this->once())
       ->method('id')
@@ -150,7 +152,7 @@ class ConfigEntityMapperTest extends UnitTestCase {
   /**
    * Tests ConfigEntityMapper::getOverviewRouteParameters().
    */
-  public function testGetOverviewRouteParameters() {
+  public function testGetOverviewRouteParameters(): void {
     $entity_type = $this->createMock('Drupal\Core\Config\Entity\ConfigEntityTypeInterface');
     $this->entityTypeManager
       ->expects($this->once())
@@ -173,7 +175,7 @@ class ConfigEntityMapperTest extends UnitTestCase {
   /**
    * Tests ConfigEntityMapper::getType().
    */
-  public function testGetType() {
+  public function testGetType(): void {
     $result = $this->configEntityMapper->getType();
     $this->assertSame('configurable_language', $result);
   }
@@ -181,7 +183,7 @@ class ConfigEntityMapperTest extends UnitTestCase {
   /**
    * Tests ConfigEntityMapper::getTypeName().
    */
-  public function testGetTypeName() {
+  public function testGetTypeName(): void {
     $entity_type = $this->createMock('Drupal\Core\Config\Entity\ConfigEntityTypeInterface');
     $entity_type->expects($this->once())
       ->method('getLabel')
@@ -199,7 +201,7 @@ class ConfigEntityMapperTest extends UnitTestCase {
   /**
    * Tests ConfigEntityMapper::getTypeLabel().
    */
-  public function testGetTypeLabel() {
+  public function testGetTypeLabel(): void {
     $entity_type = $this->createMock('Drupal\Core\Config\Entity\ConfigEntityTypeInterface');
     $entity_type->expects($this->once())
       ->method('getLabel')
@@ -217,7 +219,7 @@ class ConfigEntityMapperTest extends UnitTestCase {
   /**
    * Tests ConfigEntityMapper::getOperations().
    */
-  public function testGetOperations() {
+  public function testGetOperations(): void {
     $result = $this->configEntityMapper->getOperations();
 
     $expected = [

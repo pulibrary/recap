@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form\EventSubscriber;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -74,7 +76,7 @@ class FormAjaxSubscriberTest extends UnitTestCase {
   /**
    * @covers ::onException
    */
-  public function testOnException() {
+  public function testOnException(): void {
     $form = ['#type' => 'form', '#build_id' => 'the_build_id'];
     $expected_form = $form + [
       '#build_id_old' => 'the_build_id',
@@ -99,7 +101,7 @@ class FormAjaxSubscriberTest extends UnitTestCase {
   /**
    * @covers ::onException
    */
-  public function testOnExceptionNewBuildId() {
+  public function testOnExceptionNewBuildId(): void {
     $form = ['#type' => 'form', '#build_id' => 'the_build_id'];
     $expected_form = $form + [
       '#build_id_old' => 'a_new_build_id',
@@ -124,7 +126,7 @@ class FormAjaxSubscriberTest extends UnitTestCase {
   /**
    * @covers ::onException
    */
-  public function testOnExceptionOtherClass() {
+  public function testOnExceptionOtherClass(): void {
     $request = new Request();
     $exception = new \Exception();
 
@@ -137,7 +139,7 @@ class FormAjaxSubscriberTest extends UnitTestCase {
   /**
    * @covers ::onException
    */
-  public function testOnExceptionResponseBuilderException() {
+  public function testOnExceptionResponseBuilderException(): void {
     $form = ['#type' => 'form', '#build_id' => 'the_build_id'];
     $expected_form = $form + [
       '#build_id_old' => 'the_build_id',
@@ -160,26 +162,15 @@ class FormAjaxSubscriberTest extends UnitTestCase {
   /**
    * @covers ::onException
    */
-  public function testOnExceptionBrokenPostRequest() {
+  public function testOnExceptionBrokenPostRequest(): void {
     $this->formAjaxResponseBuilder->expects($this->never())
       ->method('buildResponse');
 
     $this->messenger->expects($this->once())
       ->method('addError');
 
-    $this->subscriber = $this->getMockBuilder('\Drupal\Core\Form\EventSubscriber\FormAjaxSubscriber')
-      ->setConstructorArgs([
-        $this->formAjaxResponseBuilder,
-        $this->getStringTranslationStub(),
-        $this->messenger,
-      ])
-      ->onlyMethods(['formatSize'])
-      ->getMock();
+    $this->subscriber = new FormAjaxSubscriber($this->formAjaxResponseBuilder, $this->getStringTranslationStub(), $this->messenger);
 
-    $this->subscriber->expects($this->once())
-      ->method('formatSize')
-      ->with(32 * 1e6)
-      ->willReturn('32M');
     $rendered_output = 'the rendered output';
     // CommandWithAttachedAssetsTrait::getRenderedContent() will call the
     // renderer service via the container.
@@ -218,7 +209,7 @@ class FormAjaxSubscriberTest extends UnitTestCase {
    * @covers ::onException
    * @covers ::getFormAjaxException
    */
-  public function testOnExceptionNestedException() {
+  public function testOnExceptionNestedException(): void {
     $form = ['#type' => 'form', '#build_id' => 'the_build_id'];
     $expected_form = $form + [
       '#build_id_old' => 'the_build_id',
@@ -242,7 +233,7 @@ class FormAjaxSubscriberTest extends UnitTestCase {
   /**
    * @covers ::getFormAjaxException
    */
-  public function testOnExceptionNestedWrongException() {
+  public function testOnExceptionNestedWrongException(): void {
     $nested_exception = new \Exception();
     $exception = new \Exception('', 0, $nested_exception);
     $request = new Request();

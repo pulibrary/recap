@@ -42,6 +42,10 @@ final class Settings {
       'replacement' => '',
       'message' => 'The "block_interest_cohort" setting is deprecated in drupal:9.5.0. This setting should be removed from the settings file, since its usage has been removed. See https://www.drupal.org/node/3320787.',
     ],
+    'yaml_parser_class' => [
+      'replacement' => '',
+      'message' => 'The "yaml_parser_class" setting is deprecated in drupal:10.3.0. This setting should be removed from the settings file, since its usage has been removed. See https://www.drupal.org/node/3415489.',
+    ],
   ];
 
   /**
@@ -105,6 +109,7 @@ final class Settings {
     // If the caller is asking for the value of a deprecated setting, trigger a
     // deprecation message about it.
     if (isset(self::$deprecatedSettings[$name])) {
+      // phpcs:ignore Drupal.Semantics.FunctionTriggerError
       @trigger_error(self::$deprecatedSettings[$name]['message'], E_USER_DEPRECATED);
     }
     return self::$instance->storage[$name] ?? $default;

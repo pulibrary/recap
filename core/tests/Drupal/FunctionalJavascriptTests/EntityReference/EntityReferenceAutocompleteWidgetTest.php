@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\EntityReference;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
@@ -17,7 +19,7 @@ use Drupal\Tests\node\Traits\NodeCreationTrait;
 class EntityReferenceAutocompleteWidgetTest extends WebDriverTestBase {
 
   use ContentTypeCreationTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use NodeCreationTrait;
 
   /**
@@ -56,7 +58,7 @@ class EntityReferenceAutocompleteWidgetTest extends WebDriverTestBase {
   /**
    * Tests that the default autocomplete widget return the correct results.
    */
-  public function testEntityReferenceAutocompleteWidget() {
+  public function testEntityReferenceAutocompleteWidget(): void {
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
 
@@ -162,7 +164,7 @@ class EntityReferenceAutocompleteWidgetTest extends WebDriverTestBase {
    * Ensures that the entity the autocomplete widget stores the entity it is
    * rendered on, and is available in the autocomplete results' AJAX request.
    */
-  public function testEntityReferenceAutocompleteWidgetAttachedEntity() {
+  public function testEntityReferenceAutocompleteWidgetAttachedEntity(): void {
     $user = $this->drupalCreateUser([
       'administer entity_test content',
     ]);

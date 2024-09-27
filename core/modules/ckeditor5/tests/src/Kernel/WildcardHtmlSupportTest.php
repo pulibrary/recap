@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\Kernel;
 
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
@@ -99,7 +101,7 @@ class WildcardHtmlSupportTest extends KernelTestBase {
     $this->assertEquals($expected_ghs_configuration, $ghs_configuration);
   }
 
-  public function providerGhsConfiguration(): array {
+  public static function providerGhsConfiguration(): array {
     return [
       'empty source editing' => [
         '<p> <br>',
@@ -159,7 +161,7 @@ class WildcardHtmlSupportTest extends KernelTestBase {
         ['alignment'],
       ],
       '<$text-container> with attribute from multiple plugins' => [
-        '<p data-llama class"> <br>',
+        '<p data-llama class> <br>',
         ['<$text-container data-llama>', '<p class>'],
         [
           [

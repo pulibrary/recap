@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Core\EventSubscriber\SpecialAttributesRouteSubscriber;
@@ -21,7 +23,7 @@ class SpecialAttributesRouteSubscriberTest extends UnitTestCase {
    * @return array
    *   An array of invalid routes.
    */
-  public function providerTestOnRouteBuildingInvalidVariables() {
+  public static function providerTestOnRouteBuildingInvalidVariables() {
     // Build an array of mock route objects based on paths.
     $routes = [];
     $paths = [
@@ -47,7 +49,7 @@ class SpecialAttributesRouteSubscriberTest extends UnitTestCase {
    * @return array
    *   An array of valid routes.
    */
-  public function providerTestOnRouteBuildingValidVariables() {
+  public static function providerTestOnRouteBuildingValidVariables() {
     // Build an array of mock route objects based on paths.
     $routes = [];
     $paths = [
@@ -74,7 +76,7 @@ class SpecialAttributesRouteSubscriberTest extends UnitTestCase {
    *
    * @covers ::onAlterRoutes
    */
-  public function testOnRouteBuildingValidVariables(Route $route) {
+  public function testOnRouteBuildingValidVariables(Route $route): void {
     $route_collection = new RouteCollection();
     $route_collection->add('test', $route);
 
@@ -92,7 +94,7 @@ class SpecialAttributesRouteSubscriberTest extends UnitTestCase {
    * @dataProvider providerTestOnRouteBuildingInvalidVariables
    * @covers ::onAlterRoutes
    */
-  public function testOnRouteBuildingInvalidVariables(Route $route) {
+  public function testOnRouteBuildingInvalidVariables(Route $route): void {
     $route_collection = new RouteCollection();
     $route_collection->add('test', $route);
 

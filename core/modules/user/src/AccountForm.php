@@ -3,6 +3,7 @@
 namespace Drupal\user;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Datetime\TimeZoneFormHelper;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
@@ -14,6 +15,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
 use Drupal\language\ConfigurableLanguageManagerInterface;
+use Drupal\user\Entity\Role;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUserAdmin;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -42,7 +44,7 @@ abstract class AccountForm extends ContentEntityForm implements TrustedCallbackI
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL) {
+  public function __construct(EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, ?TimeInterface $time = NULL) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->languageManager = $language_manager;
   }
@@ -200,7 +202,9 @@ abstract class AccountForm extends ContentEntityForm implements TrustedCallbackI
       '#access' => $account->status->access('edit'),
     ];
 
-    $roles = array_map(['\Drupal\Component\Utility\Html', 'escape'], user_role_names(TRUE));
+    $roles = Role::loadMultiple();
+    unset($roles[RoleInterface::ANONYMOUS_ID]);
+    $roles = array_map(fn(RoleInterface $role) => Html::escape($role->label()), $roles);
 
     $form['account']['roles'] = [
       '#type' => 'checkboxes',

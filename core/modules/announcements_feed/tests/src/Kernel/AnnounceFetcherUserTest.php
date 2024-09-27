@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\announcements_feed\Kernel;
 
 use Drupal\Tests\user\Traits\UserCreationTrait;
@@ -42,6 +44,7 @@ class AnnounceFetcherUserTest extends AnnounceTestBase {
    * First time accessing the announcements.
    */
   public function testAllAnnouncementsFirst(): void {
+    $this->markTestSkipped('Skipped due to major version-specific logic. See https://www.drupal.org/project/drupal/issues/3359322');
 
     $feed_items = $this->providerShowAnnouncements();
 

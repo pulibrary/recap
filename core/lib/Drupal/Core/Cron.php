@@ -112,7 +112,7 @@ class Cron implements CronInterface {
    * @param mixed[]|null $queue_config
    *   Queue configuration from the service container.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, LockBackendInterface $lock, QueueFactory $queue_factory, StateInterface $state, AccountSwitcherInterface $account_switcher, LoggerInterface $logger, QueueWorkerManagerInterface $queue_manager, TimeInterface $time = NULL, ?array $queue_config = NULL) {
+  public function __construct(ModuleHandlerInterface $module_handler, LockBackendInterface $lock, QueueFactory $queue_factory, StateInterface $state, AccountSwitcherInterface $account_switcher, LoggerInterface $logger, QueueWorkerManagerInterface $queue_manager, ?TimeInterface $time = NULL, ?array $queue_config = NULL) {
     $this->moduleHandler = $module_handler;
     $this->lock = $lock;
     $this->queueFactory = $queue_factory;
@@ -226,7 +226,7 @@ class Cron implements CronInterface {
       // Each queue will be processed immediately when it is reached for the
       // first time, as zero > currentTime will never be true.
       if ($process_from > $this->time->getCurrentMicroTime()) {
-        $this->usleep(round($process_from - $this->time->getCurrentMicroTime(), 3) * 1000000);
+        $this->usleep((int) round($process_from - $this->time->getCurrentMicroTime(), 3) * 1000000);
       }
 
       try {

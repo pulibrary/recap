@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\field\Entity\FieldConfig;
@@ -13,9 +15,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 class NodeAccessFieldTest extends NodeTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node_access_test', 'field_ui'];
 
@@ -65,7 +65,7 @@ class NodeAccessFieldTest extends NodeTestBase {
     ]);
 
     // Add a custom field to the page content type.
-    $this->fieldName = mb_strtolower($this->randomMachineName() . '_field_name');
+    $this->fieldName = $this->randomMachineName() . '_field_name';
     FieldStorageConfig::create([
       'field_name' => $this->fieldName,
       'entity_type' => 'node',
@@ -89,7 +89,7 @@ class NodeAccessFieldTest extends NodeTestBase {
   /**
    * Tests administering fields when node access is restricted.
    */
-  public function testNodeAccessAdministerField() {
+  public function testNodeAccessAdministerField(): void {
     // Create a page node.
     $fieldData = [];
     $value = $fieldData[0]['value'] = $this->randomMachineName();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Component\Serialization\Json;
@@ -42,7 +44,7 @@ class EntityAutocompleteTest extends EntityKernelTestBase {
   /**
    * Tests autocompletion edge cases with slashes in the names.
    */
-  public function testEntityReferenceAutocompletion() {
+  public function testEntityReferenceAutocompletion(): void {
     // Add an entity with a slash in its name.
     $entity_1 = $this->container->get('entity_type.manager')
       ->getStorage($this->entityType)
@@ -106,9 +108,11 @@ class EntityAutocompleteTest extends EntityKernelTestBase {
     ];
     $this->assertSame($target, reset($data), 'Autocomplete returns an entity label containing a comma and a slash.');
 
-    $input = '';
-    $data = $this->getAutocompleteResult($input);
-    $this->assertSame([], $data, 'Autocomplete of empty string returns empty result');
+    // Test empty input.
+    foreach (['', NULL, FALSE, 0, 0.0] as $input) {
+      $data = $this->getAutocompleteResult($input);
+      $this->assertSame([], $data, 'Autocomplete of empty input returns empty result');
+    }
 
     $input = ',';
     $data = $this->getAutocompleteResult($input);
@@ -130,12 +134,18 @@ class EntityAutocompleteTest extends EntityKernelTestBase {
     $this->assertSame(Html::escape($entity_1->name->value), $data[0]['label'], 'Autocomplete returned the first matching entity');
     $this->assertSame(Html::escape($entity_2->name->value), $data[1]['label'], 'Autocomplete returned the second matching entity');
     $this->assertSame(Html::escape($entity_3->name->value), $data[2]['label'], 'Autocomplete returned the third matching entity');
+
+    // Try to autocomplete an entity label with the '0' character.
+    $input = '0';
+    $data = $this->getAutocompleteResult($input);
+    $this->assertSame(Html::escape($entity_1->name->value), $data[0]['label'], 'Autocomplete returned the first matching entity');
+    $this->assertSame(Html::escape($entity_2->name->value), $data[1]['label'], 'Autocomplete returned the second matching entity');
   }
 
   /**
    * Tests that missing or invalid selection setting key are handled correctly.
    */
-  public function testSelectionSettingsHandling() {
+  public function testSelectionSettingsHandling(): void {
     $entity_reference_controller = EntityAutocompleteController::create($this->container);
     $request = Request::create('entity_reference_autocomplete/' . $this->entityType . '/default');
     $request->query->set('q', $this->randomString());

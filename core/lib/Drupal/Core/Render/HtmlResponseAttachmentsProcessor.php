@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Render;
 
+// cspell:ignore turbolinks
+
 use Drupal\Core\Asset\AssetCollectionRendererInterface;
 use Drupal\Core\Asset\AssetResolverInterface;
 use Drupal\Core\Asset\AttachedAssets;
@@ -109,6 +111,7 @@ class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
     $this->renderer = $renderer;
     $this->moduleHandler = $module_handler;
     if (!isset($languageManager)) {
+      // phpcs:ignore Drupal.Semantics.FunctionTriggerError
       @trigger_error('Calling ' . __METHOD__ . '() without the $languageManager argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0', E_USER_DEPRECATED);
       $this->languageManager = \Drupal::languageManager();
     }
@@ -351,7 +354,7 @@ class HtmlResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
     $content = $response->getContent();
     foreach ($placeholders as $type => $placeholder) {
       if (isset($variables[$type])) {
-        $content = str_replace($placeholder, $this->renderer->renderPlain($variables[$type]), $content);
+        $content = str_replace($placeholder, $this->renderer->renderInIsolation($variables[$type]), $content);
       }
     }
     $response->setContent($content);

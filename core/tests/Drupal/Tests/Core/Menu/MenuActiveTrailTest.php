@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Menu;
 
 use Drupal\Core\Menu\MenuActiveTrail;
@@ -140,11 +142,11 @@ class MenuActiveTrailTest extends UnitTestCase {
    * @covers ::getActiveLink
    * @dataProvider provider
    */
-  public function testGetActiveLink(Request $request, $links, $menu_name, $expected_link) {
+  public function testGetActiveLink(Request $request, $links, $menu_name, $expected_link): void {
     $this->requestStack->push($request);
     if ($links !== FALSE) {
       $this->menuLinkManager->expects($this->exactly(2))
-        ->method('loadLinksbyRoute')
+        ->method('loadLinksByRoute')
         ->with('baby_llama')
         ->willReturn($links);
     }
@@ -160,7 +162,7 @@ class MenuActiveTrailTest extends UnitTestCase {
    * @covers ::getActiveTrailIds
    * @dataProvider provider
    */
-  public function testGetActiveTrailIds(Request $request, $links, $menu_name, $expected_link, $expected_trail) {
+  public function testGetActiveTrailIds(Request $request, $links, $menu_name, $expected_link, $expected_trail): void {
     $expected_trail_ids = array_combine($expected_trail, $expected_trail);
 
     $this->requestStack->push($request);
@@ -168,7 +170,7 @@ class MenuActiveTrailTest extends UnitTestCase {
       // We expect exactly two calls, one for the first call, and one after the
       // cache clearing below.
       $this->menuLinkManager->expects($this->exactly(2))
-        ->method('loadLinksbyRoute')
+        ->method('loadLinksByRoute')
         ->with('baby_llama')
         ->willReturn($links);
       if ($expected_link !== NULL) {
@@ -193,7 +195,7 @@ class MenuActiveTrailTest extends UnitTestCase {
    *
    * @covers ::getCid
    */
-  public function testGetCid() {
+  public function testGetCid(): void {
     $data = $this->provider()[1];
     /** @var \Symfony\Component\HttpFoundation\Request $request */
     $request = $data[0];
@@ -204,7 +206,7 @@ class MenuActiveTrailTest extends UnitTestCase {
     $this->requestStack->push($request);
 
     $this->menuLinkManager->expects($this->any())
-      ->method('loadLinksbyRoute')
+      ->method('loadLinksByRoute')
       ->with('baby_llama')
       ->willReturn($data[1]);
 

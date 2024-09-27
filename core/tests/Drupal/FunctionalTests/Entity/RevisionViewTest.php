@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Entity;
 
 use Drupal\Core\Entity\RevisionLogInterface;
@@ -51,6 +53,7 @@ class RevisionViewTest extends BrowserTestBase {
    * @dataProvider providerRevisionPage
    */
   public function testRevisionPage(string $entityTypeId, string $expectedPageTitle): void {
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
     $storage = \Drupal::entityTypeManager()->getStorage($entityTypeId);
 
     // Add a field to test revision page output.
@@ -105,7 +108,7 @@ class RevisionViewTest extends BrowserTestBase {
   /**
    * Data provider for testRevisionPage.
    */
-  public function providerRevisionPage(): array {
+  public static function providerRevisionPage(): array {
     return [
       ['entity_test_rev', 'Revision of revision 1, view revision'],
       ['entity_test_revlog', 'Revision of revision 1, view revision from Sun, 01/11/2009 - 16:00'],

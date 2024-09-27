@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Unit;
 
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -36,7 +38,7 @@ class MigrationStateUnitTest extends UnitTestCase {
    * @covers ::getSourceState
    * @covers ::getDestinationsForSource
    */
-  public function testGetUpgradeStates($modules_to_enable, $files, $field_plugins, $migrations, $source_system_data, $expected_7, $expected_6) {
+  public function testGetUpgradeStates($modules_to_enable, $files, $field_plugins, $migrations, $source_system_data, $expected_7, $expected_6): void {
     $fieldPluginManager = $this->prophesize(MigrateFieldPluginManagerInterface::class);
     $fieldPluginManager->getDefinitions()->willReturn($field_plugins);
     $moduleHandler = $this->prophesize(ModuleHandlerInterface::class);
@@ -89,7 +91,7 @@ class MigrationStateUnitTest extends UnitTestCase {
   /**
    * Data provider for testGetUpgradeStates.
    */
-  public function providerGetUpgradeStates() {
+  public static function providerGetUpgradeStates() {
 
     // Tests multiple scenarios:
     // Not enabled and not declared.

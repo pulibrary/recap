@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional\d6;
 
 use Drupal\Tests\migrate_drupal_ui\Functional\NoMultilingualReviewPageTestBase;
@@ -23,8 +25,6 @@ class NoMultilingualReviewPageTest extends NoMultilingualReviewPageTestBase {
     'datetime_range',
     'language',
     'telephone',
-    'book',
-    'statistics',
     'syslog',
     'update',
     // Test migrations states.
@@ -54,7 +54,6 @@ class NoMultilingualReviewPageTest extends NoMultilingualReviewPageTestBase {
     return [
       'Blog',
       'Blog API',
-      'Book',
       'Calendar Signup',
       'Comment',
       'Contact',
@@ -103,7 +102,6 @@ class NoMultilingualReviewPageTest extends NoMultilingualReviewPageTestBase {
       'Poll',
       'Profile',
       'Search',
-      'Statistics',
       'Syslog',
       'System',
       'Taxonomy',
@@ -140,6 +138,7 @@ class NoMultilingualReviewPageTest extends NoMultilingualReviewPageTestBase {
       // Block is set not_finished in migrate_state_not_finished_test.
       'Block',
       'Block translation',
+      'Book',
       'CCK translation',
       'Color',
       'Content type translation',
@@ -154,6 +153,7 @@ class NoMultilingualReviewPageTest extends NoMultilingualReviewPageTestBase {
       'Option Widgets',
       'Poll aggregate',
       'Profile translation',
+      'Statistics',
       'String translation',
       'Synchronize translations',
       'Taxonomy translation',

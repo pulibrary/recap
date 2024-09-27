@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -37,7 +39,6 @@ class BlockContentPermissionsTest extends KernelTestBase {
    */
   public function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('block_content');
 
@@ -47,7 +48,7 @@ class BlockContentPermissionsTest extends KernelTestBase {
   /**
    * @covers ::blockTypePermissions
    */
-  public function testDynamicPermissions() {
+  public function testDynamicPermissions(): void {
     $permissions = $this->permissionHandler->getPermissions();
     $this->assertArrayNotHasKey('edit any basic block content', $permissions, 'The per-block-type permission does not exist.');
     $this->assertArrayNotHasKey('edit any square block content', $permissions, 'The per-block-type permission does not exist.');

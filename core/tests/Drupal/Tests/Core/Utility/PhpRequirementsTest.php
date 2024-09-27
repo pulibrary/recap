@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Utility;
 
 use Drupal\Core\Utility\PhpRequirements;
@@ -84,7 +86,7 @@ class PhpRequirementsTest extends UnitTestCase {
    * @return \Generator
    *   Test scenarios.
    */
-  public function providerMinimumSupportedPhp(): \Generator {
+  public static function providerMinimumSupportedPhp(): \Generator {
     $eol_lists = [];
 
     // Test against the known valid data from 9.0.0 to 9.3.0.

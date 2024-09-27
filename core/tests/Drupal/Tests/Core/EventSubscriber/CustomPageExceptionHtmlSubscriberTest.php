@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Component\Utility\UrlHelper;
@@ -128,7 +130,7 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
   /**
    * Tests onHandleException with a POST request.
    */
-  public function testHandleWithPostRequest() {
+  public function testHandleWithPostRequest(): void {
     $request = Request::create('/test', 'POST', ['name' => 'druplicon', 'pass' => '12345']);
 
     $request_context = new RequestContext();
@@ -154,7 +156,7 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
   /**
    * Tests onHandleException with a GET request.
    */
-  public function testHandleWithGetRequest() {
+  public function testHandleWithGetRequest(): void {
     $request = Request::create('/test', 'GET', ['name' => 'druplicon', 'pass' => '12345']);
     $request->attributes->set(AccessAwareRouterInterface::ACCESS_RESULT, AccessResult::forbidden()->addCacheTags(['druplicon']));
 

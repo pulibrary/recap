@@ -27,7 +27,10 @@
     "Sortable": true,
     "once": true,
     "CKEditor5": true,
-    "tabbable": true
+    "tabbable": true,
+    "transliterate": true,
+    "bodyScrollLock" : true,
+    "FloatingUIDOM": true
   },
   "rules": {
     "prettier/prettier": "error",

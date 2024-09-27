@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -38,9 +40,7 @@ abstract class BlockContentTestBase extends BrowserTestBase {
   ];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'block_content'];
 
@@ -108,7 +108,7 @@ abstract class BlockContentTestBase extends BrowserTestBase {
     if (is_array($values)) {
       if (!isset($values['id'])) {
         do {
-          $id = strtolower($this->randomMachineName(8));
+          $id = $this->randomMachineName(8);
         } while (BlockContentType::load($id));
       }
       else {

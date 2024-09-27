@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional;
 
 use Drupal\block_content\Entity\BlockContentType;
@@ -16,9 +18,7 @@ class BlockContentTypeTest extends BlockContentTestBase {
 
   use AssertBreadcrumbTrait;
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field_ui'];
 
@@ -60,7 +60,7 @@ class BlockContentTypeTest extends BlockContentTestBase {
   /**
    * Tests the order of the block content types on the add page.
    */
-  public function testBlockContentAddPageOrder() {
+  public function testBlockContentAddPageOrder(): void {
     $this->createBlockContentType(['id' => 'bundle_1', 'label' => 'Bundle 1']);
     $this->createBlockContentType(['id' => 'bundle_2', 'label' => 'Aaa Bundle 2']);
     $this->drupalLogin($this->adminUser);
@@ -71,7 +71,7 @@ class BlockContentTypeTest extends BlockContentTestBase {
   /**
    * Tests creating a block type programmatically and via a form.
    */
-  public function testBlockContentTypeCreation() {
+  public function testBlockContentTypeCreation(): void {
     // Log in a test user.
     $this->drupalLogin($this->adminUser);
 
@@ -86,7 +86,11 @@ class BlockContentTypeTest extends BlockContentTestBase {
       'id' => 'foo',
       'label' => 'title for foo',
     ];
-    $this->submitForm($edit, 'Save');
+    $this->submitForm($edit, 'Save and manage fields');
+
+    // Asserts that form submit redirects to the expected manage fields page.
+    $this->assertSession()->addressEquals('admin/structure/block-content/manage/' . $edit['id'] . '/fields');
+
     $block_type = BlockContentType::load('foo');
     $this->assertInstanceOf(BlockContentType::class, $block_type);
 
@@ -116,7 +120,7 @@ class BlockContentTypeTest extends BlockContentTestBase {
   /**
    * Tests editing a block type using the UI.
    */
-  public function testBlockContentTypeEditing() {
+  public function testBlockContentTypeEditing(): void {
     $this->drupalPlaceBlock('system_breadcrumb_block');
     // Now create an initial block-type.
     $this->createBlockContentType('basic', TRUE);
@@ -168,7 +172,7 @@ class BlockContentTypeTest extends BlockContentTestBase {
   /**
    * Tests deleting a block type that still has content.
    */
-  public function testBlockContentTypeDeletion() {
+  public function testBlockContentTypeDeletion(): void {
     // Now create an initial block-type.
     $this->createBlockContentType('basic', TRUE);
 
@@ -195,7 +199,7 @@ class BlockContentTypeTest extends BlockContentTestBase {
   /**
    * Tests that redirects work as expected when multiple block types exist.
    */
-  public function testsBlockContentAddTypes() {
+  public function testsBlockContentAddTypes(): void {
     // Now create an initial block-type.
     $this->createBlockContentType('basic', TRUE);
 
@@ -229,7 +233,7 @@ class BlockContentTypeTest extends BlockContentTestBase {
         $this->clickLink('foo');
         // Create a new block.
         $edit = ['info[0][value]' => $this->randomMachineName(8)];
-        $this->submitForm($edit, 'Save');
+        $this->submitForm($edit, 'Save and configure');
         $blocks = $storage->loadByProperties(['info' => $edit['info[0][value]']]);
         if (!empty($blocks)) {
           $block = reset($blocks);

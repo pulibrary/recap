@@ -31,9 +31,9 @@ abstract class ContentEntityBase extends EntityBase implements \IteratorAggregat
    * are keyed by language code, whereas LanguageInterface::LANGCODE_DEFAULT
    * is used for values in default language.
    *
-   * @todo: Add methods for getting original fields and for determining
+   * @todo Add methods for getting original fields and for determining
    * changes.
-   * @todo: Provide a better way for defining default values.
+   * @todo Provide a better way for defining default values.
    *
    * @var array
    */
@@ -85,6 +85,18 @@ abstract class ContentEntityBase extends EntityBase implements \IteratorAggregat
    * @var string
    */
   protected $activeLangcode = LanguageInterface::LANGCODE_DEFAULT;
+
+  /**
+   * Override the result of isDefaultTranslation().
+   *
+   * Under certain circumstances, such as when changing default translation, the
+   * default value needs to be overridden.
+   *
+   * @var bool|null
+   *
+   * @internal
+   */
+  protected ?bool $enforceDefaultTranslation = NULL;
 
   /**
    * Local cache for the default language code.
@@ -196,7 +208,7 @@ abstract class ContentEntityBase extends EntityBase implements \IteratorAggregat
     foreach ($values as $key => $value) {
       // If the key matches an existing property set the value to the property
       // to set properties like isDefaultRevision.
-      // @todo: Should this be converted somehow?
+      // @todo Should this be converted somehow?
       if (property_exists($this, $key) && isset($value[LanguageInterface::LANGCODE_DEFAULT])) {
         $this->$key = $value[LanguageInterface::LANGCODE_DEFAULT];
       }
@@ -410,9 +422,27 @@ abstract class ContentEntityBase extends EntityBase implements \IteratorAggregat
   }
 
   /**
+   * Set or clear an override of the isDefaultTranslation() result.
+   *
+   * @param bool|null $enforce_default_translation
+   *   If boolean value is passed, the value will override the result of
+   *   isDefaultTranslation() method. If NULL is passed, the default logic will
+   *   be used.
+   *
+   * @return $this
+   */
+  public function setDefaultTranslationEnforced(?bool $enforce_default_translation): static {
+    $this->enforceDefaultTranslation = $enforce_default_translation;
+    return $this;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function isDefaultTranslation() {
+    if ($this->enforceDefaultTranslation !== NULL) {
+      return $this->enforceDefaultTranslation;
+    }
     return $this->activeLangcode === LanguageInterface::LANGCODE_DEFAULT;
   }
 
@@ -439,9 +469,12 @@ abstract class ContentEntityBase extends EntityBase implements \IteratorAggregat
   public function preSave(EntityStorageInterface $storage) {
     // An entity requiring validation should not be saved if it has not been
     // actually validated.
-    assert(!$this->validationRequired || $this->validated, 'Entity validation was skipped.');
-
-    $this->validated = FALSE;
+    if ($this->validationRequired && !$this->validated) {
+      throw new \LogicException('Entity validation is required, but was skipped.');
+    }
+    else {
+      $this->validated = FALSE;
+    }
 
     parent::preSave($storage);
   }
@@ -695,7 +728,7 @@ abstract class ContentEntityBase extends EntityBase implements \IteratorAggregat
   /**
    * {@inheritdoc}
    */
-  public function access($operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     if ($operation == 'create') {
       return $this->entityTypeManager()
         ->getAccessControlHandler($this->entityTypeId)
@@ -1038,7 +1071,7 @@ abstract class ContentEntityBase extends EntityBase implements \IteratorAggregat
   /**
    * Implements the magic method for getting object properties.
    *
-   * @todo: A lot of code still uses non-fields (e.g. $entity->content in view
+   * @todo A lot of code still uses non-fields (e.g. $entity->content in view
    *   builders) by reference. Clean that up.
    */
   public function &__get($name) {
@@ -1418,7 +1451,7 @@ abstract class ContentEntityBase extends EntityBase implements \IteratorAggregat
     $original = $this->original ? $this->original : NULL;
 
     if (!$original) {
-      $id = $this->getOriginalId() !== NULL ? $this->getOriginalId() : $this->id();
+      $id = $this->getOriginalId() ?? $this->id();
       $original = $this->entityTypeManager()->getStorage($this->getEntityTypeId())->loadUnchanged($id);
     }
 

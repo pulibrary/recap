@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\tracker\Kernel\Views;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -44,8 +46,7 @@ class TrackerUserUidTest extends KernelTestBase {
   /**
    * Tests the user uid filter and argument.
    */
-  public function testUserUid() {
-    $this->installSchema('system', ['sequences']);
+  public function testUserUid(): void {
     $this->installConfig(['filter']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');

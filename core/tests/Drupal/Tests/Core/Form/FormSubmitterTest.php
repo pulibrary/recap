@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\EventSubscriber\RedirectResponseSubscriber;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
@@ -36,18 +39,24 @@ class FormSubmitterTest extends UnitTestCase {
   protected $unroutedUrlAssembler;
 
   /**
+   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\EventSubscriber\RedirectResponseSubscriber
+   */
+  protected $redirectResponseSubscriber;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
     $this->urlGenerator = $this->createMock(UrlGeneratorInterface::class);
     $this->unroutedUrlAssembler = $this->createMock(UnroutedUrlAssemblerInterface::class);
+    $this->redirectResponseSubscriber = $this->createMock(RedirectResponseSubscriber::class);
   }
 
   /**
    * @covers ::doSubmitForm
    */
-  public function testHandleFormSubmissionNotSubmitted() {
+  public function testHandleFormSubmissionNotSubmitted(): void {
     $form_submitter = $this->getFormSubmitter();
     $form = [];
     $form_state = new FormState();
@@ -60,7 +69,7 @@ class FormSubmitterTest extends UnitTestCase {
   /**
    * @covers ::doSubmitForm
    */
-  public function testHandleFormSubmissionNoRedirect() {
+  public function testHandleFormSubmissionNoRedirect(): void {
     $form_submitter = $this->getFormSubmitter();
     $form = [];
     $form_state = (new FormState())
@@ -77,7 +86,7 @@ class FormSubmitterTest extends UnitTestCase {
    *
    * @dataProvider providerTestHandleFormSubmissionWithResponses
    */
-  public function testHandleFormSubmissionWithResponses($class, $form_state_key) {
+  public function testHandleFormSubmissionWithResponses($class, $form_state_key): void {
     $response = $this->getMockBuilder($class)
       ->disableOriginalConstructor()
       ->getMock();
@@ -96,7 +105,7 @@ class FormSubmitterTest extends UnitTestCase {
     $this->assertInstanceOf('Symfony\Component\HttpFoundation\Response', $return);
   }
 
-  public function providerTestHandleFormSubmissionWithResponses() {
+  public static function providerTestHandleFormSubmissionWithResponses() {
     return [
       ['Symfony\Component\HttpFoundation\Response', 'response'],
       ['Symfony\Component\HttpFoundation\RedirectResponse', 'redirect'],
@@ -108,7 +117,7 @@ class FormSubmitterTest extends UnitTestCase {
    *
    * @covers ::redirectForm
    */
-  public function testRedirectWithNull() {
+  public function testRedirectWithNull(): void {
     $form_submitter = $this->getFormSubmitter();
 
     $form_state = $this->createMock('Drupal\Core\Form\FormStateInterface');
@@ -134,7 +143,7 @@ class FormSubmitterTest extends UnitTestCase {
    *
    * @dataProvider providerTestRedirectWithUrl
    */
-  public function testRedirectWithUrl(Url $redirect_value, $result, $status = 303) {
+  public function testRedirectWithUrl(Url $redirect_value, $result, $status = 303): void {
     $container = new ContainerBuilder();
     $container->set('url_generator', $this->urlGenerator);
     \Drupal::setContainer($container);
@@ -169,7 +178,7 @@ class FormSubmitterTest extends UnitTestCase {
    * @return array
    *   Returns some test data.
    */
-  public function providerTestRedirectWithUrl() {
+  public static function providerTestRedirectWithUrl() {
     return [
       [new Url('test_route_a', [], ['absolute' => TRUE]), 'test-route'],
       [new Url('test_route_b', ['key' => 'value'], ['absolute' => TRUE]), 'test-route/value'],
@@ -181,7 +190,7 @@ class FormSubmitterTest extends UnitTestCase {
    *
    * @covers ::redirectForm
    */
-  public function testRedirectWithResponseObject() {
+  public function testRedirectWithResponseObject(): void {
     $form_submitter = $this->getFormSubmitter();
     $redirect = new RedirectResponse('/example');
     $form_state = $this->createMock('Drupal\Core\Form\FormStateInterface');
@@ -199,7 +208,7 @@ class FormSubmitterTest extends UnitTestCase {
    *
    * @covers ::redirectForm
    */
-  public function testRedirectWithoutResult() {
+  public function testRedirectWithoutResult(): void {
     $form_submitter = $this->getFormSubmitter();
     $this->urlGenerator->expects($this->never())
       ->method('generateFromRoute');
@@ -220,7 +229,7 @@ class FormSubmitterTest extends UnitTestCase {
   /**
    * @covers ::executeSubmitHandlers
    */
-  public function testExecuteSubmitHandlers() {
+  public function testExecuteSubmitHandlers(): void {
     $form_submitter = $this->getFormSubmitter();
     $mock = $this->prophesize(MockFormBase::class);
     $mock
@@ -258,7 +267,7 @@ class FormSubmitterTest extends UnitTestCase {
     $request_stack = new RequestStack();
     $request_stack->push(Request::create('/test-path'));
     return $this->getMockBuilder('Drupal\Core\Form\FormSubmitter')
-      ->setConstructorArgs([$request_stack, $this->urlGenerator])
+      ->setConstructorArgs([$request_stack, $this->urlGenerator, $this->redirectResponseSubscriber])
       ->onlyMethods(['batchGet'])
       ->getMock();
   }

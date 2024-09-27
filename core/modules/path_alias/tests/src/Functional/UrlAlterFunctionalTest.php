@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\path_alias\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
@@ -18,9 +19,7 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
   use PathAliasTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['path', 'url_alter_test'];
 
@@ -32,7 +31,7 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
   /**
    * Tests that URL altering works and that it occurs in the correct order.
    */
-  public function testUrlAlter() {
+  public function testUrlAlter(): void {
     // Ensure that the path_alias table exists after Drupal installation.
     $this->assertTrue(Database::getConnection()->schema()->tableExists('path_alias'), 'The path_alias table exists after Drupal installation.');
 
@@ -86,7 +85,7 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
   protected function assertUrlOutboundAlter(string $original, string $final): void {
     // Test outbound altering.
     $result = $this->container->get('path_processor_manager')->processOutbound($original);
-    $this->assertSame($final, $result, new FormattableMarkup('Altered outbound URL %original, expected %final, and got %result.', ['%original' => $original, '%final' => $final, '%result' => $result]));
+    $this->assertSame($final, $result, "Altered outbound URL $original, expected $final, and got $result.");
   }
 
   /**
@@ -102,7 +101,7 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
   protected function assertUrlInboundAlter(string $original, string $final): void {
     // Test inbound altering.
     $result = $this->container->get('path_alias.manager')->getPathByAlias($original);
-    $this->assertSame($final, $result, new FormattableMarkup('Altered inbound URL %original, expected %final, and got %result.', ['%original' => $original, '%final' => $final, '%result' => $result]));
+    $this->assertSame($final, $result, "Altered inbound URL $original, expected $final, and got $result.");
   }
 
 }

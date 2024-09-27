@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
 use Drupal\Core\Database\Database;
@@ -82,7 +84,7 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
     $default_db = Database::getConnection()->getKey();
     Database::setActiveConnection($this->sourceDatabase->getKey());
 
-    if (substr($path, -3) == '.gz') {
+    if (str_ends_with($path, '.gz')) {
       $path = 'compress.zlib://' . $path;
     }
     require $path;
@@ -188,7 +190,7 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
       $session->pageTextContains($label);
     }
     $session->pageTextContainsOnce('content items');
-    $session->pageTextContains('There is translated content of these types:');
+    $session->pageTextContains('Check whether there is translated content of these types:');
   }
 
   /**
@@ -203,7 +205,7 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
    *
    * @throws \Behat\Mink\Exception\ExpectationException
    */
-  protected function assertReviewForm(array $available_paths = NULL, array $missing_paths = NULL) {
+  protected function assertReviewForm(?array $available_paths = NULL, ?array $missing_paths = NULL) {
     $session = $this->assertSession();
     $session->pageTextContains('What will be upgraded?');
 
@@ -298,8 +300,8 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
 
     // Use the driver connection form to get the correct options out of the
     // database settings. This supports all of the databases we test against.
-    $drivers = drupal_get_database_types();
-    $form = $drivers[$driver]->getFormOptions($connection_options);
+    $drivers = Database::getDriverList()->getInstallableList();
+    $form = $drivers[$driver]->getInstallTasks()->getFormOptions($connection_options);
     $connection_options = array_intersect_key($connection_options, $form + $form['advanced_options']);
     // Remove isolation_level since that option is not configurable in the UI.
     unset($connection_options['isolation_level']);

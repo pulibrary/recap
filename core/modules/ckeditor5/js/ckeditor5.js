@@ -116,6 +116,10 @@
       });
     }
 
+    if (config === null) {
+      return null;
+    }
+
     return Object.entries(config).reduce((processed, [key, value]) => {
       if (typeof value === 'object') {
         // Check for null values.
@@ -251,7 +255,7 @@
    * To ensure they have higher specificity and are not reset too aggressively.
    *
    * @param {CSSRule} rule
-   *  A single CSS rule to be analysed and changed if necessary.
+   *  A single CSS rule to be analyzed and changed if necessary.
    */
   function ckeditor5SelectorProcessing(rule) {
     // Handle nested rules in @media, @support, etc.
@@ -443,22 +447,9 @@
           editor.model.document.on('change:data', () => {
             const callback = callbacks.get(id);
             if (callback) {
-              if (editor.plugins.has('SourceEditing')) {
-                // If the change:data is being called while in source editing
-                // mode, it means that the form is being submitted. To avoid
-                // race conditions, in this case the callback gets called
-                // without decorating the callback with debounce.
-                // @see https://www.drupal.org/i/3229174
-                // @see Drupal.editorDetach
-                if (editor.plugins.get('SourceEditing').isSourceEditingMode) {
-                  callback();
-                  return;
-                }
-              }
-
               // Marks the field as changed.
               // @see Drupal.editorAttach
-              debounce(callback, 400)();
+              callback();
             }
           });
 
@@ -530,7 +521,7 @@
      *   Callback called with the value of the editor.
      */
     onChange(element, callback) {
-      callbacks.set(getElementId(element), callback);
+      callbacks.set(getElementId(element), debounce(callback, 400, true));
     },
 
     /**
@@ -570,7 +561,7 @@
             const callback = callbacks.get(id);
             if (callback) {
               // Allow modules to update EditorModel by providing the current data.
-              debounce(callback, 400)(editor.getData());
+              callback(editor.getData());
             }
           });
         })
@@ -637,7 +628,7 @@
 
   // Redirect on hash change when the original hash has an associated CKEditor 5.
   function redirectTextareaFragmentToCKEditor5Instance() {
-    const hash = window.location.hash.substr(1);
+    const hash = window.location.hash.substring(1);
     const element = document.getElementById(hash);
     if (element) {
       const editorID = getElementId(element);
@@ -659,13 +650,19 @@
   );
 
   // Respond to new dialogs that are opened by CKEditor, closing the AJAX loader.
-  $(window).on('dialog:beforecreate', () => {
-    $('.ckeditor5-dialog-loading').animate(
-      { top: '-40px' },
-      function removeDialogLoading() {
-        $(this).remove();
-      },
-    );
+  window.addEventListener('dialog:beforecreate', () => {
+    const dialogLoading = document.querySelector('.ckeditor5-dialog-loading');
+
+    if (dialogLoading) {
+      dialogLoading.addEventListener(
+        'transitionend',
+        function removeDialogLoading() {
+          dialogLoading.remove();
+        },
+      );
+      dialogLoading.style.transition = 'top 0.5s ease';
+      dialogLoading.style.top = '-40px';
+    }
   });
 
   // Respond to dialogs that are saved, sending data back to CKEditor.
@@ -676,7 +673,7 @@
   });
 
   // Respond to dialogs that are closed, removing the current save handler.
-  $(window).on('dialog:afterclose', () => {
+  window.addEventListener('dialog:afterclose', () => {
     if (Drupal.ckeditor5.saveCallback) {
       Drupal.ckeditor5.saveCallback = null;
     }

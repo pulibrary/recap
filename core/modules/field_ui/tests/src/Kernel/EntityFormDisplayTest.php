@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Kernel;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -16,17 +18,16 @@ use Drupal\KernelTests\KernelTestBase;
 class EntityFormDisplayTest extends KernelTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
   protected static $modules = [
     'field_ui',
     'field',
     'entity_test',
     'field_test',
-    'user',
+    'system',
     'text',
+    'user',
   ];
 
   /**
@@ -34,13 +35,15 @@ class EntityFormDisplayTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('action');
+    $this->installConfig('user');
     $this->installEntitySchema('entity_test');
   }
 
   /**
    * @covers \Drupal\Core\Entity\EntityDisplayRepository::getFormDisplay
    */
-  public function testEntityGetFromDisplay() {
+  public function testEntityGetFromDisplay(): void {
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
 
@@ -64,7 +67,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests the behavior of a field component within an EntityFormDisplay object.
    */
-  public function testFieldComponent() {
+  public function testFieldComponent(): void {
     // Create a field storage and a field.
     $field_name = 'test_field';
     $field_storage = FieldStorageConfig::create([
@@ -129,7 +132,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests the behavior of a field component for a base field.
    */
-  public function testBaseFieldComponent() {
+  public function testBaseFieldComponent(): void {
     $display = EntityFormDisplay::create([
       'targetEntityType' => 'entity_test_base_field_display',
       'bundle' => 'entity_test_base_field_display',
@@ -190,7 +193,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests deleting field.
    */
-  public function testDeleteField() {
+  public function testDeleteField(): void {
     $field_name = 'test_field';
     // Create a field storage and a field.
     $field_storage = FieldStorageConfig::create([
@@ -206,7 +209,11 @@ class EntityFormDisplayTest extends KernelTestBase {
     $field->save();
 
     // Create default and compact entity display.
-    EntityFormMode::create(['id' => 'entity_test.compact', 'targetEntityType' => 'entity_test'])->save();
+    EntityFormMode::create([
+      'id' => 'entity_test.compact',
+      'label' => 'Compact',
+      'targetEntityType' => 'entity_test',
+    ])->save();
     EntityFormDisplay::create([
       'targetEntityType' => 'entity_test',
       'bundle' => 'entity_test',
@@ -240,7 +247,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests \Drupal\Core\Entity\EntityDisplayBase::onDependencyRemoval().
    */
-  public function testOnDependencyRemoval() {
+  public function testOnDependencyRemoval(): void {
     $this->enableModules(['field_plugins_test']);
 
     $field_name = 'test_field';
@@ -285,7 +292,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests the serialization and unserialization of the class.
    */
-  public function testSerialization() {
+  public function testSerialization(): void {
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
 

@@ -104,7 +104,7 @@
     response,
     status,
   ) {
-    if ($('input#edit-displays-live-preview').is(':checked')) {
+    if ($('input#edit-displays-live-preview')[0].checked) {
       $('#preview-submit').trigger('click');
     }
   };
@@ -173,7 +173,7 @@
       $(once('views-ajax', 'input#edit-displays-live-preview', context)).on(
         'click',
         function () {
-          if ($(this).is(':checked')) {
+          if (this.checked) {
             $('#preview-submit').trigger('click');
           }
         },
@@ -194,7 +194,7 @@
       $(once('views-ajax', '#views-tabset a')).on('click', function () {
         const href = $(this).attr('href');
         // Cut of #views-tabset.
-        const displayId = href.substr(11);
+        const displayId = href.substring(11);
         const viewsPreviewId = document.querySelector(
           '#views-live-preview #preview-display-id',
         );
@@ -245,8 +245,9 @@
         // Set the URL to go to the anchor.
         elementSettings.url = $link.attr('href');
         if (
-          Drupal.Views.getPath(elementSettings.url).substring(0, 21) !==
-          'admin/structure/views'
+          !Drupal.Views.getPath(elementSettings.url).startsWith(
+            'admin/structure/views',
+          )
         ) {
           return true;
         }
@@ -273,8 +274,9 @@
           // Set the URL to go to the anchor.
           elementSettings.url = $(submit.form).attr('action');
           if (
-            Drupal.Views.getPath(elementSettings.url).substring(0, 21) !==
-            'admin/structure/views'
+            !Drupal.Views.getPath(elementSettings.url).startsWith(
+              'admin/structure/views',
+            )
           ) {
             return true;
           }

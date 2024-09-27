@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Test\Comparator;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\TestTools\Comparator\MarkupInterfaceComparator;
-use PHPUnit\Framework\Error\Warning;
 use SebastianBergmann\Comparator\Factory;
 use SebastianBergmann\Comparator\ComparisonFailure;
 
@@ -17,6 +18,7 @@ use SebastianBergmann\Comparator\ComparisonFailure;
  * objects to strings can require an initialized container.
  *
  * @group Test
+ * @group #slow
  *
  * @coversDefaultClass \Drupal\TestTools\Comparator\MarkupInterfaceComparator
  */
@@ -54,40 +56,40 @@ class MarkupInterfaceComparatorTest extends KernelTestBase {
    *     comparison should match, FALSE if error, or a class name of an object
    *     thrown.
    */
-  public function dataSetProvider() {
+  public static function dataSetProvider() {
     return [
       'FormattableMarkup vs FormattableMarkup, equal' => [
-        new FormattableMarkup('goldfinger', []),
-        new FormattableMarkup('goldfinger', []),
+        new FormattableMarkup('GoldFinger', []),
+        new FormattableMarkup('GoldFinger', []),
         TRUE,
         TRUE,
       ],
       'FormattableMarkup vs FormattableMarkup, not equal' => [
-        new FormattableMarkup('goldfinger', []),
+        new FormattableMarkup('GoldFinger', []),
         new FormattableMarkup('moonraker', []),
         TRUE,
         ComparisonFailure::class,
       ],
       'FormattableMarkup vs string, equal' => [
-        new FormattableMarkup('goldfinger', []),
-        'goldfinger',
+        new FormattableMarkup('GoldFinger', []),
+        'GoldFinger',
         TRUE,
         TRUE,
       ],
       'string vs FormattableMarkup, equal' => [
-        'goldfinger',
-        new FormattableMarkup('goldfinger', []),
+        'GoldFinger',
+        new FormattableMarkup('GoldFinger', []),
         TRUE,
         TRUE,
       ],
       'TranslatableMarkup vs FormattableMarkup, equal' => [
-        new TranslatableMarkup('goldfinger'),
-        new FormattableMarkup('goldfinger', []),
+        new TranslatableMarkup('GoldFinger'),
+        new FormattableMarkup('GoldFinger', []),
         TRUE,
         TRUE,
       ],
       'TranslatableMarkup vs string, not equal' => [
-        new TranslatableMarkup('goldfinger'),
+        new TranslatableMarkup('GoldFinger'),
         'moonraker',
         TRUE,
         ComparisonFailure::class,
@@ -105,20 +107,20 @@ class MarkupInterfaceComparatorTest extends KernelTestBase {
         TRUE,
       ],
       'FormattableMarkup vs array' => [
-        new FormattableMarkup('goldfinger', []),
-        ['goldfinger'],
+        new FormattableMarkup('GoldFinger', []),
+        ['GoldFinger'],
         FALSE,
-        Warning::class,
+        \InvalidArgumentException::class,
       ],
       'stdClass vs TranslatableMarkup' => [
-        (object) ['goldfinger'],
-        new TranslatableMarkup('goldfinger'),
+        (object) ['GoldFinger'],
+        new TranslatableMarkup('GoldFinger'),
         FALSE,
         FALSE,
       ],
       'string vs string, equal' => [
-        'goldfinger',
-        'goldfinger',
+        'GoldFinger',
+        'GoldFinger',
         FALSE,
         \LogicException::class,
       ],
@@ -162,7 +164,7 @@ class MarkupInterfaceComparatorTest extends KernelTestBase {
    *     thrown.
    *   - the expected deprecation message.
    */
-  public function dataSetProviderDeprecatedCases() {
+  public static function dataSetProviderDeprecatedCases() {
     return [
       'html string with tags vs FormattableMarkup, equal' => [
         '<em class="placeholder">For Your Eyes</em> Only',

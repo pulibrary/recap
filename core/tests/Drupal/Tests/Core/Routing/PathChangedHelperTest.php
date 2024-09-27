@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Routing;
 
 use Drupal\Core\Routing\PathChangedHelper;
@@ -18,7 +20,7 @@ class PathChangedHelperTest extends UnitTestCase {
    *
    * @covers ::__construct
    */
-  public function testPathChangedHelperException() {
+  public function testPathChangedHelperException(): void {
     $route_match = $this->prophesize(RouteMatchInterface::class);
     $route_match->getRouteName()->willReturn('path.changed.not-bc');
 

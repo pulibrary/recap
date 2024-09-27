@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -26,7 +28,7 @@ class CopyFieldValueTest extends WebDriverTestBase {
   /**
    * Tests copy field value JavaScript functionality.
    */
-  public function testCopyFieldValue() {
+  public function testCopyFieldValue(): void {
     $this->drupalGet('/system-test/copy-field-value-test-form');
     $page = $this->getSession()->getPage();
     $source_field_selector = 'edit-source-field';
