@@ -5,6 +5,7 @@ dependencies:
   module:
     - system
     - twitter_block
+    - user
   theme:
     - pinwheel
 id: pinwheel_twitterblock
@@ -32,6 +33,7 @@ settings:
   border_color: ''
   language: ''
   tweet_limit: ''
+  dnt: false
   related: ''
   polite: polite
   widget_id: '732250456165089284'
@@ -41,3 +43,10 @@ visibility:
     negate: false
     context_mapping: {  }
     pages: '<front>'
+  user_role:
+    id: user_role
+    negate: false
+    context_mapping:
+      user: '@user.current_user_context:current_user'
+    roles:
+      administrator: administrator
