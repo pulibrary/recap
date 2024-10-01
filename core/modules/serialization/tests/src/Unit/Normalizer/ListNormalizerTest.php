@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\serialization\Unit\Normalizer;
 
 use Drupal\Core\TypedData\DataDefinition;
@@ -77,7 +79,7 @@ class ListNormalizerTest extends UnitTestCase {
   /**
    * Tests the supportsNormalization() method.
    */
-  public function testSupportsNormalization() {
+  public function testSupportsNormalization(): void {
     $this->assertTrue($this->normalizer->supportsNormalization($this->list));
     $this->assertFalse($this->normalizer->supportsNormalization(new \stdClass()));
   }
@@ -85,7 +87,7 @@ class ListNormalizerTest extends UnitTestCase {
   /**
    * Tests the normalize() method.
    */
-  public function testNormalize() {
+  public function testNormalize(): void {
     $serializer = $this->prophesize(Serializer::class);
     $serializer->normalize($this->typedData, 'json', ['mu' => 'nu'])
       ->shouldBeCalledTimes(3)

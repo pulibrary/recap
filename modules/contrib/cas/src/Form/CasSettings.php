@@ -2,6 +2,7 @@
 
 namespace Drupal\cas\Form;
 
+use Drupal\cas\Service\CasHelper;
 use Drupal\cas\Service\CasUserManager;
 use Drupal\Component\Plugin\Factory\FactoryInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -9,9 +10,10 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\user\RoleInterface;
+use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\cas\Service\CasHelper;
 
 /**
  * Provides the CAS settings form.
@@ -211,6 +213,21 @@ class CasSettings extends ConfigFormBase {
       '#description' => $this->t('Enable to automatically create local Drupal accounts for first-time CAS logins. If disabled, users must be pre-registered before being allowed to log in.'),
       '#default_value' => $config->get('user_accounts.auto_register'),
     ];
+    $form['user_accounts']['auto_register_follow_registration_policy'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t("Follow site's account registration policy"),
+      '#description' => $this->t('With auto-register on, will follow the user account registration policy. For instance, if the <a href=":url">account settings</a> "%option" is selected under "%field", the auto-created account will wait for administrator approval.', [
+        '%option' => $this->t('Visitors, but administrator approval is required'),
+        '%field' => $this->t('Who can register accounts?'),
+        ':url' => Url::fromRoute('entity.user.admin_form')->toString(),
+      ]),
+      '#default_value' => $config->get('user_accounts.auto_register_follow_registration_policy'),
+      '#states' => [
+        'visible' => [
+          ':input[name="user_accounts[auto_register]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
     if (!$this->moduleHandler->moduleExists('cas_attributes')) {
       $form['user_accounts']['cas_attributes_callout'] = [
         '#prefix' => '<p class="messages messages--status">',
@@ -316,47 +333,53 @@ class CasSettings extends ConfigFormBase {
       ];
     }
     $form['error_handling']['messages']['message_validation_failure'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
+      '#rows' => 3,
       '#title' => $this->t('Ticket validation failure'),
       '#description' => $this->t('During the CAS authentication process, the CAS server provides Drupal with a "ticket" which is then exchanged for user details (e.g. username and other attributes). This message will be displayed if there is a problem during this process.'),
       '#default_value' => $config->get('error_handling.message_validation_failure'),
     ];
     $form['error_handling']['messages']['message_no_local_account'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
+      '#rows' => 3,
       '#title' => $this->t('Local account does not exist'),
       '#description' => $this->t('Displayed when a new user attempts to login via CAS and automatic registration is disabled.'),
       '#default_value' => $config->get('error_handling.message_no_local_account'),
     ];
     $form['error_handling']['messages']['message_subscriber_denied_reg'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
+      '#rows' => 3,
       '#title' => $this->t('Denied registration'),
       '#description' => $this->t('Displayed when some other module (like CAS Attributes) denies automatic registration of a new user.'),
       '#default_value' => $config->get('error_handling.message_subscriber_denied_reg'),
     ];
     $form['error_handling']['messages']['message_subscriber_denied_login'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
+      '#rows' => 3,
       '#title' => $this->t('Denied login'),
       '#description' => $this->t('Displayed when some other module (like CAS Attributes) denies login of a user.'),
       '#default_value' => $config->get('error_handling.message_subscriber_denied_login'),
     ];
     $form['error_handling']['messages']['message_account_blocked'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
+      '#rows' => 3,
       '#title' => $this->t('Local account is blocked'),
       '#description' => $this->t('Displayed when the Drupal user account belonging to the user logging in via CAS is blocked.'),
       '#default_value' => $config->get('error_handling.message_account_blocked'),
     ];
     $form['error_handling']['messages']['message_username_already_exists'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
+      '#rows' => 3,
       '#title' => $this->t('Local account username already exists'),
       '#description' => $this->t('Displayed when automatic registraton of new user fails because an existing Drupal user is using the same username.'),
       '#default_value' => $config->get('error_handling.message_username_already_exists'),
     ];
     $form['error_handling']['messages']['message_prevent_normal_login'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
+      '#rows' => 3,
       '#title' => $this->t('Prevent normal login error message'),
       '#description' => $this->t('Displayed when prevent normal login for CAS users is on and a CAS user tries to logon using the normal Drupal login form.'),
       '#default_value' => $config->get('error_handling.message_prevent_normal_login'),
-      '#maxlength' => 512,
       '#states' => [
         'disabled' => [
           ':input[name="user_accounts[prevent_normal_login]"]' => [
@@ -366,11 +389,11 @@ class CasSettings extends ConfigFormBase {
       ],
     ];
     $form['error_handling']['messages']['message_restrict_password_management'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
+      '#rows' => 3,
       '#title' => $this->t('Restrict password management error message'),
       '#description' => $this->t('Displayed when restrict password management is on and a CAS user tries to reset their Drupal password.'),
       '#default_value' => $config->get('error_handling.message_restrict_password_management'),
-      '#maxlength' => 512,
       '#states' => [
         'disabled' => [
           ':input[name="user_accounts[restrict_password_management]"]' => [
@@ -573,6 +596,15 @@ class CasSettings extends ConfigFormBase {
     }
 
     if ($form_state->getValue(['user_accounts', 'auto_register'])) {
+      $follow_registration_policy = $form_state->getValue([
+        'user_accounts',
+        'auto_register_follow_registration_policy',
+      ]);
+      if ($follow_registration_policy && $this->config('user.settings')->get('register') === UserInterface::REGISTER_ADMINISTRATORS_ONLY) {
+        $form_state->setErrorByName('user_accounts][auto_register_follow_registration_policy', $this->t('Auto-registering accounts is not possible while following the account registration policy because the policy requires that new accounts to be created only by administrators. Either uncheck <em>Follow site\'s account registration policy</em> or change the policy at <a href=":url">account settings</a>.', [
+          ':url' => Url::fromRoute('entity.user.admin_form')->toString(),
+        ]));
+      }
       $email_assignment_strategy = $form_state->getValue([
         'user_accounts',
         'email_assignment_strategy',
@@ -691,6 +723,10 @@ class CasSettings extends ConfigFormBase {
       ->set('user_accounts.auto_register', $form_state->getValue([
         'user_accounts',
         'auto_register',
+      ]))
+      ->set('user_accounts.auto_register_follow_registration_policy', $form_state->getValue([
+        'user_accounts',
+        'auto_register_follow_registration_policy',
       ]))
       ->set('user_accounts.email_assignment_strategy', $form_state->getValue([
         'user_accounts',

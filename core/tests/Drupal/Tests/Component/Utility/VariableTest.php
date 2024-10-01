@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\Variable;
@@ -16,27 +18,21 @@ use PHPUnit\Framework\TestCase;
 class VariableTest extends TestCase {
 
   /**
-   * A bogus callable for testing ::callableToString().
-   */
-  public static function fake(): void {
-  }
-
-  /**
    * Data provider for testCallableToString().
    *
    * @return array[]
    *   Sets of arguments to pass to the test method.
    */
-  public function providerCallableToString(): array {
-    $self = static::class;
+  public static function providerCallableToString(): array {
+    $mock = VariableTestMock::class;
     return [
       'string' => [
-        "$self::fake",
-        "$self::fake",
+        "$mock::fake",
+        "$mock::fake",
       ],
       'static method as array' => [
-        [$self, 'fake'],
-        "$self::fake",
+        [$mock, 'fake'],
+        "$mock::fake",
       ],
       'closure' => [
         function () {
@@ -45,8 +41,8 @@ class VariableTest extends TestCase {
         '[closure]',
       ],
       'object method' => [
-        [new static(), 'fake'],
-        "$self::fake",
+        [new VariableTestMock(), 'fake'],
+        "$mock::fake",
       ],
       'service method' => [
         'fake_service:method',
@@ -95,7 +91,7 @@ class VariableTest extends TestCase {
    *     - The expected export string.
    *     - The variable to export.
    */
-  public function providerTestExport() {
+  public static function providerTestExport() {
     return [
       // Array.
       [
@@ -178,8 +174,18 @@ class VariableTest extends TestCase {
    * @param mixed $variable
    *   The variable to be exported.
    */
-  public function testExport($expected, $variable) {
+  public function testExport($expected, $variable): void {
     $this->assertEquals($expected, Variable::export($variable));
+  }
+
+}
+
+class VariableTestMock {
+
+  /**
+   * A bogus callable for testing ::callableToString().
+   */
+  public static function fake(): void {
   }
 
 }
@@ -187,8 +193,8 @@ class VariableTest extends TestCase {
 /**
  * No-op test class for VariableTest::testExport().
  *
- * @see Drupal\Tests\Component\Utility\VariableTest::testExport()
- * @see Drupal\Tests\Component\Utility\VariableTest::providerTestExport()
+ * @see \Drupal\Tests\Component\Utility\VariableTest::testExport()
+ * @see \Drupal\Tests\Component\Utility\VariableTest::providerTestExport()
  */
 class StubVariableTestClass {
 

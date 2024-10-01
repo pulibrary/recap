@@ -56,3 +56,8 @@ services:
     class: Drupal\cas\Subscriber\CasLoginRedirectSubscriber
     tags:
       - { name: 'event_subscriber' }
+  cas.admin_approval_registration.subscriber:
+    class: Drupal\cas\Subscriber\CasAdminApprovalRegistrationSubscriber
+    arguments: ['@config.factory', '@messenger']
+    tags:
+      - { name: 'event_subscriber' }

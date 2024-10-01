@@ -32,7 +32,7 @@ class EntityTestForm extends ContentEntityForm {
     $form = parent::form($form, $form_state);
     $entity = $this->entity;
 
-    // @todo: Is there a better way to check if an entity type is revisionable?
+    // @todo Is there a better way to check if an entity type is revisionable?
     if ($entity->getEntityType()->hasKey('revision') && !$entity->isNew()) {
       $form['revision'] = [
         '#type' => 'checkbox',
@@ -80,7 +80,7 @@ class EntityTestForm extends ContentEntityForm {
         $form_state->setRebuild();
       }
     }
-    catch (\AssertionError $e) {
+    catch (\Exception $e) {
       \Drupal::state()->set('entity_test.form.save.exception', get_class($e) . ': ' . $e->getMessage());
     }
     return $status ?? FALSE;

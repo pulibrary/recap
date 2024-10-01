@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\cas\Unit\Service;
 
-use Drupal\Core\Password\PasswordGeneratorInterface;
-use Prophecy\PhpUnit\ProphecyTrait;
+use Drupal\cas\CasPropertyBag;
 use Drupal\cas\Event\CasPreLoginEvent;
 use Drupal\cas\Event\CasPreRegisterEvent;
 use Drupal\cas\Service\CasProxyHelper;
 use Drupal\cas\Service\CasUserManager;
+use Drupal\Core\Password\PasswordGeneratorInterface;
 use Drupal\Tests\UnitTestCase;
-use Drupal\cas\CasPropertyBag;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * CasUserManager unit tests.
@@ -61,7 +61,7 @@ class CasUserManagerTest extends UnitTestCase {
   /**
    * The mocked event dispatcher.
    *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $eventDispatcher;
 
@@ -113,7 +113,7 @@ class CasUserManagerTest extends UnitTestCase {
       ->getMock();
     $this->session->start();
     $this->connection = $this->createMock('\Drupal\Core\Database\Connection');
-    $this->eventDispatcher = $this->createMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
+    $this->eventDispatcher = $this->createMock('\Symfony\Contracts\EventDispatcher\EventDispatcherInterface');
     $this->casHelper = $this->createMock('\Drupal\cas\Service\CasHelper');
     $this->account = $this->createMock('Drupal\user\UserInterface');
     $this->casProxyHelper = $this->prophesize(CasProxyHelper::class);
@@ -132,6 +132,9 @@ class CasUserManagerTest extends UnitTestCase {
     $config_factory = $this->getConfigFactoryStub([
       'cas.settings' => [
         'user_accounts.auto_assigned_roles' => [],
+      ],
+      'user.settings' => [
+        'register' => 'visitors',
       ],
     ]);
 
@@ -272,6 +275,9 @@ class CasUserManagerTest extends UnitTestCase {
         'user_accounts.email_hostname' => 'sample.com',
         'user_accounts.email_attribute' => 'email',
       ],
+      'user.settings' => [
+        'register' => 'visitors',
+      ],
     ]);
 
     $cas_user_manager = $this->getMockBuilder('Drupal\cas\Service\CasUserManager')
@@ -315,6 +321,7 @@ class CasUserManagerTest extends UnitTestCase {
         'name' => 'test',
         'mail' => $expected_assigned_email,
         'pass' => NULL,
+        'status' => TRUE,
       ])
       ->willReturn($this->account);
 
@@ -343,6 +350,9 @@ class CasUserManagerTest extends UnitTestCase {
         'user_accounts.email_assignment_strategy' => $email_assignment_strategy,
         'user_accounts.email_hostname' => 'sample.com',
         'user_accounts.email_attribute' => 'email',
+      ],
+      'user.settings' => [
+        'register' => 'visitors',
       ],
     ]);
 
@@ -388,6 +398,7 @@ class CasUserManagerTest extends UnitTestCase {
         'name' => 'test',
         'mail' => $expected_assigned_email,
         'pass' => NULL,
+        'status' => TRUE,
       ])
       ->willReturn($this->account);
 
@@ -426,7 +437,16 @@ class CasUserManagerTest extends UnitTestCase {
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
-        $this->getConfigFactoryStub(),
+        $this->getConfigFactoryStub([
+          'cas.settings' => [
+            'user_accounts' => [
+              'auto_register_follow_registration_policy' => FALSE,
+            ],
+          ],
+          'user.settings' => [
+            'register' => 'visitors',
+          ],
+        ]),
         $this->session,
         $this->connection,
         $this->eventDispatcher,
@@ -477,7 +497,16 @@ class CasUserManagerTest extends UnitTestCase {
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
-        $this->getConfigFactoryStub(),
+        $this->getConfigFactoryStub([
+          'cas.settings' => [
+            'user_accounts' => [
+              'auto_register_follow_registration_policy' => FALSE,
+            ],
+          ],
+          'user.settings' => [
+            'register' => 'visitors',
+          ],
+        ]),
         $this->session,
         $this->connection,
         $this->eventDispatcher,
@@ -529,7 +558,16 @@ class CasUserManagerTest extends UnitTestCase {
       ->setConstructorArgs([
         $this->externalAuth,
         $this->authmap,
-        $this->getConfigFactoryStub(),
+        $this->getConfigFactoryStub([
+          'cas.settings' => [
+            'user_accounts' => [
+              'auto_register_follow_registration_policy' => FALSE,
+            ],
+          ],
+          'user.settings' => [
+            'register' => 'visitors',
+          ],
+        ]),
         $this->session,
         $this->connection,
         $this->eventDispatcher,
@@ -540,8 +578,8 @@ class CasUserManagerTest extends UnitTestCase {
       ->getMock();
 
     $this->account
-      ->method('isactive')
-      ->willReturn(FALSE);
+      ->method('isBlocked')
+      ->willReturn(TRUE);
     $this->account
       ->method('getaccountname')
       ->willReturn('user');

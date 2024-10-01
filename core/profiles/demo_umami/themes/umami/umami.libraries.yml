@@ -4,10 +4,8 @@ global:
     base:
       css/base.css: {}
     component:
-      css/components/blocks/banner/banner.css: {}
       css/components/blocks/help/help.css: {}
       css/components/blocks/page-title/page-title.css: {}
-      css/components/blocks/footer-promo/footer-promo.css: {}
       css/components/blocks/language-switcher/language-switcher.css: {}
       css/components/blocks/search/search.css: {}
       css/components/blocks/search/search-results.css: {}
@@ -44,14 +42,7 @@ global:
       css/components/toolbar/toolbar.css: {}
       css/components/layout_builder/layout-builder.css: {}
     layout:
-      css/layout/grid-2.css: {}
-      css/layout/grid-3.css: {}
-      css/layout/grid-4.css: {}
       css/layout/layout.css: {}
-  js:
-    js/components/navigation/menu-main/menu-main.js: {}
-  dependencies:
-    - umami/demo-umami-tour
 
 messages:
   css:
@@ -59,11 +50,6 @@ messages:
       css/components/messages/messages.css: {}
   js:
     js/components/messages/messages.js: {}
-
-more-link:
-  css:
-    theme:
-      css/components/navigation/more-link/more-link.css: { weight: -10 }
 
 quicklinks:
   css:
@@ -85,36 +71,6 @@ user:
   css:
     component:
       css/components/user/user.css: { weight: -10 }
-
-view-mode-card:
-  css:
-    theme:
-      css/components/content/card/card.css: {}
-  dependencies:
-    - umami/more-link
-
-view-mode-card-common:
-  css:
-    theme:
-      css/components/content/card/card.css: {}
-      css/components/content/card-common/card-common.css: {}
-  dependencies:
-    - umami/more-link
-
-view-mode-card-common-alt:
-  css:
-    theme:
-      css/components/content/card/card.css: {}
-      css/components/content/card-common-alt/card-common-alt.css: {}
-  dependencies:
-    - umami/more-link
-
-demo-umami-tour:
-  css:
-    theme:
-      css/components/tour/tour.theme.css: {}
-  dependencies:
-    - claro/tour-styling
 
 oneplusfourgrid_section:
   css:

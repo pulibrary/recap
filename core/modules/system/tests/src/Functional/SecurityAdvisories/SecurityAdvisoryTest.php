@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\SecurityAdvisories;
 
 use Drupal\advisory_feed_test\AdvisoryTestClientMiddleware;
@@ -147,6 +149,9 @@ class SecurityAdvisoryTest extends BrowserTestBase {
     // advisories on admin pages.
     $this->drupalLogin($this->drupalCreateUser([
       'access administration pages',
+      // We have nothing under admin, so we need access to a child route to
+      // access the parent.
+      'administer modules',
     ]));
     $this->assertAdvisoriesNotDisplayed($mixed_advisory_links, ['system.admin']);
 

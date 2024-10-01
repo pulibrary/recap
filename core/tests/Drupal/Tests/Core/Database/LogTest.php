@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Database;
 
 use Drupal\Core\Database\Database;
@@ -24,7 +26,7 @@ class LogTest extends UnitTestCase {
    *
    * @covers ::findCaller
    */
-  public function testContribDriverLog() {
+  public function testContribDriverLog(): void {
     Database::addConnectionInfo('default', 'default', [
       'driver' => 'test',
       'namespace' => 'Drupal\Tests\Core\Database\Stub',
@@ -37,7 +39,7 @@ class LogTest extends UnitTestCase {
     $result = (new StubConnection($pdo, []))->testLogCaller();
     $this->assertSame([
       'file' => __FILE__,
-      'line' => 37,
+      'line' => 39,
       'function' => 'testContribDriverLog',
       'class' => 'Drupal\Tests\Core\Database\LogTest',
       'type' => '->',
@@ -51,7 +53,7 @@ class LogTest extends UnitTestCase {
     $result = (new Log())->findCaller();
     $this->assertSame([
       'file' => __FILE__,
-      'line' => 51,
+      'line' => 53,
       'function' => 'testContribDriverLog',
       'class' => 'Drupal\Tests\Core\Database\LogTest',
       'type' => '->',

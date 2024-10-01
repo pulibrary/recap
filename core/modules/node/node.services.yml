@@ -1,13 +1,14 @@
 services:
+  _defaults:
+    autoconfigure: true
   node.route_subscriber:
     class: Drupal\node\Routing\RouteSubscriber
-    tags:
-      - { name: event_subscriber }
   node.grant_storage:
     class: Drupal\node\NodeGrantDatabaseStorage
     arguments: ['@database', '@module_handler', '@language_manager']
     tags:
       - { name: backend_overridable }
+  Drupal\node\NodeGrantDatabaseStorageInterface: '@node.grant_storage'
   access_check.node.preview:
     class: Drupal\node\Access\NodePreviewAccessCheck
     arguments: ['@entity_type.manager']
@@ -16,8 +17,6 @@ services:
   node.admin_path.route_subscriber:
     class: Drupal\node\EventSubscriber\NodeAdminRouteSubscriber
     arguments: ['@config.factory', '@router.builder']
-    tags:
-      - { name: event_subscriber }
   node_preview:
     class: Drupal\node\ParamConverter\NodePreviewConverter
     arguments: ['@tempstore.private']

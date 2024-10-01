@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -56,7 +58,7 @@ class FieldDialogsTest extends WebDriverTestBase {
   /**
    * Tests removing a field through the rearrange dialog.
    */
-  public function testRemoveFieldHandler() {
+  public function testRemoveFieldHandler(): void {
     $this->drupalGet('admin/structure/views/view/test_content_ajax');
     $page = $this->getSession()->getPage();
 

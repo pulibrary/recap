@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -40,7 +42,7 @@ class UserNameItemTest extends UnitTestCase {
    * @return array
    *   Test cases.
    */
-  public function providerMaxLength(): array {
+  public static function providerMaxLength(): array {
     return [
       '32' => [32],
       '255' => [255],

@@ -5,10 +5,15 @@ tour.tour.*:
   label: 'Tour settings'
   mapping:
     id:
-      type: string
+      type: machine_name
       label: 'ID'
+      constraints:
+        # Tour IDs also allow dashes.
+        Regex:
+          pattern: '/^[a-z0-9_-]+$/'
+          message: "The %value machine name is not valid."
     label:
-      type: label
+      type: required_label
       label: 'Label'
     module:
       type: string
@@ -36,11 +41,15 @@ tour.tip:
     plugin:
       type: string
       label: 'Plugin'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.tour.tip
+          interface: '\Drupal\tour\TipPluginInterface'
     label:
-      type: label
+      type: required_label
       label: 'Label'
     weight:
-      type: integer
+      type: weight
       label: 'Weight'
     position:
       type: string

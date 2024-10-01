@@ -10,9 +10,9 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Psr\Log\LogLevel;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Psr\Log\LogLevel;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Helper class that builds the redirect response.
@@ -52,7 +52,7 @@ class CasRedirector {
    *
    * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CasHelper service.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The EventDispatcher service.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The URL generator service.

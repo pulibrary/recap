@@ -15,6 +15,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Extension\ExtensionLifecycle;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Utility\PhpRequirements;
@@ -22,11 +23,12 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\PrivateStream;
 use Drupal\Core\StreamWrapper\PublicStream;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\Error;
-use GuzzleHttp\Exception\TransferException;
+use Psr\Http\Client\ClientExceptionInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 // cspell:ignore quickedit
@@ -83,7 +85,7 @@ function system_requirements($phase) {
     // Display the currently active installation profile, if the site
     // is not running the default installation profile.
     $profile = \Drupal::installProfile();
-    if ($profile != 'standard') {
+    if ($profile != 'standard' && !empty($profile)) {
       $info = $module_extension_list->getExtensionInfo($profile);
       $requirements['install_profile'] = [
         'title' => t('Installation profile'),
@@ -120,7 +122,7 @@ function system_requirements($phase) {
     // Warn if any experimental modules are installed.
     if (!empty($experimental_modules)) {
       $requirements['experimental_modules'] = [
-        'title' => t('Experimental modules enabled'),
+        'title' => t('Experimental modules installed'),
         'value' => t('Experimental modules found: %module_list. <a href=":url">Experimental modules</a> are provided for testing purposes only. Use at your own risk.', ['%module_list' => implode(', ', $experimental_modules), ':url' => 'https://www.drupal.org/core/experimental']),
         'severity' => REQUIREMENT_WARNING,
       ];
@@ -131,7 +133,7 @@ function system_requirements($phase) {
         $deprecated_modules_link_list[] = (string) Link::fromTextAndUrl($deprecated_module['name'], Url::fromUri($deprecated_module['lifecycle_link']))->toString();
       }
       $requirements['deprecated_modules'] = [
-        'title' => t('Deprecated modules enabled'),
+        'title' => t('Deprecated modules installed'),
         'value' => t('Deprecated modules found: %module_list.', [
           '%module_list' => Markup::create(implode(', ', $deprecated_modules_link_list)),
         ]),
@@ -139,7 +141,7 @@ function system_requirements($phase) {
       ];
     }
 
-    // Gather all obsolete and experimental themes being enabled.
+    // Gather all obsolete and experimental themes being installed.
     $experimental_themes = [];
     $deprecated_themes = [];
     $installed_themes = \Drupal::service('theme_handler')->listInfo();
@@ -156,33 +158,25 @@ function system_requirements($phase) {
           $obsolete_extensions[$theme] = ['name' => $info['name'], 'lifecycle_link' => $info['lifecycle_link']];
         }
       }
-      // Currently, we check for both the key/value pairs 'experimental: true'
-      // and 'lifecycle: experimental' to determine if an extension is marked as
-      // experimental.
-      // @todo Remove the check for 'experimental: true' as part of
-      // https://www.drupal.org/node/3250342
-      if (isset($data->info['experimental']) && $data->info['experimental']) {
-        $experimental_themes[$theme] = $data->info['name'];
-      }
     }
 
-    // Warn if any experimental themes are enabled.
+    // Warn if any experimental themes are installed.
     if (!empty($experimental_themes)) {
       $requirements['experimental_themes'] = [
-        'title' => t('Experimental themes enabled'),
+        'title' => t('Experimental themes installed'),
         'value' => t('Experimental themes found: %theme_list. Experimental themes are provided for testing purposes only. Use at your own risk.', ['%theme_list' => implode(', ', $experimental_themes)]),
         'severity' => REQUIREMENT_WARNING,
       ];
     }
 
-    // Warn if any deprecated themes are enabled.
+    // Warn if any deprecated themes are installed.
     if (!empty($deprecated_themes)) {
       foreach ($deprecated_themes as $deprecated_theme) {
         $deprecated_themes_link_list[] = (string) Link::fromTextAndUrl($deprecated_theme['name'], Url::fromUri($deprecated_theme['lifecycle_link']))->toString();
 
       }
       $requirements['deprecated_themes'] = [
-        'title' => t('Deprecated themes enabled'),
+        'title' => t('Deprecated themes installed'),
         'value' => t('Deprecated themes found: %theme_list.', [
           '%theme_list' => Markup::create(implode(', ', $deprecated_themes_link_list)),
         ]),
@@ -190,13 +184,13 @@ function system_requirements($phase) {
       ];
     }
 
-    // Warn if any obsolete extensions (themes or modules) are enabled.
+    // Warn if any obsolete extensions (themes or modules) are installed.
     if (!empty($obsolete_extensions)) {
       foreach ($obsolete_extensions as $obsolete_extension) {
         $obsolete_extensions_link_list[] = (string) Link::fromTextAndUrl($obsolete_extension['name'], Url::fromUri($obsolete_extension['lifecycle_link']))->toString();
       }
       $requirements['obsolete_extensions'] = [
-        'title' => t('Obsolete extensions enabled'),
+        'title' => t('Obsolete extensions installed'),
         'value' => t('Obsolete extensions found: %extensions. Obsolete extensions are provided only so that they can be uninstalled cleanly. You should immediately <a href=":uninstall_url">uninstall these extensions</a> since they may be removed in a future release.', [
           '%extensions' => Markup::create(implode(', ', $obsolete_extensions_link_list)),
           ':uninstall_url' => Url::fromRoute('system.modules_uninstall')->toString(),
@@ -422,10 +416,10 @@ function system_requirements($phase) {
     $requirements['php_apcu_available']['title'] = t('PHP APCu available caching');
     if (extension_loaded('apcu') && filter_var(ini_get('apc.enabled'), FILTER_VALIDATE_BOOLEAN)) {
       $memory_info = apcu_sma_info(TRUE);
-      $apcu_actual_size = format_size($memory_info['seg_size']);
+      $apcu_actual_size = ByteSizeMarkup::create($memory_info['seg_size'] * $memory_info['num_seg']);
       $apcu_recommended_size = '32 MB';
       $requirements['php_apcu_enabled']['value'] = t('Enabled (@size)', ['@size' => $apcu_actual_size]);
-      if (Bytes::toNumber($apcu_actual_size) < Bytes::toNumber($apcu_recommended_size)) {
+      if (Bytes::toNumber(ini_get('apc.shm_size')) * ini_get('apc.shm_segments') < Bytes::toNumber($apcu_recommended_size)) {
         $requirements['php_apcu_enabled']['severity'] = REQUIREMENT_WARNING;
         $requirements['php_apcu_enabled']['description'] = t('Depending on your configuration, Drupal can run with a @apcu_size APCu limit. However, a @apcu_default_size APCu limit (the default) or above is recommended, especially if your site uses additional custom or contributed modules.', [
           '@apcu_size' => $apcu_actual_size,
@@ -433,7 +427,7 @@ function system_requirements($phase) {
         ]);
       }
       else {
-        $memory_available = $memory_info['avail_mem'] / $memory_info['seg_size'];
+        $memory_available = $memory_info['avail_mem'] / ($memory_info['seg_size'] * $memory_info['num_seg']);
         if ($memory_available < 0.1) {
           $requirements['php_apcu_available']['severity'] = REQUIREMENT_ERROR;
           $requirements['php_apcu_available']['description'] = t('APCu is using over 90% of its allotted memory (@apcu_actual_size). To improve APCu performance, consider increasing this limit.', [
@@ -450,7 +444,7 @@ function system_requirements($phase) {
           $requirements['php_apcu_available']['severity'] = REQUIREMENT_OK;
         }
         $requirements['php_apcu_available']['value'] = t('Memory available: @available.', [
-          '@available' => format_size($memory_info['avail_mem']),
+          '@available' => ByteSizeMarkup::create($memory_info['avail_mem']),
         ]);
       }
     }
@@ -501,6 +495,17 @@ function system_requirements($phase) {
     }
   }
 
+  if ($phase === 'runtime' && PHP_SAPI !== 'cli') {
+    if (!function_exists('fastcgi_finish_request') && !function_exists('litespeed_finish_request') && !ob_get_status()) {
+      $requirements['output_buffering'] = [
+        'title' => t('Output Buffering'),
+        'error_value' => t('Not enabled'),
+        'severity' => REQUIREMENT_WARNING,
+        'description' => t('<a href="https://www.php.net/manual/en/function.ob-start.php">Output buffering</a> is not enabled. This may degrade Drupal\'s performance. You can enable output buffering by default <a href="https://www.php.net/manual/en/outcontrol.configuration.php#ini.output-buffering">in your PHP settings</a>.'),
+      ];
+    }
+  }
+
   if ($phase == 'install' || $phase == 'update') {
     // Test for PDO (database).
     $requirements['database_extensions'] = [
@@ -516,8 +521,7 @@ function system_requirements($phase) {
     }
     else {
       // Make sure at least one supported database driver exists.
-      $drivers = drupal_detect_database_types();
-      if (empty($drivers)) {
+      if (empty(Database::getDriverList()->getInstallableList())) {
         $database_ok = FALSE;
         $pdo_message = t('Your web server does not appear to support any common PDO database extensions. Check with your hosting provider to see if they support PDO (PHP Data Objects) and offer any databases that <a href=":drupal-databases">Drupal supports</a>.', [
           ':drupal-databases' => 'https://www.drupal.org/docs/system-requirements/database-server-requirements',
@@ -545,7 +549,7 @@ function system_requirements($phase) {
 
   if ($phase === 'runtime' || $phase === 'update') {
     // Database information.
-    $class = Database::getConnection()->getDriverClass('Install\\Tasks');
+    $class = Database::getConnection()->getConnectionOptions()['namespace'] . '\\Install\\Tasks';
     /** @var \Drupal\Core\Database\Install\Tasks $tasks */
     $tasks = new $class();
     $requirements['database_system'] = [
@@ -630,7 +634,7 @@ function system_requirements($phase) {
     }
   }
 
-  // Test configuration files and directory for writability.
+  // Test if configuration files and directory are writable.
   if ($phase == 'runtime') {
     $conf_errors = [];
     // Find the site path. Kernel service is not always available at this point,
@@ -959,10 +963,21 @@ function system_requirements($phase) {
         ];
       }
 
-      $entity_update_issues = \Drupal::service('renderer')->renderPlain($build);
+      $entity_update_issues = \Drupal::service('renderer')->renderInIsolation($build);
       $requirements['entity_update']['severity'] = REQUIREMENT_ERROR;
       $requirements['entity_update']['value'] = t('Mismatched entity and/or field definitions');
       $requirements['entity_update']['description'] = t('The following changes were detected in the entity type and field definitions. @updates', ['@updates' => $entity_update_issues]);
+    }
+  }
+
+  // Display the deployment identifier if set.
+  if ($phase == 'runtime') {
+    if ($deployment_identifier = Settings::get('deployment_identifier')) {
+      $requirements['deployment identifier'] = [
+        'title' => t('Deployment identifier'),
+        'value' => $deployment_identifier,
+        'severity' => REQUIREMENT_INFO,
+      ];
     }
   }
 
@@ -1279,7 +1294,7 @@ function system_requirements($phase) {
       break;
 
     case 'mbstring.encoding_translation':
-      $requirements['unicode']['description'] = t('Multibyte string input conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.encoding_translation</em> setting. Please refer to the <a href="http://php.net/mbstring">PHP mbstring documentation</a> for more information.');
+      $requirements['unicode']['description'] = t('Multibyte string input conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.encoding_translation</em> setting. Refer to the <a href="http://php.net/mbstring">PHP mbstring documentation</a> for more information.');
       break;
   }
 
@@ -1289,7 +1304,7 @@ function system_requirements($phase) {
       $requirements['update status'] = [
         'value' => t('Not enabled'),
         'severity' => REQUIREMENT_WARNING,
-        'description' => t('Update notifications are not enabled. It is <strong>highly recommended</strong> that you enable the Update Manager module from the <a href=":module">module administration page</a> in order to stay up-to-date on new releases. For more information, <a href=":update">Update status handbook page</a>.', [
+        'description' => t('Update notifications are not enabled. It is <strong>highly recommended</strong> that you install the Update Manager module from the <a href=":module">module administration page</a> in order to stay up-to-date on new releases. For more information, <a href=":update">Update status handbook page</a>.', [
           ':update' => 'https://www.drupal.org/documentation/modules/update',
           ':module' => Url::fromRoute('system.modules_list')->toString(),
         ]),
@@ -1334,7 +1349,7 @@ function system_requirements($phase) {
     ];
   }
 
-  // See if trusted hostnames have been configured, and warn the user if they
+  // See if trusted host names have been configured, and warn the user if they
   // are not set.
   if ($phase == 'runtime') {
     $trusted_host_patterns = Settings::get('trusted_host_patterns');
@@ -1356,7 +1371,7 @@ function system_requirements($phase) {
   }
 
   // When the database driver is provided by a module, then check that the
-  // providing module is enabled.
+  // providing module is installed.
   if ($phase === 'runtime' || $phase === 'update') {
     $connection = Database::getConnection();
     $provider = $connection->getProvider();
@@ -1367,11 +1382,11 @@ function system_requirements($phase) {
         $pending_updates = $post_update_registry->getPendingUpdateInformation();
         if (!in_array('enable_provider_database_driver', array_keys($pending_updates['system']['pending'] ?? []), TRUE)) {
           // Only show the warning when the post update function has run and
-          // the module that is providing the database driver is not enabled.
+          // the module that is providing the database driver is not installed.
           $requirements['database_driver_provided_by_module'] = [
             'title' => t('Database driver provided by module'),
-            'value' => t('Not enabled'),
-            'description' => t('The current database driver is provided by the module: %module. The module is currently not enabled. You should immediately <a href=":enable">enable</a> the module.', ['%module' => $provider, ':enable' => Url::fromRoute('system.modules_list')->toString()]),
+            'value' => t('Not installed'),
+            'description' => t('The current database driver is provided by the module: %module. The module is currently not installed. You should immediately <a href=":install">install</a> the module.', ['%module' => $provider, ':install' => Url::fromRoute('system.modules_list')->toString()]),
             'severity' => REQUIREMENT_ERROR,
           ];
         }
@@ -1403,7 +1418,7 @@ function system_requirements($phase) {
   // file names. There is no definite root directory depth below which Drupal is
   // guaranteed to function correctly on Windows. Since problems are likely
   // with more than 100 characters in the Drupal root path, show an error.
-  if (substr(PHP_OS, 0, 3) == 'WIN') {
+  if (str_starts_with(PHP_OS, 'WIN')) {
     $depth = strlen(realpath(DRUPAL_ROOT . '/' . PublicStream::basePath()));
     if ($depth > 120) {
       $requirements['max_path_on_windows'] = [
@@ -1504,6 +1519,7 @@ function system_requirements($phase) {
     }
     // Also check post-updates. Only do this if we're not already showing an
     // error for hook_update_N().
+    $missing_updates = [];
     if (empty($module_list)) {
       $existing_updates = \Drupal::service('keyvalue')->get('post_update')->get('existing_updates', []);
       $post_update_registry = \Drupal::service('update.post_update_registry');
@@ -1530,12 +1546,49 @@ function system_requirements($phase) {
         }
       }
     }
+
+    if (empty($missing_updates)) {
+      foreach ($update_registry->getAllEquivalentUpdates() as $module => $equivalent_updates) {
+        $module_info = $module_extension_list->get($module);
+        foreach ($equivalent_updates as $future_update => $data) {
+          $future_update_function_name = $module . '_update_' . $future_update;
+          $ran_update_function_name = $module . '_update_' . $data['ran_update'];
+          // If an update was marked as an equivalent by a previous update, and
+          // both the previous update and the equivalent update are not found in
+          // the current code base, prevent updating. This indicates a site
+          // attempting to go 'backwards' in terms of database schema.
+          // @see \Drupal\Core\Update\UpdateHookRegistry::markFutureUpdateEquivalent()
+          if (!function_exists($ran_update_function_name) && !function_exists($future_update_function_name)) {
+            // If the module is provided by core prepend helpful text as the
+            // module does not exist in composer or Drupal.org.
+            if (str_starts_with($module_info->getPathname(), 'core/')) {
+              $future_version_string = 'Drupal Core ' . $data['future_version_string'];
+            }
+            else {
+              $future_version_string = $data['future_version_string'];
+            }
+            $requirements[$module . '_equivalent_update_missing'] = [
+              'title' => t('Missing updates for: @module', ['@module' => $module_info->info['name']]),
+              'description' => t('The version of the %module module that you are attempting to update to is missing update @future_update (which was marked as an equivalent by @ran_update). Update to at least @future_version_string.', [
+                '%module' => $module_info->info['name'],
+                '@ran_update' => $data['ran_update'],
+                '@future_update' => $future_update,
+                '@future_version_string' => $future_version_string,
+              ]),
+              'severity' => REQUIREMENT_ERROR,
+            ];
+            break;
+          }
+        }
+      }
+    }
   }
 
   // Add warning when twig debug option is enabled.
   if ($phase === 'runtime') {
-    $twig_debug = \Drupal::state()->get('twig_debug', FALSE);
-    $twig_cache_disable = \Drupal::state()->get('twig_cache_disable', FALSE);
+    $development_settings = \Drupal::keyValue('development_settings');
+    $twig_debug = $development_settings->get('twig_debug', FALSE);
+    $twig_cache_disable = $development_settings->get('twig_cache_disable', FALSE);
     if ($twig_debug || $twig_cache_disable) {
       $requirements['twig_debug_enabled'] = [
         'title' => t('Twig development mode'),
@@ -1548,7 +1601,7 @@ function system_requirements($phase) {
         'severity' => REQUIREMENT_WARNING,
       ];
     }
-    $render_cache_disabled = \Drupal::state()->get('disable_rendered_output_cache_bins', FALSE);
+    $render_cache_disabled = $development_settings->get('disable_rendered_output_cache_bins', FALSE);
     if ($render_cache_disabled) {
       $requirements['render_cache_disabled'] = [
         'title' => t('Markup caching disabled'),
@@ -1558,6 +1611,17 @@ function system_requirements($phase) {
             'system.development_settings',
           )->toString(),
         ]),
+        'severity' => REQUIREMENT_WARNING,
+      ];
+    }
+  }
+
+  // Add warning if state caching is not explicitly set.
+  if ($phase === 'runtime') {
+    if (Settings::get('state_cache') === NULL) {
+      $requirements['state_cache_not_set'] = [
+        'title' => t('State cache flag not set'),
+        'value' => t("State cache flag \$settings['state_cache'] is not set. It is recommended to be set to TRUE in settings.php unless there are too many state keys. Drupal 11 will default to having state cache enabled."),
         'severity' => REQUIREMENT_WARNING,
       ];
     }
@@ -1583,13 +1647,16 @@ function system_install() {
   $site->save(TRUE);
 
   // Populate the dummy query string added to all CSS and JavaScript files.
-  _drupal_flush_css_js();
+  \Drupal::service('asset.query_string')->reset();
 }
 
 /**
  * Implements hook_schema().
  */
 function system_schema() {
+  // @deprecated The sequences table has been deprecated in drupal:10.2.0 and is
+  // removed from drupal:12.0.0. See https://www.drupal.org/node/3220378.
+  // @todo Remove sequences table in Drupal 12. See https://www.drupal.org/i/3335756
   $schema['sequences'] = [
     'description' => 'Stores IDs.',
     'fields' => [
@@ -1601,57 +1668,6 @@ function system_schema() {
       ],
     ],
     'primary key' => ['value'],
-  ];
-
-  $schema['sessions'] = [
-    'description' => "Drupal's session handlers read and write into the sessions table. Each record represents a user session, either anonymous or authenticated.",
-    'fields' => [
-      'uid' => [
-        'description' => 'The {users}.uid corresponding to a session, or 0 for anonymous user.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-      'sid' => [
-        'description' => "A session ID (hashed). The value is generated by Drupal's session handlers.",
-        'type' => 'varchar_ascii',
-        'length' => 128,
-        'not null' => TRUE,
-      ],
-      'hostname' => [
-        'description' => 'The IP address that last used this session ID (sid).',
-        'type' => 'varchar_ascii',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'timestamp' => [
-        'description' => 'The Unix timestamp when this session last requested a page. Old records are purged by PHP automatically.',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'size' => 'big',
-      ],
-      'session' => [
-        'description' => 'The serialized contents of the user\'s session, an array of name/value pairs that persists across page requests by this session ID. Drupal loads the user\'s session from here at the start of each request and saves it at the end.',
-        'type' => 'blob',
-        'not null' => FALSE,
-        'size' => 'big',
-      ],
-    ],
-    'primary key' => [
-      'sid',
-    ],
-    'indexes' => [
-      'timestamp' => ['timestamp'],
-      'uid' => ['uid'],
-    ],
-    'foreign keys' => [
-      'session_user' => [
-        'table' => 'users',
-        'columns' => ['uid' => 'uid'],
-      ],
-    ],
   ];
 
   return $schema;
@@ -1680,7 +1696,7 @@ function _system_advisories_requirements(array &$requirements): void {
   try {
     $advisories = $fetcher->getSecurityAdvisories(TRUE, 5);
   }
-  catch (TransferException $exception) {
+  catch (ClientExceptionInterface $exception) {
     $requirements['system_advisories']['title'] = t('Critical security announcements');
     $requirements['system_advisories']['severity'] = REQUIREMENT_WARNING;
     $requirements['system_advisories']['description'] = ['#theme' => 'system_security_advisories_fetch_error_message'];
@@ -1797,6 +1813,12 @@ function system_update_10100(&$sandbox = NULL) {
   });
   if ($connection->databaseType() != 'sqlite') {
     foreach (array_keys($cache_tables) as $table) {
+      // If the table has no expire column there is nothing to do. This can
+      // happen if a site has tables starting with cache_ that are not cache
+      // bins.
+      if (!$schema->fieldExists($table, 'expire')) {
+        continue;
+      }
       // Truncate cache tables. They will be flushed anyway at the end of
       // database updates, but emptying the tables now will boost the schema
       // changes.
@@ -1812,4 +1834,108 @@ function system_update_10100(&$sandbox = NULL) {
     }
   }
 
+}
+
+/**
+ * Change the {batch} table [bid] field to serial.
+ */
+function system_update_10101(&$sandbox = NULL) {
+  $connection = \Drupal::database();
+  $schema = $connection->schema();
+
+  // Update batch table.
+  if ($schema->tableExists('batch')) {
+    $schema->changeField('batch', 'bid', 'bid', [
+      'description' => 'Primary Key: Unique batch ID.',
+      'type' => 'serial',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+    ]);
+  }
+
+}
+
+/**
+ * Clear left over entries in the revision data table.
+ */
+function system_update_10201(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $database = \Drupal::database();
+
+  // Initialize the sandbox. Store a list of entity types that need to be
+  // cleaned up in a list, then keep track of the current entity type by
+  // its numeric index.
+  if (!isset($sandbox['current_key'])) {
+    // This must be the first run. Initialize the sandbox.
+    $sandbox['current_key'] = 0;
+
+    // Filter the entity types for those that need to be cleaned up.
+    $definitions = array_filter($entity_type_manager->getDefinitions(), function (EntityTypeInterface $entity_type) use ($entity_definition_update_manager, $database) {
+
+      // Use the last installed entity type definition for the filtering, as
+      // some might not have been installed yet or are only being made
+      // revisionable or translatable in a later update function.
+      $entity_type = $entity_definition_update_manager->getEntityType($entity_type->id());
+      if (!$entity_type) {
+        // New entity type that is not installed yet, nothing to clean up, skip.
+        return FALSE;
+      }
+      if (!$entity_type->isRevisionable() || !$entity_type->isTranslatable()) {
+        // Entity type is either not revisionable or not translatable.
+        return FALSE;
+      }
+
+      // Ensure the revision and revision data tables really exist.
+      $entity_type_id = $entity_type->id();
+      $revision_table = $entity_type->getRevisionTable() ?: $entity_type_id . '_revision';
+      $revision_data_table = $entity_type->getRevisionDataTable() ?: $entity_type_id . '_field_revision';
+      return $database->schema()
+        ->tableExists($revision_table) && $database->schema()
+        ->tableExists($revision_data_table);
+    });
+
+    if (empty($definitions)) {
+      $sandbox['#finished'] = TRUE;
+      return;
+    }
+
+    $sandbox['entity_type_ids'] = array_keys($definitions);
+    $sandbox['max'] = count($sandbox['entity_type_ids']);
+  }
+
+  // Get the current entity type. Fetch 100 records that should be deleted.
+  // Order them by entity ID to optimize the amount of delete queries that need
+  // to be executed.
+  $entity_type_id = $sandbox['entity_type_ids'][$sandbox['current_key']];
+  /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
+  $entity_type = $entity_definition_update_manager->getEntityType($entity_type_id);
+
+  $revision_table = $entity_type->getRevisionTable() ?: $entity_type_id . '_revision';
+  $revision_data_table = $entity_type->getRevisionDataTable() ?: $entity_type_id . '_field_revision';
+  $revision_field = $entity_type->getKey('revision');
+
+  $query = $database->select($revision_data_table, 'rd');
+  $query->leftJoin($revision_table, 'r', 'r.' . $revision_field . ' = rd.' . $revision_field);
+  $query->addField('rd', $revision_field, 'revision');
+
+  $revision_ids = $query
+    ->isNull('r.' . $revision_field)
+    ->range(0, 100)
+    ->execute()
+    ->fetchCol();
+
+  if ($revision_ids) {
+    $database->delete($revision_data_table)
+      ->condition($revision_field, $revision_ids, 'IN')
+      ->execute();
+  }
+
+  // If there are less than 100 rows, the entity type was cleaned up, move on to
+  // the next one.
+  if (count($revision_ids) < 100) {
+    $sandbox['current_key']++;
+  }
+
+  $sandbox['#finished'] = $sandbox['current_key'] == $sandbox['max'];
 }

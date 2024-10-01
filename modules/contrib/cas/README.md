@@ -14,7 +14,7 @@ Using a single-sign on service like CAS is a beneficial because it provides:
 - Security. Your Drupal website never sees a user's password.
 
 This module implements version 1 and version 2 of the CAS protocol:
-http://jasig.github.io/cas/4.1.x/protocol/CAS-Protocol-Specification.html
+https://apereo.github.io/cas/7.0.x/protocol/CAS-Protocol.html
 
 Not all parts of the specification are implemented, but the core functionality
 that the protocol describes works well.

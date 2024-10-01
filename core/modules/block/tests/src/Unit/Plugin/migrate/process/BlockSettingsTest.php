@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Unit\Plugin\migrate\process;
 
 use Drupal\block\Plugin\migrate\process\BlockSettings;
@@ -25,12 +27,10 @@ class BlockSettingsTest extends UnitTestCase {
    *
    * @dataProvider providerTestTransform
    */
-  public function testTransform($value, $expected) {
+  public function testTransform($value, $expected): void {
     $executable = $this->prophesize(MigrateExecutableInterface::class)
       ->reveal();
-    if (empty($row)) {
-      $row = $this->prophesize(Row::class)->reveal();
-    }
+    $row = $this->prophesize(Row::class)->reveal();
 
     $plugin = new BlockSettings([], 'block_settings', []);
     $actual = $plugin->transform($value, $executable, $row, 'foo');
@@ -40,7 +40,7 @@ class BlockSettingsTest extends UnitTestCase {
   /**
    * Provides data for testTransform.
    */
-  public function providerTestTransform() {
+  public static function providerTestTransform() {
     return [
       'title set' => [
         [

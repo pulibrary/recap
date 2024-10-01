@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -24,7 +26,7 @@ class FrameworkTest extends WebDriverTestBase {
   /**
    * Tests that new JavaScript and CSS files are lazy-loaded on an AJAX request.
    */
-  public function testLazyLoad() {
+  public function testLazyLoad(): void {
     $expected = [
       'setting_name' => 'ajax_forms_test_lazy_load_form_submit',
       'setting_value' => 'executed',
@@ -84,7 +86,7 @@ class FrameworkTest extends WebDriverTestBase {
   /**
    * Tests that drupalSettings.currentPath is not updated on AJAX requests.
    */
-  public function testCurrentPathChange() {
+  public function testCurrentPathChange(): void {
     $this->drupalGet('ajax_forms_test_lazy_load_form');
     $page = $this->getSession()->getPage();
     $assert = $this->assertSession();
@@ -99,7 +101,7 @@ class FrameworkTest extends WebDriverTestBase {
   /**
    * Tests that overridden CSS files are not added during lazy load.
    */
-  public function testLazyLoadOverriddenCSS() {
+  public function testLazyLoadOverriddenCSS(): void {
     // The test_theme throws a few JavaScript errors. Since we're only
     // interested in CSS for this test, we're not letting this test fail on
     // those.
@@ -117,9 +119,10 @@ class FrameworkTest extends WebDriverTestBase {
     $page = $this->getSession()->getPage();
     $assert = $this->assertSession();
 
+    $page_load_hash_1 = $this->getSession()->evaluateScript('window.performance.timeOrigin');
     $page->checkField('add_files');
     $page->pressButton('Submit');
-    $assert->assertWaitOnAjaxRequest();
+    $assert->assertExpectedAjaxRequest(1);
 
     // Verify that the resulting HTML does not load the overridden CSS file.
     // We add a "?" to the assertion, because drupalSettings may include
@@ -127,6 +130,8 @@ class FrameworkTest extends WebDriverTestBase {
     // in a LINK or STYLE tag, for which Drupal always adds a query string for
     // cache control.
     $assert->responseNotContains('js.module.css?');
+    $page_load_hash_2 = $this->getSession()->evaluateScript('window.performance.timeOrigin');
+    $this->assertSame($page_load_hash_1, $page_load_hash_2, 'Page was not reloaded; AJAX update occurred.');
   }
 
 }

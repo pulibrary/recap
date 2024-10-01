@@ -149,7 +149,7 @@ class FieldItemList extends ItemList implements FieldItemListInterface {
   /**
    * {@inheritdoc}
    */
-  public function access($operation = 'view', AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation = 'view', ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler($this->getEntity()->getEntityTypeId());
     return $access_control_handler->fieldAccess($operation, $this->getFieldDefinition(), $account, $this, $return_as_object);
   }
@@ -157,7 +157,7 @@ class FieldItemList extends ItemList implements FieldItemListInterface {
   /**
    * {@inheritdoc}
    */
-  public function defaultAccess($operation = 'view', AccountInterface $account = NULL) {
+  public function defaultAccess($operation = 'view', ?AccountInterface $account = NULL) {
     // Grant access per default.
     return AccessResult::allowed();
   }
@@ -370,7 +370,17 @@ class FieldItemList extends ItemList implements FieldItemListInterface {
         ]);
       }
       else {
-        $widget = $field_widget_plugin_manager->getInstance(['field_definition' => $definition]);
+        $options = [
+          'field_definition' => $this->getFieldDefinition(),
+        ];
+        // If the field does not have a widget configured in the 'default' form
+        // mode, check if there are default entity form display options defined
+        // for the 'default' form mode in the form state.
+        // @see \Drupal\field_ui\Controller\FieldConfigAddController::fieldConfigAddConfigureForm
+        if (($default_options = $form_state->get('default_options')) && isset($default_options['entity_form_display']['default'])) {
+          $options['configuration'] = $default_options['entity_form_display']['default'];
+        }
+        $widget = $field_widget_plugin_manager->getInstance($options);
       }
 
       $form_state->set('default_value_widget', $widget);

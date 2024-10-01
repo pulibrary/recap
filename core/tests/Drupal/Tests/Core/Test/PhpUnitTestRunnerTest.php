@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Test;
 
 use Drupal\Core\Test\PhpUnitTestRunner;
@@ -21,14 +23,14 @@ class PhpUnitTestRunnerTest extends UnitTestCase {
    *
    * @covers ::execute
    */
-  public function testRunTestsError() {
+  public function testRunTestsError(): void {
     $test_id = 23;
     $log_path = 'test_log_path';
 
     // Create a mock test run storage.
     $storage = $this->getMockBuilder(SimpletestTestRunResultsStorage::class)
       ->disableOriginalConstructor()
-      ->setMethods(['createNew'])
+      ->onlyMethods(['createNew'])
       ->getMock();
 
     // Set some expectations for createNew().
@@ -84,7 +86,7 @@ class PhpUnitTestRunnerTest extends UnitTestCase {
   /**
    * @covers ::phpUnitCommand
    */
-  public function testPhpUnitCommand() {
+  public function testPhpUnitCommand(): void {
     $runner = new PhpUnitTestRunner($this->root, sys_get_temp_dir());
     $this->assertMatchesRegularExpression('/phpunit/', $runner->phpUnitCommand());
   }
@@ -92,12 +94,12 @@ class PhpUnitTestRunnerTest extends UnitTestCase {
   /**
    * @covers ::xmlLogFilePath
    */
-  public function testXmlLogFilePath() {
+  public function testXmlLogFilePath(): void {
     $runner = new PhpUnitTestRunner($this->root, sys_get_temp_dir());
     $this->assertStringEndsWith('phpunit-23.xml', $runner->xmlLogFilePath(23));
   }
 
-  public function providerTestSummarizeResults() {
+  public static function providerTestSummarizeResults() {
     return [
       [
         [
@@ -142,7 +144,7 @@ class PhpUnitTestRunnerTest extends UnitTestCase {
    * @dataProvider providerTestSummarizeResults
    * @covers ::summarizeResults
    */
-  public function testSummarizeResults($results, $has_status) {
+  public function testSummarizeResults($results, $has_status): void {
     $runner = new PhpUnitTestRunner($this->root, sys_get_temp_dir());
     $summary = $runner->summarizeResults($results);
 

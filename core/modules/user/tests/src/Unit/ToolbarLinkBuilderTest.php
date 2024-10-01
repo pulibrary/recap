@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Core\Session\AccountProxyInterface;
@@ -19,7 +21,7 @@ class ToolbarLinkBuilderTest extends UnitTestCase {
    *
    * @covers ::renderDisplayName
    */
-  public function testRenderDisplayName() {
+  public function testRenderDisplayName(): void {
     $account = $this->prophesize(AccountProxyInterface::class);
     $display_name = 'Something suspicious that should be #plain_text, not #markup';
     $account->getDisplayName()->willReturn($display_name);

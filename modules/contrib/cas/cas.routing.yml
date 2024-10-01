@@ -39,7 +39,7 @@ cas.proxyCallback:
     _controller: '\Drupal\cas\Controller\ProxyCallbackController::callback'
   requirements:
     # This route is publicly accessible.
-      _access: 'TRUE'
+    _access: 'TRUE'
   options:
     _maintenance_access: TRUE
     no_cache: TRUE

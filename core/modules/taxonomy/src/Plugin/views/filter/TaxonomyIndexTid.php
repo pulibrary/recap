@@ -8,6 +8,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\TermStorageInterface;
 use Drupal\taxonomy\VocabularyStorageInterface;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\filter\ManyToOne;
@@ -17,9 +18,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Filter by term id.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("taxonomy_index_tid")
  */
+#[ViewsFilter("taxonomy_index_tid")]
 class TaxonomyIndexTid extends ManyToOne {
 
   /**
@@ -27,6 +27,7 @@ class TaxonomyIndexTid extends ManyToOne {
    *
    * @var array|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $validated_exposed_input = NULL;
 
   /**
@@ -90,7 +91,7 @@ class TaxonomyIndexTid extends ManyToOne {
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     if (!empty($this->definition['vocabulary'])) {
@@ -169,7 +170,7 @@ class TaxonomyIndexTid extends ManyToOne {
     $vocabulary = $this->vocabularyStorage->load($this->options['vid']);
     if (empty($vocabulary) && $this->options['limit']) {
       $form['markup'] = [
-        '#markup' => '<div class="js-form-item form-item">' . $this->t('An invalid vocabulary is selected. Please change it in the options.') . '</div>',
+        '#markup' => '<div class="js-form-item form-item">' . $this->t('An invalid vocabulary is selected. Change it in the options.') . '</div>',
       ];
       return;
     }
@@ -371,7 +372,7 @@ class TaxonomyIndexTid extends ManyToOne {
   }
 
   protected function valueSubmit($form, FormStateInterface $form_state) {
-    // prevent array_filter from messing up our arrays in parent submit.
+    // Prevent array_filter from messing up our arrays in parent submit.
   }
 
   public function buildExposeForm(&$form, FormStateInterface $form_state) {
@@ -387,7 +388,7 @@ class TaxonomyIndexTid extends ManyToOne {
   }
 
   public function adminSummary() {
-    // set up $this->valueOptions for the parent summary
+    // Set up $this->valueOptions for the parent summary
     $this->valueOptions = [];
 
     if ($this->value) {
@@ -398,19 +399,6 @@ class TaxonomyIndexTid extends ManyToOne {
       }
     }
     return parent::adminSummary();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheContexts() {
-    $contexts = parent::getCacheContexts();
-    // The result potentially depends on term access and so is just cacheable
-    // per user.
-    // @todo See https://www.drupal.org/node/2352175.
-    $contexts[] = 'user';
-
-    return $contexts;
   }
 
   /**

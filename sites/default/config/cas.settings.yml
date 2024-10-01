@@ -1,5 +1,6 @@
 _core:
   default_config_hash: 2z_THKqotLn7-Fl5rKmZkNmZph-IVfv-8q1ShRZAqBY
+langcode: en
 login_link_enabled: false
 login_link_label: 'CAS Login'
 login_success_message: 'You have been logged in.'
@@ -28,6 +29,7 @@ forced_login:
 user_accounts:
   prevent_normal_login: false
   auto_register: false
+  auto_register_follow_registration_policy: false
   email_assignment_strategy: 0
   email_hostname: ''
   email_attribute: ''

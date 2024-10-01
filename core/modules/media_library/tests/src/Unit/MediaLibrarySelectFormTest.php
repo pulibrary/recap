@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\Unit;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -12,7 +14,7 @@ use Drupal\views\Plugin\ViewsPluginManager;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -48,18 +50,10 @@ class MediaLibrarySelectFormTest extends UnitTestCase {
     $container->set('string_translation', $this->createMock(TranslationInterface::class));
     \Drupal::setContainer($container);
 
-    $query = $this->getMockBuilder(ParameterBag::class)
-      ->onlyMethods(['all'])
-      ->disableOriginalConstructor()
-      ->getMock();
-    $query->expects($this->any())
-      ->method('all')
-      ->willReturn([]);
-
     $request = $this->getMockBuilder(Request::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $request->query = $query;
+    $request->query = new InputBag();
 
     $view = $this->getMockBuilder(ViewExecutable::class)
       ->onlyMethods(['getRequest', 'initStyle', 'getDisplay'])

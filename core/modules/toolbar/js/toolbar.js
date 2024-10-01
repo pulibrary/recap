@@ -205,29 +205,35 @@
           });
         }
 
-        $(window).on({
-          'dialog:aftercreate': (event, dialog, $element, settings) => {
-            const $toolbar = $('#toolbar-bar');
-            $toolbar.css('margin-top', '0');
+        window.addEventListener('dialog:aftercreate', (e) => {
+          const $element = $(e.target);
+          const { settings } = e;
+          const toolbarBar = document.getElementById('toolbar-bar');
+          if (toolbarBar) {
+            toolbarBar.style.marginTop = '0';
 
             // When off-canvas is positioned in top, toolbar has to be moved down.
             if (settings.drupalOffCanvasPosition === 'top') {
               const height = Drupal.offCanvas
                 .getContainer($element)
                 .outerHeight();
-              $toolbar.css('margin-top', `${height}px`);
+              toolbarBar.style.marginTop = `${height}px`;
 
               $element.on('dialogContentResize.off-canvas', () => {
                 const newHeight = Drupal.offCanvas
                   .getContainer($element)
                   .outerHeight();
-                $toolbar.css('margin-top', `${newHeight}px`);
+                toolbarBar.style.marginTop = `${newHeight}px`;
               });
             }
-          },
-          'dialog:beforeclose': () => {
-            $('#toolbar-bar').css('margin-top', '0');
-          },
+          }
+        });
+
+        window.addEventListener('dialog:beforeclose', () => {
+          const toolbarBar = document.getElementById('toolbar-bar');
+          if (toolbarBar) {
+            toolbarBar.style.marginTop = '0';
+          }
         });
       });
 

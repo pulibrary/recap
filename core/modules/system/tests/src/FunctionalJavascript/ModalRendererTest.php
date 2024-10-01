@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -24,7 +26,7 @@ class ModalRendererTest extends WebDriverTestBase {
   /**
    * Tests that links respect 'data-dialog-renderer' attribute.
    */
-  public function testModalRenderer() {
+  public function testModalRenderer(): void {
     $session_assert = $this->assertSession();
     $this->drupalGet('/dialog_renderer-test-links');
     $this->clickLink('Normal Modal!');
@@ -74,12 +76,34 @@ class ModalRendererTest extends WebDriverTestBase {
     // Tabbable should focus the item with autofocus inside button pane.
     $this->assertJsCondition('document.activeElement === tabbable.tabbable(document.querySelector(".ui-dialog .ui-dialog-content"))[1]');
     $this->assertJsCondition('document.activeElement === document.querySelector(".ui-dialog .form-text")');
+
+    // By default, buttons within "action" form elements are changed to jQuery
+    // ui buttons and moved into the 'ui-dialog-buttonpane' container.
+    $this->drupalGet('/dialog_renderer-test-links');
+    $this->clickLink('Auto buttons default!');
+    $this->assertNotNull($session_assert->waitForElement('css', '.ui-dialog-buttonpane .ui-dialog-buttonset .js-form-submit'));
+    $session_assert->elementExists('css', '.ui-dialog-buttonpane .ui-dialog-buttonset .js-form-submit');
+
+    // When the drupalAutoButtons option is false, buttons SHOULD NOT be moved
+    // into the 'ui-dialog-buttonpane' container.
+    $this->drupalGet('/dialog_renderer-test-links');
+    $this->clickLink('Auto buttons false!');
+    $this->assertNotNull($session_assert->waitForElement('css', '.form-actions'));
+    $session_assert->elementExists('css', '.form-actions');
+    $session_assert->elementNotExists('css', '.ui-dialog-buttonpane');
+
+    // When the drupalAutoButtons option is true, buttons SHOULD be moved
+    // into the 'ui-dialog-buttonpane' container.
+    $this->drupalGet('/dialog_renderer-test-links');
+    $this->clickLink('Auto buttons true!');
+    $this->assertNotNull($session_assert->waitForElement('css', '.ui-dialog-buttonpane .ui-dialog-buttonset .js-form-submit'));
+    $session_assert->elementExists('css', '.ui-dialog-buttonpane .ui-dialog-buttonset .js-form-submit');
   }
 
   /**
    * Confirm focus management of a dialog openers in a dropbutton.
    */
-  public function testOpenerInDropbutton() {
+  public function testOpenerInDropbutton(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

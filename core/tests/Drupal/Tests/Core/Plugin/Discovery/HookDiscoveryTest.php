@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin\Discovery;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -41,7 +43,7 @@ class HookDiscoveryTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Plugin\Discovery::getDefinitions()
    */
-  public function testGetDefinitionsWithoutPlugins() {
+  public function testGetDefinitionsWithoutPlugins(): void {
     $this->assertCount(0, $this->hookDiscovery->getDefinitions());
   }
 
@@ -50,7 +52,7 @@ class HookDiscoveryTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Plugin\Discovery::getDefinitions()
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     $this->moduleHandler->expects($this->atLeastOnce())
       ->method('invokeAllWith')
       ->with('test_plugin')
@@ -79,7 +81,7 @@ class HookDiscoveryTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Plugin\Discovery::getDefinition()
    */
-  public function testGetDefinition() {
+  public function testGetDefinition(): void {
     $this->moduleHandler->expects($this->exactly(4))
       ->method('invokeAllWith')
       ->with('test_plugin')
@@ -108,7 +110,7 @@ class HookDiscoveryTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Plugin\Discovery::getDefinition()
    */
-  public function testGetDefinitionWithUnknownID() {
+  public function testGetDefinitionWithUnknownID(): void {
     $this->expectException(PluginNotFoundException::class);
     $this->hookDiscovery->getDefinition('test_non_existent', TRUE);
   }

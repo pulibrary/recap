@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\mysql\Unit;
 
 use Drupal\mysql\Driver\Database\mysql\Connection;
@@ -97,7 +99,7 @@ class ConnectionTest extends UnitTestCase {
    *
    * @return array
    */
-  public function providerVersionAndIsMariaDb(): array {
+  public static function providerVersionAndIsMariaDb(): array {
     return [
       // MariaDB.
       [

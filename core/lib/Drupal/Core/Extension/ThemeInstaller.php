@@ -102,8 +102,10 @@ class ThemeInstaller implements ThemeInstallerInterface {
    *   The module extension list.
    * @param \Drupal\Core\Theme\Registry|null $themeRegistry
    *   The theme registry.
+   * @param \Drupal\Core\Extension\ThemeExtensionList|null $themeExtensionList
+   *   The theme extension list.
    */
-  public function __construct(ThemeHandlerInterface $theme_handler, ConfigFactoryInterface $config_factory, ConfigInstallerInterface $config_installer, ModuleHandlerInterface $module_handler, ConfigManagerInterface $config_manager, AssetCollectionOptimizerInterface $css_collection_optimizer, RouteBuilderInterface $route_builder, LoggerInterface $logger, StateInterface $state, ModuleExtensionList $module_extension_list, protected ?Registry $themeRegistry = NULL) {
+  public function __construct(ThemeHandlerInterface $theme_handler, ConfigFactoryInterface $config_factory, ConfigInstallerInterface $config_installer, ModuleHandlerInterface $module_handler, ConfigManagerInterface $config_manager, AssetCollectionOptimizerInterface $css_collection_optimizer, RouteBuilderInterface $route_builder, LoggerInterface $logger, StateInterface $state, ModuleExtensionList $module_extension_list, protected ?Registry $themeRegistry = NULL, protected ?ThemeExtensionList $themeExtensionList = NULL) {
     $this->themeHandler = $theme_handler;
     $this->configFactory = $config_factory;
     $this->configInstaller = $config_installer;
@@ -118,6 +120,11 @@ class ThemeInstaller implements ThemeInstallerInterface {
       @trigger_error('Calling ' . __METHOD__ . '() without the $themeRegistry argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3350906', E_USER_DEPRECATED);
       $this->themeRegistry = \Drupal::service('theme.registry');
     }
+    if ($this->themeExtensionList === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $themeExtensionList argument is deprecated in drupal:10.3.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3413308', E_USER_DEPRECATED);
+      $this->themeExtensionList = \Drupal::service('extension.list.theme');
+    }
+
   }
 
   /**
@@ -126,7 +133,7 @@ class ThemeInstaller implements ThemeInstallerInterface {
   public function install(array $theme_list, $install_dependencies = TRUE) {
     $extension_config = $this->configFactory->getEditable('core.extension');
 
-    $theme_data = $this->themeHandler->rebuildThemeData();
+    $theme_data = $this->themeExtensionList->reset()->getList();
     $installed_themes = $extension_config->get('theme') ?: [];
     $installed_modules = $extension_config->get('module') ?: [];
 
@@ -159,6 +166,7 @@ class ThemeInstaller implements ThemeInstallerInterface {
         $unmet_module_dependencies = array_diff_key($module_dependencies, $installed_modules);
 
         if ($theme_data[$theme]->info[ExtensionLifecycle::LIFECYCLE_IDENTIFIER] === ExtensionLifecycle::DEPRECATED) {
+          // phpcs:ignore Drupal.Semantics.FunctionTriggerError
           @trigger_error("The theme '$theme' is deprecated. See " . $theme_data[$theme]->info['lifecycle_link'], E_USER_DEPRECATED);
         }
 
@@ -213,6 +221,12 @@ class ThemeInstaller implements ThemeInstallerInterface {
         throw new ExtensionNameLengthException("Theme name $key is over the maximum allowed length of " . DRUPAL_EXTENSION_NAME_MAX_LENGTH . ' characters.');
       }
 
+      // Throw an exception if a module with the same name is enabled.
+      $installed_modules = $extension_config->get('module') ?: [];
+      if (isset($installed_modules[$key])) {
+        throw new ExtensionNameReservedException("Theme name $key is already in use by an installed module.");
+      }
+
       // Validate default configuration of the theme. If there is existing
       // configuration then stop installing.
       $this->configInstaller->checkConfigurationToInstall('theme', $key);
@@ -259,7 +273,7 @@ class ThemeInstaller implements ThemeInstallerInterface {
     $theme_config = $this->configFactory->getEditable('system.theme');
     $list = $this->themeHandler->listInfo();
     foreach ($theme_list as $key) {
-      if (!isset($list[$key])) {
+      if ($extension_config->get("theme.$key") === NULL) {
         throw new UnknownExtensionException("Unknown theme: $key.");
       }
       if ($key === $theme_config->get('default')) {
@@ -270,7 +284,7 @@ class ThemeInstaller implements ThemeInstallerInterface {
       }
       // Base themes cannot be uninstalled if sub themes are installed, and if
       // they are not uninstalled at the same time.
-      if (!empty($list[$key]->sub_themes)) {
+      if (isset($list[$key]) && !empty($list[$key]->sub_themes)) {
         foreach ($list[$key]->sub_themes as $sub_key => $sub_label) {
           if (isset($list[$sub_key]) && !in_array($sub_key, $theme_list, TRUE)) {
             throw new \InvalidArgumentException("The base theme $key cannot be uninstalled, because theme $sub_key depends on it.");

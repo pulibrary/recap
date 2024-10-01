@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Ajax;
 
 use Drupal\ajax_test\Controller\AjaxTestController;
+use Drupal\Core\Ajax\OpenModalDialogWithUrl;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+
+// cspell:ignore testdialog
 
 /**
  * Performs tests on opening and manipulating dialogs via AJAX commands.
@@ -25,7 +30,7 @@ class DialogTest extends WebDriverTestBase {
   /**
    * Tests sending non-JS and AJAX requests to open and manipulate modals.
    */
-  public function testDialog() {
+  public function testDialog(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer contact forms']));
     // Ensure the elements render without notices or exceptions.
     $this->drupalGet('ajax-test/dialog');
@@ -127,6 +132,22 @@ class DialogTest extends WebDriverTestBase {
     // Use a link to close the panel opened by button 2.
     $this->getSession()->getPage()->clickLink('Link 4 (close non-modal if open)');
 
+    // Test dialogs opened using OpenModalDialogWithUrl.
+    $this->getSession()->getPage()->findButton('Button 3 (modal from url)')->press();
+    // Check that title was fetched properly.
+    // @see \Drupal\ajax_test\Form\AjaxTestDialogForm::dialog.
+    $form_dialog_title = $this->assertSession()->waitForElement('css', "span.ui-dialog-title:contains('Ajax Form contents')");
+    $this->assertNotNull($form_dialog_title, 'Dialog form has the expected title.');
+    $button1_dialog->findButton('Close')->press();
+    // Test external URL.
+    $dialog_obj = new OpenModalDialogWithUrl('http://example.com', []);
+    try {
+      $dialog_obj->render();
+    }
+    catch (\LogicException $e) {
+      $this->assertEquals('External URLs are not allowed.', $e->getMessage());
+    }
+
     // Form modal.
     $this->clickLink('Link 5 (form)');
     // Two links have been clicked in succession - This time wait for a change
@@ -144,25 +165,35 @@ class DialogTest extends WebDriverTestBase {
     $preview = $form_dialog->findButton('Preview');
     $this->assertNotNull($preview, 'The dialog contains a "Preview" button.');
 
-    // When a form with submit inputs is in a dialog, the form's submit inputs
-    // are copied to the dialog buttonpane as buttons. The originals should have
-    // their styles set to display: none.
-    $hidden_buttons = $this->getSession()->getPage()->findAll('css', '.ajax-test-form [type="submit"]');
-    $this->assertCount(2, $hidden_buttons);
+    // Form submit inputs, link buttons, and buttons in dialog are copied to the
+    // dialog buttonpane as buttons. The originals should have their styles set
+    // to display: none.
+    $hidden_buttons = $this->getSession()->getPage()->findAll('css', '.ajax-test-form .button');
+    $this->assertCount(3, $hidden_buttons);
     $hidden_button_text = [];
     foreach ($hidden_buttons as $button) {
       $styles = $button->getAttribute('style');
       $this->assertStringContainsStringIgnoringCase('display: none;', $styles);
-      $hidden_button_text[] = $button->getAttribute('value');
+      $hidden_button_text[] = $button->hasAttribute('value') ? $button->getAttribute('value') : $button->getHtml();
     }
 
     // The copied buttons should have the same text as the submit inputs they
     // were copied from.
     $moved_to_buttonpane_buttons = $this->getSession()->getPage()->findAll('css', '.ui-dialog-buttonpane button');
-    $this->assertCount(2, $moved_to_buttonpane_buttons);
+    $this->assertCount(3, $moved_to_buttonpane_buttons);
     foreach ($moved_to_buttonpane_buttons as $key => $button) {
       $this->assertEquals($hidden_button_text[$key], $button->getText());
     }
+
+    // Press buttons in the dialog to ensure there are no AJAX errors.
+    $this->assertSession()->elementExists('css', '.ui-dialog-buttonpane')->pressButton('Hello world');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $has_focus_text = $this->getSession()->evaluateScript('document.activeElement.textContent');
+    $this->assertEquals('Do it', $has_focus_text);
+    $this->assertSession()->elementExists('css', '.ui-dialog-buttonpane')->pressButton('Preview');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $has_focus_text = $this->getSession()->evaluateScript('document.activeElement.textContent');
+    $this->assertEquals('Do it', $has_focus_text);
 
     // Reset: close the form.
     $form_dialog->findButton('Close')->press();
@@ -185,6 +216,13 @@ class DialogTest extends WebDriverTestBase {
 
     $form_title = $dialog_add->find('css', "span.ui-dialog-title:contains('Add contact form')");
     $this->assertNotNull($form_title, 'The add form title is as expected.');
+
+    // Test: dialog link opener with title callback.
+    $page = $this->getSession()->getPage();
+    $assert_session = $this->assertSession();
+    $this->drupalGet("/ajax-test/link-page-dialog");
+    $page->clickLink('Modal link');
+    $this->assertEquals('Dialog link page title', $assert_session->waitForElement('css', '.ui-dialog-title')->getText());
   }
 
   /**

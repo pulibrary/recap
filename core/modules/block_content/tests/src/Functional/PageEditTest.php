@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -32,14 +34,14 @@ class PageEditTest extends BlockContentTestBase {
   /**
    * Checks block edit functionality.
    */
-  public function testPageEdit() {
+  public function testPageEdit(): void {
     $this->drupalLogin($this->adminUser);
 
     $title_key = 'info[0][value]';
     $body_key = 'body[0][value]';
     // Create block to edit.
     $edit = [];
-    $edit['info[0][value]'] = mb_strtolower($this->randomMachineName(8));
+    $edit['info[0][value]'] = $this->randomMachineName(8);
     $edit[$body_key] = $this->randomMachineName(16);
     $this->drupalGet('block/add/basic');
     $this->submitForm($edit, 'Save');

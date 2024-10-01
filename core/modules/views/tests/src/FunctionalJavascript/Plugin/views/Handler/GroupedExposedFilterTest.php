@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\FunctionalJavascript\Plugin\views\Handler;
 
 use Drupal\field\Entity\FieldConfig;
@@ -61,6 +63,7 @@ class GroupedExposedFilterTest extends WebDriverTestBase {
     // Setup a node type that has the right fields for the test view.
     NodeType::create([
       'type' => 'page',
+      'name' => 'Page',
     ])->save();
 
     FieldConfig::create([
@@ -73,7 +76,7 @@ class GroupedExposedFilterTest extends WebDriverTestBase {
   /**
    * Tests if the right fields are shown and the right values set.
    */
-  public function testGroupedFilterValuesUI() {
+  public function testGroupedFilterValuesUI(): void {
     $web_assert = $this->assertSession();
 
     $this->drupalGet('/admin/structure/views/view/test_exposed_admin_ui');

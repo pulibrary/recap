@@ -38,8 +38,16 @@
           $dialog.trigger('dialogButtonsChange');
         }
 
-        // Force focus on the modal when the behavior is run.
-        $dialog.dialog('widget').trigger('focus');
+        setTimeout(function () {
+          // Account for pre-existing focus handling that may have already moved
+          // the focus inside the dialog.
+          if (!$dialog[0].contains(document.activeElement)) {
+            // Move focus to the first focusable element in the next event loop
+            // to allow dialog buttons to be changed first.
+            $dialog.dialog('instance')._focusedElement = null;
+            $dialog.dialog('instance')._focusTabbable();
+          }
+        }, 0);
       }
 
       const originalClose = settings.dialog.close;
@@ -86,25 +94,27 @@
     prepareDialogButtons($dialog) {
       const buttons = [];
       const $buttons = $dialog.find(
-        '.form-actions input[type=submit], .form-actions a.button',
+        '.form-actions input[type=submit], .form-actions a.button, .form-actions a.action-link',
       );
       $buttons.each(function () {
-        const $originalButton = $(this).css({ display: 'none' });
+        const $originalButton = $(this);
+        this.style.display = 'none';
         buttons.push({
           text: $originalButton.html() || $originalButton.attr('value'),
           class: $originalButton.attr('class'),
+          'data-once': $originalButton.data('once'),
           click(e) {
             // If the original button is an anchor tag, triggering the "click"
             // event will not simulate a click. Use the click method instead.
-            if ($originalButton.is('a')) {
+            if ($originalButton[0].tagName === 'A') {
               $originalButton[0].click();
             } else {
               $originalButton
                 .trigger('mousedown')
                 .trigger('mouseup')
                 .trigger('click');
-              e.preventDefault();
             }
+            e.preventDefault();
           },
         });
       });
@@ -150,8 +160,19 @@
     ajax.commands.insert(ajax, response, status);
 
     // Move the buttons to the jQuery UI dialog buttons area.
-    if (!response.dialogOptions.buttons) {
+    response.dialogOptions = response.dialogOptions || {};
+    if (typeof response.dialogOptions.drupalAutoButtons === 'undefined') {
       response.dialogOptions.drupalAutoButtons = true;
+    } else if (response.dialogOptions.drupalAutoButtons === 'false') {
+      response.dialogOptions.drupalAutoButtons = false;
+    } else {
+      response.dialogOptions.drupalAutoButtons =
+        !!response.dialogOptions.drupalAutoButtons;
+    }
+    if (
+      !response.dialogOptions.buttons &&
+      response.dialogOptions.drupalAutoButtons
+    ) {
       response.dialogOptions.buttons =
         Drupal.behaviors.dialog.prepareDialogButtons($dialog);
     }
@@ -249,7 +270,9 @@
    * @param {object} [settings]
    *   Dialog settings.
    */
-  $(window).on('dialog:aftercreate', (e, dialog, $element, settings) => {
+  window.addEventListener('dialog:aftercreate', (event) => {
+    const $element = $(event.target);
+    const dialog = event.dialog;
     $element.on('click.dialog', '.dialog-cancel', (e) => {
       dialog.close('cancel');
       e.preventDefault();
@@ -267,7 +290,31 @@
    * @param {jQuery} $element
    *   jQuery collection of the dialog element.
    */
-  $(window).on('dialog:beforeclose', (e, dialog, $element) => {
+  window.addEventListener('dialog:beforeclose', (e) => {
+    const $element = $(e.target);
     $element.off('.dialog');
   });
+
+  /**
+   * Ajax command to open URL in a modal dialog.
+   *
+   * @param {Drupal.Ajax} [ajax]
+   *   An Ajax object.
+   * @param {object} response
+   *   The Ajax response.
+   */
+  Drupal.AjaxCommands.prototype.openModalDialogWithUrl = function (
+    ajax,
+    response,
+  ) {
+    const dialogOptions = response.dialogOptions || {};
+    const elementSettings = {
+      progress: { type: 'throbber' },
+      dialogType: 'modal',
+      dialog: dialogOptions,
+      url: response.url,
+      httpMethod: 'GET',
+    };
+    Drupal.ajax(elementSettings).execute();
+  };
 })(jQuery, Drupal, window.tabbable);

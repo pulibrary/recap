@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Asset;
 
 use Drupal\Core\Asset\LibraryDependencyResolver;
@@ -71,7 +73,7 @@ class LibraryDependencyResolverTest extends UnitTestCase {
   /**
    * Provides test data for ::testGetLibrariesWithDependencies().
    */
-  public function providerTestGetLibrariesWithDependencies() {
+  public static function providerTestGetLibrariesWithDependencies() {
     return [
       // Empty list of libraries.
       [[], []],
@@ -116,14 +118,14 @@ class LibraryDependencyResolverTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetLibrariesWithDependencies
    */
-  public function testGetLibrariesWithDependencies(array $libraries, array $expected) {
+  public function testGetLibrariesWithDependencies(array $libraries, array $expected): void {
     $this->assertEquals($expected, $this->libraryDependencyResolver->getLibrariesWithDependencies($libraries));
   }
 
   /**
    * Provides test data for ::testGetMinimalRepresentativeSubset().
    */
-  public function providerTestGetMinimalRepresentativeSubset() {
+  public static function providerTestGetMinimalRepresentativeSubset() {
     return [
       // Empty list of libraries.
       [[], []],
@@ -170,14 +172,14 @@ class LibraryDependencyResolverTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetMinimalRepresentativeSubset
    */
-  public function testGetMinimalRepresentativeSubset(array $libraries, array $expected) {
+  public function testGetMinimalRepresentativeSubset(array $libraries, array $expected): void {
     $this->assertEquals($expected, $this->libraryDependencyResolver->getMinimalRepresentativeSubset($libraries));
   }
 
   /**
    * @covers ::getMinimalRepresentativeSubset
    */
-  public function testGetMinimalRepresentativeSubsetInvalidInput() {
+  public function testGetMinimalRepresentativeSubsetInvalidInput(): void {
     $this->expectException(\AssertionError::class);
     $this->expectExceptionMessage('$libraries can\'t contain duplicate items.');
     $this->libraryDependencyResolver->getMinimalRepresentativeSubset(['test/no_deps_a', 'test/no_deps_a']);

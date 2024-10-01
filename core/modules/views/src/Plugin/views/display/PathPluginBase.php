@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views\display;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -426,7 +427,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
     $options['path'] = [
       'category' => 'page',
       'title' => $this->t('Path'),
-      'value' => views_ui_truncate($path, 24),
+      'value' => Unicode::truncate($path, 24, FALSE, TRUE),
     ];
   }
 
@@ -517,7 +518,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
         && is_numeric($matches[1]));
     });
     if (!empty($numeric_placeholders)) {
-      $errors[] = $this->t("Numeric placeholders may not be used. Please use plain placeholders (%).");
+      $errors[] = $this->t("Numeric placeholders may not be used. Use plain placeholders (%).");
     }
     return $errors;
   }

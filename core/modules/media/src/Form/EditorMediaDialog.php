@@ -90,7 +90,7 @@ class EditorMediaDialog extends FormBase {
    * @param \Drupal\editor\EditorInterface $editor
    *   The text editor to which this dialog corresponds.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EditorInterface $editor = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EditorInterface $editor = NULL) {
     // This form is special, in that the default values do not come from the
     // server side, but from the client side, from a text editor. We must cache
     // this data in form state, because when the form is rebuilt, we will be
@@ -203,12 +203,12 @@ class EditorMediaDialog extends FormBase {
       $warning = $this->t('There is nothing to configure for this media.');
       $form['no_access_notice'] = ['#markup' => $warning];
       if ($format->access('update')) {
-        $tparams = [
+        $arguments = [
           '@warning' => $warning,
           '@edit_url' => $format->toUrl('edit-form')->toString(),
           '%format' => $format->label(),
         ];
-        $form['no_access_notice']['#markup'] = $this->t('@warning <a href="@edit_url">Edit the text format %format</a> to modify the attributes that can be overridden.', $tparams);
+        $form['no_access_notice']['#markup'] = $this->t('@warning <a href="@edit_url">Edit the text format %format</a> to modify the attributes that can be overridden.', $arguments);
       }
     }
 

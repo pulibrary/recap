@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Cache;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\DatabaseBackendFactory;
 use Drupal\Core\Database\Database;
@@ -10,6 +13,7 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\Reference;
+use Drupal\Component\Serialization\PhpSerialize;
 
 /**
  * Tests delaying of cache tag invalidation queries to the end of transactions.
@@ -34,7 +38,6 @@ class EndOfTransactionQueriesTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('system', 'sequences');
     $this->installEntitySchema('entity_test');
     $this->installEntitySchema('user');
 
@@ -48,11 +51,14 @@ class EndOfTransactionQueriesTest extends KernelTestBase {
   public function register(ContainerBuilder $container) {
     parent::register($container);
 
+    $container->register('serializer', PhpSerialize::class);
     // Register a database cache backend rather than memory-based.
     $container->register('cache_factory', DatabaseBackendFactory::class)
       ->addArgument(new Reference('database'))
       ->addArgument(new Reference('cache_tags.invalidator.checksum'))
-      ->addArgument(new Reference('settings'));
+      ->addArgument(new Reference('settings'))
+      ->addArgument(new Reference('serializer'))
+      ->addArgument(new Reference(TimeInterface::class));
   }
 
   /**
@@ -69,6 +75,14 @@ class EndOfTransactionQueriesTest extends KernelTestBase {
 
     $executed_statements = [];
     foreach (Database::getLog('testEntitySave') as $log) {
+      // Exclude transaction related statements from the log.
+      if (
+        str_starts_with($log['query'], 'ROLLBACK TO SAVEPOINT ') ||
+        str_starts_with($log['query'], 'RELEASE SAVEPOINT ') ||
+        str_starts_with($log['query'], 'SAVEPOINT ')
+      ) {
+        continue;
+      }
       $executed_statements[] = $log['query'];
     }
     $last_statement_index = max(array_keys($executed_statements));
@@ -76,7 +90,7 @@ class EndOfTransactionQueriesTest extends KernelTestBase {
     $this->assertSame($last_statement_index - count($cachetag_statements) + 1, min($cachetag_statements), 'All of the last queries in the transaction are for the "cachetags" table.');
 
     // Verify that a nested entity save occurred.
-    $this->assertSame('johndoe', User::load(1)->getAccountName());
+    $this->assertSame('john doe', User::load(1)->getAccountName());
 
     // Cache reads occurring during a transaction that DO NOT depend on
     // invalidated cache tags result in cache HITs. Similarly, cache writes that
@@ -125,7 +139,7 @@ class EndOfTransactionQueriesTest extends KernelTestBase {
     // Save a user, that should invalidate the cache tagged with user_list but
     // not the one with entity_test_list.
     User::create([
-      'name' => 'johndoe',
+      'name' => 'john doe',
       'status' => 1,
     ])->save();
 

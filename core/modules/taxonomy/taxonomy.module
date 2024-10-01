@@ -11,6 +11,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\taxonomy\VocabularyInterface;
 
 /**
  * Implements hook_help().
@@ -20,10 +21,10 @@ function taxonomy_help($route_name, RouteMatchInterface $route_match) {
     case 'help.page.taxonomy':
       $field_ui_url = \Drupal::moduleHandler()->moduleExists('field_ui') ? Url::fromRoute('help.page', ['name' => 'field_ui'])->toString() : '#';
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Taxonomy module allows users who have permission to create and edit content to categorize (tag) content of that type. Users who have the <em>Administer vocabularies and terms</em> <a href=":permissions" title="Taxonomy module permissions">permission</a> can add <em>vocabularies</em> that contain a set of related <em>terms</em>. The terms in a vocabulary can either be pre-set by an administrator or built gradually as content is added and edited. Terms may be organized hierarchically if desired.', [':permissions' => Url::fromRoute('user.admin_permissions.module', ['modules' => 'taxonomy'])->toString()]) . '</p>';
-      $output .= '<p>' . t('For more information, see the <a href=":taxonomy">online documentation for the Taxonomy module</a>.', [':taxonomy' => 'https://www.drupal.org/documentation/modules/taxonomy/']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<p>' . t('For more information, see the <a href=":taxonomy">online documentation for the Taxonomy module</a>.', [':taxonomy' => 'https://www.drupal.org/docs/8/core/modules/taxonomy']) . '</p>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Managing vocabularies') . '</dt>';
       $output .= '<dd>' . t('Users who have the <em>Administer vocabularies and terms</em> permission can add and edit vocabularies from the <a href=":taxonomy_admin">Taxonomy administration page</a>. Vocabularies can be deleted from their <em>Edit vocabulary</em> page. Users with the <em>Taxonomy term: Administer fields</em> permission may add additional fields for terms in that vocabulary using the <a href=":field_ui">Field UI module</a>.', [':taxonomy_admin' => Url::fromRoute('entity.taxonomy_vocabulary.collection')->toString(), ':field_ui' => $field_ui_url]) . '</dd>';
@@ -70,6 +71,21 @@ function taxonomy_theme_suggestions_taxonomy_term(array $variables) {
   $suggestions[] = 'taxonomy_term__' . $term->id();
 
   return $suggestions;
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ *
+ * @todo Evaluate removing as part of https://www.drupal.org/node/2358923.
+ */
+function taxonomy_local_tasks_alter(&$local_tasks) {
+  $local_task_key = 'config_translation.local_tasks:entity.taxonomy_vocabulary.config_translation_overview';
+  if (isset($local_tasks[$local_task_key])) {
+    // The config_translation module expects the base route to be
+    // entity.taxonomy_vocabulary.edit_form like it is for other configuration
+    // entities. Taxonomy uses the overview_form as the base route.
+    $local_tasks[$local_task_key]['base_route'] = 'entity.taxonomy_vocabulary.overview_form';
+  }
 }
 
 /**
@@ -122,6 +138,26 @@ function template_preprocess_taxonomy_term(&$variables) {
   foreach (Element::children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];
   }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function taxonomy_entity_operation(EntityInterface $term) {
+  $operations = [];
+  if ($term instanceof Term && $term->access('create')) {
+    $operations['add-child'] = [
+      'title' => t('Add child'),
+      'weight' => 10,
+      'url' => Url::fromRoute(
+        'entity.taxonomy_term.add_form',
+        ['taxonomy_vocabulary' => $term->bundle()],
+        ['query' => ['parent' => $term->id()]],
+      ),
+    ];
+  }
+
+  return $operations;
 }
 
 /**
@@ -205,7 +241,7 @@ function taxonomy_build_node_index($node) {
       $connection = \Drupal::database();
       foreach ($tid_all as $tid) {
         $connection->merge('taxonomy_index')
-          ->key(['nid' => $node->id(), 'tid' => $tid, 'status' => $node->isPublished()])
+          ->keys(['nid' => $node->id(), 'tid' => $tid, 'status' => $node->isPublished()])
           ->fields(['sticky' => $sticky, 'created' => $node->getCreatedTime()])
           ->execute();
       }
@@ -259,3 +295,15 @@ function taxonomy_taxonomy_term_delete(Term $term) {
 /**
  * @} End of "defgroup taxonomy_index".
  */
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function taxonomy_taxonomy_vocabulary_presave(VocabularyInterface $vocabulary) {
+  // Vocabularies' `description` field must be stored as NULL at the config
+  // level if it is empty.
+  // @see taxonomy_post_update_set_vocabulary_description_to_null()
+  if (trim($vocabulary->getDescription()) === '') {
+    $vocabulary->set('description', NULL);
+  }
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\announcements_feed\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -48,14 +50,14 @@ class AnnounceFetcherUnitTest extends UnitTestCase {
    *
    * @dataProvider urlProvider
    */
-  public function testValidateUrl($url, $isValid) {
+  public function testValidateUrl($url, $isValid): void {
     $this->assertEquals($isValid, $this->fetcher->validateUrl($url));
   }
 
   /**
    * Data for the testValidateUrl.
    */
-  public function urlProvider(): array {
+  public static function urlProvider(): array {
     return [
       ['https://www.drupal.org', TRUE],
       ['https://drupal.org', TRUE],

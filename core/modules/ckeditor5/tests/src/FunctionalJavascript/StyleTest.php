@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 // cspell:ignore sourceediting
@@ -22,14 +24,13 @@ class StyleTest extends CKEditor5TestBase {
   /**
    * @covers \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Style::buildConfigurationForm
    */
-  public function testStyleSettingsForm() {
+  public function testStyleSettingsForm(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer filters']));
 
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
     $this->createNewTextFormat($page, $assert_session);
-    $assert_session->assertWaitOnAjaxRequest();
 
     // The Style plugin settings form should not be present.
     $assert_session->elementNotExists('css', '[data-drupal-selector="edit-editor-settings-plugins-ckeditor5-style"]');
@@ -150,7 +151,7 @@ JS;
   /**
    * Tests Style functionality: setting a class, expected style choices.
    */
-  public function testStyleFunctionality() {
+  public function testStyleFunctionality(): void {
     FilterFormat::create([
       'format' => 'test_format',
       'name' => 'Test format',
@@ -186,8 +187,11 @@ JS;
             ],
           ],
           'ckeditor5_list' => [
-            'reversed' => FALSE,
-            'startIndex' => FALSE,
+            'properties' => [
+              'reversed' => FALSE,
+              'startIndex' => FALSE,
+            ],
+            'multiBlock' => TRUE,
           ],
           'ckeditor5_sourceEditing' => [
             'allowed_tags' => [

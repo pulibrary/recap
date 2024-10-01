@@ -48,7 +48,8 @@ use Drupal\field\FieldConfigInterface;
  *   constraints = {
  *     "RequiredConfigDependencies" = {
  *       "field_storage_config"
- *     }
+ *     },
+ *     "ImmutableProperties" = {"id", "entity_type", "field_name", "bundle", "field_type"},
  *   }
  * )
  */
@@ -262,7 +263,6 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
     $link_templates = parent::linkTemplates();
     if (\Drupal::moduleHandler()->moduleExists('field_ui')) {
       $link_templates["{$this->entity_type}-field-edit-form"] = 'entity.field_config.' . $this->entity_type . '_field_edit_form';
-      $link_templates["{$this->entity_type}-storage-edit-form"] = 'entity.field_config.' . $this->entity_type . '_storage_edit_form';
       $link_templates["{$this->entity_type}-field-delete-form"] = 'entity.field_config.' . $this->entity_type . '_field_delete_form';
 
       if (isset($link_templates['config-translation-overview'])) {
@@ -313,10 +313,10 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
       }
 
       if (!$field_storage_definition) {
-        throw new FieldException("Attempted to create an instance of field with name {$this->field_name} on entity type {$this->entity_type} when the field storage does not exist.");
+        throw new FieldException("Attempted to create, modify or delete an instance of field with name {$this->field_name} on entity type {$this->entity_type} when the field storage does not exist.");
       }
       if (!$field_storage_definition instanceof FieldStorageConfigInterface) {
-        throw new FieldException("Attempted to create a configurable field of non-configurable field storage {$this->field_name}.");
+        throw new FieldException("Attempted to create, modify or delete a configurable field of non-configurable field storage {$this->field_name}.");
       }
       $this->fieldStorage = $field_storage_definition;
     }

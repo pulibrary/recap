@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Entity;
 
 use Drupal\Core\Entity\Controller\VersionHistoryController;
@@ -204,8 +206,9 @@ class RevisionVersionHistoryTest extends BrowserTestBase {
     $row1Link = $this->assertSession()->elementExists('css', 'table tbody tr:nth-child(1) a');
     $this->assertEquals($entity->toUrl()->toString(), $row1Link->getAttribute('href'));
     // Reload revision so object has the properties to build a revision link.
-    $firstRevision = \Drupal::entityTypeManager()->getStorage('entity_test_revlog')
-      ->loadRevision($firstRevisionId);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_test_revlog');
+    $firstRevision = $storage->loadRevision($firstRevisionId);
     $row2Link = $this->assertSession()->elementExists('css', 'table tbody tr:nth-child(2) a');
     $this->assertEquals($firstRevision->toUrl('revision')->toString(), $row2Link->getAttribute('href'));
   }
@@ -263,17 +266,8 @@ class RevisionVersionHistoryTest extends BrowserTestBase {
     $row3 = $this->assertSession()->elementExists('css', 'table tbody tr:nth-child(3)');
     $this->assertSession()->elementNotExists('named', ['link', 'Revert'], $row3);
 
-    // Reverting latest is allowed if entity access permits it.
-    $entity->setName('view all revisions, revert, force allow revert');
-    $entity->setNewRevision();
-    $entity->save();
-
     $this->drupalGet($entity->toUrl('version-history'));
-    $this->assertSession()->elementsCount('css', 'table tbody tr', 4);
-
-    $row1 = $this->assertSession()->elementExists('css', 'table tbody tr:nth-child(1)');
-    $this->assertSession()->elementTextContains('css', 'table tbody tr:nth-child(1)', 'Current revision');
-    $this->assertSession()->elementExists('named', ['link', 'Revert'], $row1);
+    $this->assertSession()->elementsCount('css', 'table tbody tr', 3);
   }
 
   /**
@@ -311,18 +305,8 @@ class RevisionVersionHistoryTest extends BrowserTestBase {
     // Revision 3 does not have delete revision operation: no access.
     $row3 = $this->assertSession()->elementExists('css', 'table tbody tr:nth-child(3)');
     $this->assertSession()->elementNotExists('named', ['link', 'Delete'], $row3);
-
-    // Deleting latest is allowed if entity access permits it.
-    $entity->setName('view all revisions, delete revision, force allow delete revision');
-    $entity->setNewRevision();
-    $entity->save();
-
     $this->drupalGet($entity->toUrl('version-history'));
-    $this->assertSession()->elementsCount('css', 'table tbody tr', 4);
-
-    $row1 = $this->assertSession()->elementExists('css', 'table tbody tr:nth-child(1)');
-    $this->assertSession()->elementTextContains('css', 'table tbody tr:nth-child(1)', 'Current revision');
-    $this->assertSession()->elementExists('named', ['link', 'Delete'], $row1);
+    $this->assertSession()->elementsCount('css', 'table tbody tr', 3);
   }
 
   /**

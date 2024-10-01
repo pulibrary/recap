@@ -1,20 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\language\Traits\LanguageTestTrait;
 
 /**
  * Tests the content translation settings language selector options.
  *
+ * @covers \Drupal\language\Form\ContentLanguageSettingsForm
  * @group language
  */
 class LanguageSelectorTranslatableTest extends BrowserTestBase {
 
+  use LanguageTestTrait;
+
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'language',
@@ -67,11 +71,9 @@ class LanguageSelectorTranslatableTest extends BrowserTestBase {
   /**
    * Tests content translation language selectors are correctly translated.
    */
-  public function testLanguageStringSelector() {
+  public function testLanguageStringSelector(): void {
     // Add another language.
-    $edit = ['predefined_langcode' => 'es'];
-    $this->drupalGet('admin/config/regional/language/add');
-    $this->submitForm($edit, 'Add language');
+    static::createLanguageFromLangcode('es');
 
     // Translate the string English in Spanish (Inglés). Override config entity.
     $name_translation = 'Inglés';
@@ -94,7 +96,7 @@ class LanguageSelectorTranslatableTest extends BrowserTestBase {
   /**
    * Tests that correct title is displayed for content translation page.
    */
-  public function testContentTranslationPageTitle() {
+  public function testContentTranslationPageTitle(): void {
     $this->drupalGet('admin/config/regional/content-language');
     $this->assertSession()->pageTextContains('Content language and translation');
     $this->assertSession()->pageTextNotMatches('#Content language$#');

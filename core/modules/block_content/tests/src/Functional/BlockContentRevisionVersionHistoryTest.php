@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\block_content\Functional;
 
@@ -21,7 +21,6 @@ class BlockContentRevisionVersionHistoryTest extends BlockContentTestBase {
    * {@inheritdoc}
    */
   protected $permissions = [
-    'access block library',
     'view any basic block content history',
     'revert any basic block content revisions',
     'delete any basic block content revisions',

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
@@ -60,7 +62,7 @@ class EntityLinkTest extends UnitTestCase {
    *
    * @dataProvider providerTestLink
    */
-  public function testToLink($entity_label, $link_text, $expected_text, $link_rel = 'canonical', array $link_options = []) {
+  public function testToLink($entity_label, $link_text, $expected_text, $link_rel = 'canonical', array $link_options = []): void {
     $language = new Language(['id' => 'es']);
     $link_options += ['language' => $language];
     $this->languageManager->expects($this->any())
@@ -113,12 +115,12 @@ class EntityLinkTest extends UnitTestCase {
   /**
    * Provides test data for testLink().
    */
-  public function providerTestLink() {
+  public static function providerTestLink() {
     $data = [];
     $data[] = [
       'some_entity_label',
-      'qwerqwer',
-      'qwerqwer',
+      'link text',
+      'link text',
     ];
     $data[] = [
       'some_entity_label',
@@ -132,20 +134,20 @@ class EntityLinkTest extends UnitTestCase {
     ];
     $data[] = [
       'some_entity_label',
-      'qwerqwer',
-      'qwerqwer',
+      'link text',
+      'link text',
       'edit-form',
     ];
     $data[] = [
       'some_entity_label',
-      'qwerqwer',
-      'qwerqwer',
+      'link text',
+      'link text',
       'edit-form',
     ];
     $data[] = [
       'some_entity_label',
-      'qwerqwer',
-      'qwerqwer',
+      'link text',
+      'link text',
       'edit-form',
       ['foo' => 'qwer'],
     ];

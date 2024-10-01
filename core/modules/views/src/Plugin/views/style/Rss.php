@@ -3,21 +3,22 @@
 namespace Drupal\views\Plugin\views\style;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\views\Attribute\ViewsStyle;
 
 /**
  * Default style plugin to render an RSS feed.
  *
  * @ingroup views_style_plugins
- *
- * @ViewsStyle(
- *   id = "rss",
- *   title = @Translation("RSS Feed"),
- *   help = @Translation("Generates an RSS feed from a view."),
- *   theme = "views_view_rss",
- *   display_types = {"feed"}
- * )
  */
+#[ViewsStyle(
+  id: "rss",
+  title: new TranslatableMarkup("RSS Feed"),
+  help: new TranslatableMarkup("Generates an RSS feed from a view."),
+  theme: "views_view_rss",
+  display_types: ["feed"],
+)]
 class Rss extends StylePluginBase {
 
   /**
@@ -28,6 +29,7 @@ class Rss extends StylePluginBase {
   /**
    * The channel elements.
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public array $channel_elements;
 
   /**
@@ -132,6 +134,11 @@ class Rss extends StylePluginBase {
       '#view' => $this->view,
       '#options' => $this->options,
       '#rows' => $rows,
+      '#attached' => [
+        'http_header' => [
+          ['Content-Type', 'application/rss+xml; charset=utf-8'],
+        ],
+      ],
     ];
     unset($this->view->row_index);
     return $build;

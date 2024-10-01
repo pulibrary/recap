@@ -2,13 +2,13 @@
 
 namespace Drupal\cas\Controller;
 
+use Drupal\cas\Service\CasHelper;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Database\Connection;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\cas\Service\CasHelper;
 
 /**
  * Provides a controller for the 'cas.proxyCallback' route.

@@ -23,7 +23,7 @@ abstract class NormalizerBase implements SerializerAwareInterface, CacheableNorm
   /**
    * {@inheritdoc}
    */
-  public function supportsNormalization($data, string $format = NULL, array $context = []): bool {
+  public function supportsNormalization($data, ?string $format = NULL, array $context = []): bool {
     // If we aren't dealing with an object or the format is not supported return
     // now.
     if (!is_object($data) || !$this->checkFormat($format)) {
@@ -31,6 +31,7 @@ abstract class NormalizerBase implements SerializerAwareInterface, CacheableNorm
     }
 
     if (property_exists($this, 'supportedInterfaceOrClass')) {
+      @trigger_error('Defining ' . static::class . '::supportedInterfaceOrClass property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
       $supported = (array) $this->supportedInterfaceOrClass;
     }
     else {
@@ -49,13 +50,14 @@ abstract class NormalizerBase implements SerializerAwareInterface, CacheableNorm
    * classes do. Therefore, this method is implemented at this level to reduce
    * code duplication.
    */
-  public function supportsDenormalization($data, string $type, string $format = NULL, array $context = []): bool {
+  public function supportsDenormalization($data, string $type, ?string $format = NULL, array $context = []): bool {
     // If the format is not supported return now.
     if (!$this->checkFormat($format)) {
       return FALSE;
     }
 
     if (property_exists($this, 'supportedInterfaceOrClass')) {
+      @trigger_error('Defining ' . static::class . '::supportedInterfaceOrClass property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
       $supported = (array) $this->supportedInterfaceOrClass;
     }
     else {

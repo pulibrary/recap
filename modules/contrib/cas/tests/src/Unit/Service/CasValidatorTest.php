@@ -2,17 +2,17 @@
 
 namespace Drupal\Tests\cas\Unit\Service;
 
-use Drupal\Tests\UnitTestCase;
-use Drupal\cas\Service\CasValidator;
 use Drupal\cas\CasPropertyBag;
+use Drupal\cas\Service\CasHelper;
+use Drupal\cas\Service\CasValidator;
+use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Middleware;
-use Drupal\cas\Service\CasHelper;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
@@ -28,7 +28,7 @@ class CasValidatorTest extends UnitTestCase {
   /**
    * The mocked event dispatcher.
    *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $eventDispatcher;
 
@@ -46,7 +46,7 @@ class CasValidatorTest extends UnitTestCase {
     parent::setUp();
 
     // Mock event dispatcher to dispatch events.
-    $this->eventDispatcher = $this->createMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
+    $this->eventDispatcher = $this->createMock('\Symfony\Contracts\EventDispatcher\EventDispatcherInterface');
   }
 
   /**

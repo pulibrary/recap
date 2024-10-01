@@ -32,6 +32,7 @@ proxy:
 user_accounts:
   prevent_normal_login: true
   auto_register: false
+  auto_register_follow_registration_policy: false
   email_assignment_strategy: 0
   email_hostname: ''
   email_attribute: ''

@@ -74,6 +74,9 @@ cas.settings:
         auto_register:
           type: boolean
           label: 'Auto Register Users'
+        auto_register_follow_registration_policy:
+          type: boolean
+          label: 'Follow user account registration policy'
         email_assignment_strategy:
           type: integer
           label: 'Email Assignment Strategy'
@@ -99,31 +102,31 @@ cas.settings:
       label: 'Error Handling'
       mapping:
         login_failure_page:
-          type: string
+          type: text
           label: 'Login Failure Page'
         message_validation_failure:
-          type: label
+          type: text
           label: 'Ticket validation failure error message'
         message_no_local_account:
-          type: label
+          type: text
           label: 'Local account does not exist error message'
         message_subscriber_denied_reg:
-          type: label
+          type: text
           label: 'Event subscriber denied registration error message'
         message_subscriber_denied_login:
-          type: label
+          type: text
           label: 'Event subscriber denied login error message'
         message_account_blocked:
-          type: label
+          type: text
           label: 'Local account is blocked error message'
         message_username_already_exists:
-          type: label
+          type: text
           label: 'Local account username already exists error message'
         message_prevent_normal_login:
-          type: label
+          type: text
           label: 'Prevent normal login error message'
         message_restrict_password_management:
-          type: label
+          type: text
           label: 'Restrict password management error message'
     logout:
       type: mapping

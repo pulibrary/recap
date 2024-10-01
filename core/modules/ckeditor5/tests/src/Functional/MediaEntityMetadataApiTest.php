@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\Functional;
 
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
@@ -210,7 +212,7 @@ class MediaEntityMetadataApiTest extends BrowserTestBase {
   /**
    * Tests the media entity metadata API.
    */
-  public function testApi() {
+  public function testApi(): void {
     $path = '/ckeditor5/filtered_html/media-entity-metadata';
     $token = $this->container->get('csrf_token')->get(ltrim($path, '/'));
     $uuid = $this->mediaImage->uuid();
@@ -279,7 +281,7 @@ class MediaEntityMetadataApiTest extends BrowserTestBase {
   public function testApiTranslation(): void {
     $this->container->get('module_installer')->install(['language', 'content_translation']);
     $this->resetAll();
-    ConfigurableLanguage::create(['id' => 'fi'])->save();
+    ConfigurableLanguage::createFromLangcode('fi')->save();
     $this->container->get('config.factory')->getEditable('language.negotiation')
       ->set('url.source', 'path_prefix')
       ->set('url.prefixes.fi', 'fi')

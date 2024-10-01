@@ -3,15 +3,15 @@
 namespace Drupal\cas\Service;
 
 use Drupal\cas\CasServerConfig;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use Drupal\Component\Utility\UrlHelper;
-use GuzzleHttp\Cookie\CookieJar;
 use Drupal\cas\Exception\CasProxyException;
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
+use GuzzleHttp\Client;
+use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Exception\ClientException;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Drupal\Core\Database\Connection;
 
 /**
  * Default implementation of 'cas.proxy_helper' service.

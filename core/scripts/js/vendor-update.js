@@ -88,15 +88,6 @@ const assetsFolder = `${coreFolder}/assets/vendor`;
       ],
     },
     {
-      pack: 'jquery-form',
-      library: 'internal.jquery.form',
-      files: [
-        { from: 'dist/jquery.form.min.js', to: 'jquery.form.min.js' },
-        { from: 'dist/jquery.form.min.js.map', to: 'jquery.form.min.js.map' },
-        { from: 'src/jquery.form.js', to: 'src/jquery.form.js' },
-      ],
-    },
-    {
       pack: 'js-cookie',
       files: [{ from: 'dist/js.cookie.min.js', to: 'js.cookie.min.js' }],
     },
@@ -140,6 +131,19 @@ const assetsFolder = `${coreFolder}/assets/vendor`;
     {
       pack: 'loadjs',
       files: [{ from: 'dist/loadjs.min.js', to: 'loadjs.min.js' }],
+    },
+    {
+      pack: 'tua-body-scroll-lock',
+      files: [
+        { from: 'dist/tua-bsl.umd.min.js', to: 'tua-bsl.umd.min.js' },
+      ],
+    },
+    {
+      pack: 'transliteration',
+      files: [
+        { from: 'dist/browser/bundle.umd.min.js', to: 'bundle.umd.min.js' },
+        { from: 'dist/browser/bundle.umd.min.js.map', to: 'bundle.umd.min.js.map' },
+      ],
     },
     {
       pack: 'jquery-ui',

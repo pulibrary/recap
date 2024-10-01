@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\locale\Functional;
 
 use Drupal\Component\Gettext\PoItem;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Component\Render\FormattableMarkup;
+
+// cspell:ignore descripcion mostrar
 
 /**
  * Tests parsing js files for translatable strings.
@@ -15,9 +18,7 @@ use Drupal\Component\Render\FormattableMarkup;
 class LocaleJavascriptTranslationTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['locale', 'locale_test'];
 
@@ -26,7 +27,7 @@ class LocaleJavascriptTranslationTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
-  public function testFileParsing() {
+  public function testFileParsing(): void {
 
     // This test is for ensuring that the regular expression in
     // _locale_parse_js_file() finds translatable source strings in all valid
@@ -93,10 +94,9 @@ class LocaleJavascriptTranslationTest extends BrowserTestBase {
 
       // Assert that all strings were found properly.
       foreach ($test_strings as $str => $context) {
-        $args = ['%source' => $str, '%context' => $context];
 
         // Make sure that the string was found in the file.
-        $this->assertTrue(isset($source_strings[$str]), new FormattableMarkup('Found source string: %source', $args));
+        $this->assertTrue(isset($source_strings[$str]), "Found source string: $str");
 
         // Make sure that the proper context was matched.
         $this->assertArrayHasKey($str, $source_strings);
@@ -110,7 +110,7 @@ class LocaleJavascriptTranslationTest extends BrowserTestBase {
   /**
    * Assert translations JS is added before drupal.js, because it depends on it.
    */
-  public function testLocaleTranslationJsDependencies() {
+  public function testLocaleTranslationJsDependencies(): void {
     // User to add and remove language.
     $admin_user = $this->drupalCreateUser([
       'administer languages',

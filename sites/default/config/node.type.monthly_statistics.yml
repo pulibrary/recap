@@ -11,7 +11,7 @@ third_party_settings:
 name: Statistics
 type: monthly_statistics
 description: 'ReCAP monthly statistics showing total items accessioned and total items retrieved & attach other statistics as spreadsheets.'
-help: ''
+help: null
 new_revision: false
 preview_mode: 1
 display_submitted: false

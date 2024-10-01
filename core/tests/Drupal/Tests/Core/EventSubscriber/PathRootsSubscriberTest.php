@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Core\EventSubscriber\PathRootsSubscriber;
@@ -44,7 +46,7 @@ class PathRootsSubscriberTest extends UnitTestCase {
    * @covers ::onRouteAlter
    * @covers ::onRouteFinished
    */
-  public function testSubscribing() {
+  public function testSubscribing(): void {
 
     // Ensure that onRouteFinished can be called without throwing notices
     // when no path roots got set.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Theme;
 
 use Drupal\Core\DependencyInjection\ClassResolver;
@@ -60,7 +62,7 @@ class ThemeNegotiatorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Theme\ThemeNegotiator::determineActiveTheme()
    */
-  public function testDetermineActiveTheme() {
+  public function testDetermineActiveTheme(): void {
     $negotiator = $this->createMock('Drupal\Core\Theme\ThemeNegotiatorInterface');
     $negotiator->expects($this->once())
       ->method('determineActiveTheme')
@@ -88,7 +90,7 @@ class ThemeNegotiatorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Theme\ThemeNegotiator::determineActiveTheme()
    */
-  public function testDetermineActiveThemeWithPriority() {
+  public function testDetermineActiveThemeWithPriority(): void {
     $negotiators = [];
 
     $negotiator = $this->createMock('Drupal\Core\Theme\ThemeNegotiatorInterface');
@@ -128,7 +130,7 @@ class ThemeNegotiatorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Theme\ThemeNegotiator::determineActiveTheme()
    */
-  public function testDetermineActiveThemeWithAccessCheck() {
+  public function testDetermineActiveThemeWithAccessCheck(): void {
     $negotiators = [];
 
     $negotiator = $this->createMock('Drupal\Core\Theme\ThemeNegotiatorInterface');
@@ -173,7 +175,7 @@ class ThemeNegotiatorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Theme\ThemeNegotiatorInterface
    */
-  public function testDetermineActiveThemeWithNotApplyingNegotiator() {
+  public function testDetermineActiveThemeWithNotApplyingNegotiator(): void {
     $negotiators = [];
 
     $negotiator = $this->createMock('Drupal\Core\Theme\ThemeNegotiatorInterface');
@@ -218,8 +220,7 @@ class ThemeNegotiatorTest extends UnitTestCase {
    * @return \Drupal\Core\Theme\ThemeNegotiator
    */
   protected function createThemeNegotiator(array $negotiators) {
-    $resolver = new ClassResolver();
-    $resolver->setContainer($this->container);
+    $resolver = new ClassResolver($this->container);
     $theme_negotiator = new ThemeNegotiator($this->themeAccessCheck, $resolver, $negotiators);
     return $theme_negotiator;
   }

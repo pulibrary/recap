@@ -79,10 +79,7 @@
 
     const term = autocomplete.extractLastTerm(event.target.value);
     // Abort search if the first character is in firstCharacterBlacklist.
-    if (
-      term.length > 0 &&
-      options.firstCharacterBlacklist.indexOf(term[0]) !== -1
-    ) {
+    if (term.length > 0 && options.firstCharacterBlacklist.includes(term[0])) {
       return false;
     }
     // Only search when the term is at least the minimum length.
@@ -152,7 +149,7 @@
   }
 
   /**
-   * Handles an autocompletefocus event.
+   * Handles an autocomplete focus event.
    *
    * @return {boolean}
    *   Always returns false.
@@ -162,7 +159,7 @@
   }
 
   /**
-   * Handles an autocompleteselect event.
+   * Handles an autocomplete select event.
    *
    * @param {jQuery.Event} event
    *   The event triggered.

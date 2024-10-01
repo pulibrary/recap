@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -43,7 +45,7 @@ class NodeDeleteConfirmTest extends WebDriverTestBase {
   /**
    * Tests that the node delete operation opens in a modal.
    */
-  public function testNodeDelete() {
+  public function testNodeDelete(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
@@ -90,7 +92,7 @@ class NodeDeleteConfirmTest extends WebDriverTestBase {
   /**
    * Tests that the node type delete operation opens in a modal.
    */
-  public function testNodeTypeDelete() {
+  public function testNodeTypeDelete(): void {
     $page = $this->getSession()->getPage();
 
     // Delete node type using link on the content type list.

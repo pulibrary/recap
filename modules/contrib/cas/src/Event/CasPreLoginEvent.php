@@ -2,9 +2,9 @@
 
 namespace Drupal\cas\Event;
 
+use Drupal\cas\CasPropertyBag;
 use Drupal\user\UserInterface;
 use Symfony\Contracts\EventDispatcher\Event;
-use Drupal\cas\CasPropertyBag;
 
 /**
  * Class CasPreLoginEvent.

@@ -114,7 +114,11 @@ class CasHelper {
     'cas.login',
     'cas.legacy_login',
     'cas.logout',
+    'image.style_private',
+    'image.style_public',
     'system.cron',
+    'system.css_asset',
+    'system.js_asset',
     'user.logout',
     'user.logout.http',
   ];

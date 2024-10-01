@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Controller;
 
 use Drupal\Core\Render\MainContent\AjaxRenderer;
@@ -66,7 +68,7 @@ class AjaxRendererTest extends UnitTestCase {
    *
    * @covers ::renderResponse
    */
-  public function testRenderWithFragmentObject() {
+  public function testRenderWithFragmentObject(): void {
     $main_content = ['#markup' => 'example content'];
     $request = new Request();
     $route_match = $this->createMock('Drupal\Core\Routing\RouteMatchInterface');

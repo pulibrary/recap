@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Extension;
 
 use Drupal\Tests\UnitTestCase;
@@ -17,7 +19,7 @@ class GenericTestExistsTest extends UnitTestCase {
   /**
    * Lists module that do not require a Generic test.
    */
-  protected $modulesNoTest = ['help_topics'];
+  protected $modulesNoTest = ['help_topics', 'sdc'];
 
   /**
    * Tests that the Generic module test exists for all modules.

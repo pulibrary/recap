@@ -2,22 +2,22 @@
 
 namespace Drupal\cas\Service;
 
-use Drupal\Component\Utility\Crypt;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Database\Connection;
-use Drupal\Core\Password\PasswordGeneratorInterface;
 use Drupal\cas\CasPropertyBag;
 use Drupal\cas\Event\CasPostLoginEvent;
 use Drupal\cas\Event\CasPreLoginEvent;
 use Drupal\cas\Event\CasPreRegisterEvent;
 use Drupal\cas\Exception\CasLoginException;
+use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Password\PasswordGeneratorInterface;
 use Drupal\externalauth\AuthmapInterface;
 use Drupal\externalauth\Exception\ExternalAuthRegisterException;
 use Drupal\externalauth\ExternalAuthInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LogLevel;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides the 'cas.user_manager' service default implementation.
@@ -90,7 +90,7 @@ class CasUserManager {
   /**
    * Used to dispatch CAS login events.
    *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
   protected $eventDispatcher;
 
@@ -109,6 +109,13 @@ class CasUserManager {
   protected PasswordGeneratorInterface $passwordGenerator;
 
   /**
+   * Whether admin approval is required on new user accounts registration.
+   *
+   * @var bool
+   */
+  protected $adminApprovalNeeded;
+
+  /**
    * CasUserManager constructor.
    *
    * @param \Drupal\externalauth\ExternalAuthInterface $external_auth
@@ -121,7 +128,7 @@ class CasUserManager {
    *   The session.
    * @param \Drupal\Core\Database\Connection $database_connection
    *   The database connection.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
    * @param \Drupal\cas\Service\CasHelper $cas_helper
    *   The CAS helper.
@@ -161,6 +168,8 @@ class CasUserManager {
   public function register($authname, $local_username, array $property_values = []) {
     $property_values['name'] = $local_username;
     $property_values['pass'] = $this->randomPassword();
+    // Respect a previous status set by any of the upstream subscribers.
+    $property_values['status'] ??= (int) !$this->isAdminApprovalNeeded();
 
     try {
       $user = $this->externalAuth->register($authname, $this->provider, $property_values);
@@ -202,6 +211,19 @@ class CasUserManager {
         $this->eventDispatcher->dispatch($cas_pre_register_event, CasHelper::EVENT_PRE_REGISTER);
         if ($cas_pre_register_event->getAllowAutomaticRegistration()) {
           $account = $this->register($property_bag->getUsername(), $cas_pre_register_event->getDrupalUsername(), $cas_pre_register_event->getPropertyValues());
+          if ($this->isAdminApprovalNeeded() && $account->isBlocked()) {
+            // Cannot log in until the admins are not approving the new account.
+            // Note that CAS module provides, by default, the normal Drupal
+            // behavior by showing a status message and, if configured, sending
+            // email notifications to user and admins. This is achieved by
+            // listening to ExternalAuthEvents::REGISTER event. Third-party may
+            // override this behavior by providing a subscriber with a higher
+            // priority, implementing their logic and stopping the event
+            // propagation.
+            // @see \Drupal\cas\Subscriber\CasAdminApprovalRegistrationSubscriber
+            $this->casHelper->log(LogLevel::DEBUG, 'Login denied as new account needs admin approval.');
+            throw new CasLoginException("Cannot login, admin approval is required for new accounts", CasLoginException::ADMIN_APPROVAL_REQUIRED);
+          }
         }
         else {
           $reason = $cas_pre_register_event->getCancelRegistrationReason();
@@ -217,7 +239,7 @@ class CasUserManager {
     }
 
     // Check if the retrieved user is blocked before moving forward.
-    if (!$account->isActive()) {
+    if ($account->isBlocked()) {
       throw new CasLoginException(sprintf('The username %s has not been activated or is blocked.', $account->getAccountName()), CasLoginException::ACCOUNT_BLOCKED);
     }
 
@@ -240,7 +262,7 @@ class CasUserManager {
     }
 
     $this->externalAuth->userLoginFinalize($account, $property_bag->getUsername(), $this->provider);
-    $this->storeLoginSessionData($this->session->getId(), $ticket);
+    $this->storeLoginSessionData($ticket);
     $this->session->set('is_cas_user', TRUE);
     $this->session->set('cas_username', $property_bag->getOriginalUsername());
 
@@ -257,13 +279,15 @@ class CasUserManager {
   /**
    * Store the Session ID and ticket for single-log-out purposes.
    *
-   * @param string $session_id
-   *   The session ID, to be used to kill the session later.
    * @param string $ticket
    *   The CAS service ticket to be used as the lookup key.
    */
-  protected function storeLoginSessionData($session_id, $ticket) {
+  protected function storeLoginSessionData($ticket) {
     if ($this->settings->get('cas.settings')->get('logout.enable_single_logout') === TRUE) {
+      // TODO: We should not access the session ID here. We at least need to
+      // first persist the session so a proper ID is generated first.
+      // See https://www.drupal.org/project/cas/issues/3190842.
+      $session_id = $this->session->getId();
       $this->connection->upsert('cas_login_data')
         ->fields(
           ['sid', 'plainsid', 'ticket', 'created'],
@@ -376,6 +400,21 @@ class CasUserManager {
     else {
       throw new CasLoginException('Invalid email address assignment type for auto user registration specified in settings.');
     }
+  }
+
+  /**
+   * Checks whether Drupal requires admin approval when registering new users.
+   *
+   * @return bool
+   *   Whether Drupal requires admin approval when registering new users.
+   */
+  protected function isAdminApprovalNeeded(): bool {
+    if (!isset($this->adminApprovalNeeded)) {
+      $cas_settings = $this->settings->get('cas.settings');
+      $user_settings = $this->settings->get('user.settings');
+      $this->adminApprovalNeeded = $cas_settings->get('user_accounts.auto_register_follow_registration_policy') && $user_settings->get('register') === UserInterface::REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL;
+    }
+    return $this->adminApprovalNeeded;
   }
 
 }

@@ -32,7 +32,7 @@ interface EntityStorageInterface {
    *   (optional) If specified, the cache is reset for the entities with the
    *   given ids only.
    */
-  public function resetCache(array $ids = NULL);
+  public function resetCache(?array $ids = NULL);
 
   /**
    * Loads one or more entities.
@@ -44,7 +44,7 @@ interface EntityStorageInterface {
    *   An array of entity objects indexed by their IDs. Returns an empty array
    *   if no matching entities are found.
    */
-  public function loadMultiple(array $ids = NULL);
+  public function loadMultiple(?array $ids = NULL);
 
   /**
    * Loads one entity.
@@ -111,7 +111,8 @@ interface EntityStorageInterface {
    *
    * @param array $values
    *   An associative array where the keys are the property names and the
-   *   values are the values those properties must have.
+   *   values are the values those properties must have. If a property takes
+   *   multiple values, passing an array of values will produce an IN condition.
    *
    * @return \Drupal\Core\Entity\EntityInterface[]
    *   An array of entity objects indexed by their ids.

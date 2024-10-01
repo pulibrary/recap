@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\contextual\FunctionalJavascript;
 
 use Drupal\Core\Url;
@@ -40,7 +42,7 @@ class ContextualLinksTest extends WebDriverTestBase {
   /**
    * Tests the visibility of contextual links.
    */
-  public function testContextualLinksVisibility() {
+  public function testContextualLinksVisibility(): void {
     $this->drupalGet('user');
     $contextualLinks = $this->assertSession()->waitForElement('css', '.contextual button');
     $this->assertEmpty($contextualLinks);
@@ -72,17 +74,15 @@ class ContextualLinksTest extends WebDriverTestBase {
   /**
    * Tests clicking contextual links.
    */
-  public function testContextualLinksClick() {
+  public function testContextualLinksClick(): void {
     $this->container->get('module_installer')->install(['contextual_test']);
     // Test clicking contextual link without toolbar.
     $this->drupalGet('user');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->clickContextualLink('#block-branding', 'Test Link');
     $this->assertSession()->pageTextContains('Everything is contextual!');
 
     // Test click a contextual link that uses ajax.
     $this->drupalGet('user');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $current_page_string = 'NOT_RELOADED_IF_ON_PAGE';
     $this->getSession()->executeScript('document.body.appendChild(document.createTextNode("' . $current_page_string . '"));');
 
@@ -113,7 +113,7 @@ class ContextualLinksTest extends WebDriverTestBase {
     $this->container->get('module_installer')->install(['toolbar']);
     $this->grantPermissions(Role::load(Role::AUTHENTICATED_ID), ['access toolbar']);
     $this->drupalGet('user');
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->assertExpectedAjaxRequest(1);
 
     // Click "Edit" in toolbar to show contextual links.
     $this->getSession()->getPage()->find('css', '.contextual-toolbar-tab button')->press();
@@ -124,7 +124,7 @@ class ContextualLinksTest extends WebDriverTestBase {
   /**
    * Tests the contextual links destination.
    */
-  public function testContextualLinksDestination() {
+  public function testContextualLinksDestination(): void {
     $this->grantPermissions(Role::load(Role::AUTHENTICATED_ID), [
       'access contextual links',
       'administer blocks',
@@ -139,7 +139,7 @@ class ContextualLinksTest extends WebDriverTestBase {
   /**
    * Tests the contextual links destination with query.
    */
-  public function testContextualLinksDestinationWithQuery() {
+  public function testContextualLinksDestinationWithQuery(): void {
     $this->grantPermissions(Role::load(Role::AUTHENTICATED_ID), [
       'access contextual links',
       'administer blocks',

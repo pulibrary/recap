@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel;
 
 use Drupal\Core\Datetime\Entity\DateFormat;
@@ -51,7 +53,6 @@ class SummaryLengthTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', 'sequences');
     $this->installSchema('node', 'node_access');
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
@@ -75,7 +76,7 @@ class SummaryLengthTest extends KernelTestBase {
   /**
    * Tests the node summary length functionality.
    */
-  public function testSummaryLength() {
+  public function testSummaryLength(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
 

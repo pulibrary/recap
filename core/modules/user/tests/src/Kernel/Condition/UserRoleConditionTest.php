@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Condition;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -44,9 +46,7 @@ class UserRoleConditionTest extends KernelTestBase {
   protected $role;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'user', 'field'];
 
@@ -56,7 +56,6 @@ class UserRoleConditionTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('system', 'sequences');
     $this->installEntitySchema('user');
 
     $this->manager = $this->container->get('plugin.manager.condition');
@@ -72,7 +71,7 @@ class UserRoleConditionTest extends KernelTestBase {
     ])->save();
 
     // Create new role.
-    $rid = strtolower($this->randomMachineName(8));
+    $rid = $this->randomMachineName(8);
     $label = $this->randomString(8);
     $role = Role::create([
       'id' => $rid,
@@ -102,7 +101,7 @@ class UserRoleConditionTest extends KernelTestBase {
   /**
    * Tests the user_role condition.
    */
-  public function testConditions() {
+  public function testConditions(): void {
     // Grab the user role condition and configure it to check against
     // authenticated user roles.
     /** @var \Drupal\Core\Condition\ConditionInterface $condition */

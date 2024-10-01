@@ -4,49 +4,61 @@ namespace Drupal\image\Plugin\Field\FieldType;
 
 use Drupal\Component\Utility\Random;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\file\Entity\File;
+use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\file\Plugin\Field\FieldType\FileItem;
 
 /**
  * Plugin implementation of the 'image' field type.
- *
- * @FieldType(
- *   id = "image",
- *   label = @Translation("Image"),
- *   description = @Translation("This field stores the ID of an image file as an integer value."),
- *   category = @Translation("Reference"),
- *   default_widget = "image_image",
- *   default_formatter = "image",
- *   column_groups = {
- *     "file" = {
- *       "label" = @Translation("File"),
- *       "columns" = {
- *         "target_id", "width", "height"
- *       },
- *       "require_all_groups_for_translation" = TRUE
- *     },
- *     "alt" = {
- *       "label" = @Translation("Alt"),
- *       "translatable" = TRUE
- *     },
- *     "title" = {
- *       "label" = @Translation("Title"),
- *       "translatable" = TRUE
- *     },
- *   },
- *   list_class = "\Drupal\file\Plugin\Field\FieldType\FileFieldItemList",
- *   constraints = {"ReferenceAccess" = {}, "FileValidation" = {}}
- * )
  */
+#[FieldType(
+  id: "image",
+  label: new TranslatableMarkup("Image"),
+  description: [
+    new TranslatableMarkup("For uploading images"),
+    new TranslatableMarkup("Allows a user to upload an image with configurable extensions, image dimensions, upload size"),
+    new TranslatableMarkup(
+      "Can be configured with options such as allowed file extensions, maximum upload size and image dimensions minimums/maximums"
+    ),
+  ],
+  category: "file_upload",
+  default_widget: "image_image",
+  default_formatter: "image",
+  list_class: FileFieldItemList::class,
+  constraints: ["ReferenceAccess" => [], "FileValidation" => []],
+  column_groups: [
+    "file" => [
+      "label" => new TranslatableMarkup("File"),
+      "columns" => [
+        "target_id",
+        "width",
+        "height",
+      ],
+      "require_all_groups_for_translation" => TRUE,
+    ],
+    "alt" => [
+      "label" => new TranslatableMarkup("Alt"),
+      "translatable" => TRUE,
+    ],
+    "title" => [
+      "label" => new TranslatableMarkup("Title"),
+      "translatable" => TRUE,
+    ],
+  ]
+)]
 class ImageItem extends FileItem {
+
+  use LoggerChannelTrait;
 
   /**
    * {@inheritdoc}
@@ -68,7 +80,7 @@ class ImageItem extends FileItem {
    */
   public static function defaultFieldSettings() {
     $settings = [
-      'file_extensions' => 'png gif jpg jpeg',
+      'file_extensions' => 'png gif jpg jpeg webp',
       'alt_field' => 1,
       'alt_field_required' => 1,
       'title_field' => 0,
@@ -204,11 +216,11 @@ class ImageItem extends FileItem {
 
     $settings = $this->getSettings();
 
-    // Add maximum and minimum resolution settings.
+    // Add maximum and minimum dimensions settings.
     $max_resolution = explode('x', $settings['max_resolution']) + ['', ''];
     $element['max_resolution'] = [
       '#type' => 'item',
-      '#title' => $this->t('Maximum image resolution'),
+      '#title' => $this->t('Maximum image dimensions'),
       '#element_validate' => [[static::class, 'validateResolution']],
       '#weight' => 4.1,
       '#description' => $this->t('The maximum allowed image size expressed as WIDTH×HEIGHT (e.g. 640×480). Leave blank for no restriction. If a larger image is uploaded, it will be resized to reflect the given width and height. Resizing images on upload will cause the loss of <a href="http://wikipedia.org/wiki/Exchangeable_image_file_format">EXIF data</a> in the image.'),
@@ -235,7 +247,7 @@ class ImageItem extends FileItem {
     $min_resolution = explode('x', $settings['min_resolution']) + ['', ''];
     $element['min_resolution'] = [
       '#type' => 'item',
-      '#title' => $this->t('Minimum image resolution'),
+      '#title' => $this->t('Minimum image dimensions'),
       '#element_validate' => [[static::class, 'validateResolution']],
       '#weight' => 4.2,
       '#description' => $this->t('The minimum allowed image size expressed as WIDTH×HEIGHT (e.g. 640×480). Leave blank for no restriction. If a smaller image is uploaded, it will be rejected.'),
@@ -328,7 +340,7 @@ class ImageItem extends FileItem {
       }
     }
     else {
-      trigger_error(sprintf("Missing file with ID %s.", $this->target_id), E_USER_WARNING);
+      $this->getLogger('image')->warning("Missing file with ID %id.", ['%id' => $this->target_id]);
     }
   }
 
@@ -402,7 +414,7 @@ class ImageItem extends FileItem {
   }
 
   /**
-   * Element validate function for resolution fields.
+   * Element validate function for dimensions fields.
    */
   public static function validateResolution($element, FormStateInterface $form_state) {
     if (!empty($element['x']['#value']) || !empty($element['y']['#value'])) {

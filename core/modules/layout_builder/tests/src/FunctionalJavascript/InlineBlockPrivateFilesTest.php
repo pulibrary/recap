@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\file\Entity\File;
@@ -61,7 +63,7 @@ class InlineBlockPrivateFilesTest extends InlineBlockTestBase {
   /**
    * Tests access to private files added to inline blocks in the layout builder.
    */
-  public function testPrivateFiles() {
+  public function testPrivateFiles(): void {
     $assert_session = $this->assertSession();
     LayoutBuilderEntityViewDisplay::load('node.bundle_with_section_field.default')
       ->enableLayoutBuilder()

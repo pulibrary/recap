@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\big_pipe\Unit\Render;
 
 use Drupal\big_pipe\Render\BigPipeResponse;
@@ -32,7 +34,7 @@ class BigPipeResponseAttachmentsProcessorTest extends UnitTestCase {
    *
    * @dataProvider nonHtmlResponseProvider
    */
-  public function testNonHtmlResponse($response_class) {
+  public function testNonHtmlResponse($response_class): void {
     $big_pipe_response_attachments_processor = $this->createBigPipeResponseAttachmentsProcessor($this->prophesize(AttachmentsResponseProcessorInterface::class));
 
     $non_html_response = new $response_class();
@@ -52,7 +54,7 @@ class BigPipeResponseAttachmentsProcessorTest extends UnitTestCase {
    *
    * @dataProvider attachmentsProvider
    */
-  public function testHtmlResponse(array $attachments) {
+  public function testHtmlResponse(array $attachments): void {
     $big_pipe_response = new BigPipeResponse(new HtmlResponse('original'));
     $big_pipe_response->setAttachments($attachments);
 

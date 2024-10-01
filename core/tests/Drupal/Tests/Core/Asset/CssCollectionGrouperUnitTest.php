@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Asset;
 
 use Drupal\Core\Asset\CssCollectionGrouper;
@@ -31,7 +33,7 @@ class CssCollectionGrouperUnitTest extends UnitTestCase {
   /**
    * Tests \Drupal\Core\Asset\CssCollectionGrouper.
    */
-  public function testGrouper() {
+  public function testGrouper(): void {
     $css_assets = [
       'system.base.css' => [
         'group' => -100,

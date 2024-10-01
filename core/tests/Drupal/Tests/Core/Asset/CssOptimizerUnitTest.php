@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Asset;
 
 use Drupal\Core\Asset\CssOptimizer;
@@ -50,7 +52,7 @@ class CssOptimizerUnitTest extends UnitTestCase {
   /**
    * Provides data for the CSS asset optimizing test.
    */
-  public function providerTestOptimize() {
+  public static function providerTestOptimize() {
     $path = 'core/tests/Drupal/Tests/Core/Asset/css_test_files/';
     $absolute_path = dirname(__FILE__) . '/css_test_files/';
     return [
@@ -242,15 +244,10 @@ class CssOptimizerUnitTest extends UnitTestCase {
    *
    * @dataProvider providerTestOptimize
    */
-  public function testOptimize($css_asset, $expected) {
+  public function testOptimize($css_asset, $expected): void {
     global $base_path;
     $original_base_path = $base_path;
     $base_path = '/';
-
-    // \Drupal\Core\Asset\CssOptimizer::loadFile() relies on the current working
-    // directory being the one that is used when index.php is the entry point.
-    // Note: PHPUnit automatically restores the original working directory.
-    chdir(realpath(__DIR__ . '/../../../../../../'));
 
     $this->assertEquals($expected, $this->optimizer->optimize($css_asset), 'Group of file CSS assets optimized correctly.');
 
@@ -260,7 +257,7 @@ class CssOptimizerUnitTest extends UnitTestCase {
   /**
    * Tests a file CSS asset with preprocessing disabled.
    */
-  public function testTypeFilePreprocessingDisabled() {
+  public function testTypeFilePreprocessingDisabled(): void {
     $this->expectException('Exception');
     $this->expectExceptionMessage('Only file CSS assets with preprocessing enabled can be optimized.');
 
@@ -280,7 +277,7 @@ class CssOptimizerUnitTest extends UnitTestCase {
   /**
    * Tests a CSS asset with 'type' => 'external'.
    */
-  public function testTypeExternal() {
+  public function testTypeExternal(): void {
     $this->expectException('Exception');
     $this->expectExceptionMessage('Only file CSS assets can be optimized.');
 

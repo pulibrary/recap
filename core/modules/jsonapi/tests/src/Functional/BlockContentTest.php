@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -75,7 +77,6 @@ class BlockContentTest extends ResourceTestBase {
 
       case 'PATCH':
         $this->grantPermissionsToTestedRole([
-          'access block library',
           'administer block types',
           'administer block content',
         ]);
@@ -86,7 +87,7 @@ class BlockContentTest extends ResourceTestBase {
         break;
 
       case 'DELETE':
-        $this->grantPermissionsToTestedRole(['access block library', 'delete any basic block content']);
+        $this->grantPermissionsToTestedRole(['delete any basic block content']);
         break;
     }
   }
@@ -163,8 +164,7 @@ class BlockContentTest extends ResourceTestBase {
           ],
           'changed' => (new \DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
           'info' => 'Llama',
-          'revision_log' => NULL,
-          'revision_created' => (new \DateTime())->setTimestamp($this->entity->getRevisionCreationTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'revision_created' => (new \DateTime())->setTimestamp((int) $this->entity->getRevisionCreationTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
           'revision_translation_affected' => TRUE,
           'status' => FALSE,
           'langcode' => 'en',
@@ -207,7 +207,7 @@ class BlockContentTest extends ResourceTestBase {
       'data' => [
         'type' => 'block_content--basic',
         'attributes' => [
-          'info' => 'Dramallama',
+          'info' => 'Drama llama',
         ],
       ],
     ];
@@ -219,9 +219,9 @@ class BlockContentTest extends ResourceTestBase {
   protected function getExpectedUnauthorizedAccessMessage($method) {
     return match ($method) {
       'GET' => "The 'access block library' permission is required.",
-      'PATCH' => "The following permissions are required: 'access block library' AND 'edit any basic block content'.",
+      'PATCH' => "The 'edit any basic block content' permission is required.",
       'POST' => "The following permissions are required: 'create basic block content' AND 'access block library'.",
-      'DELETE' => "The following permissions are required: 'access block library' AND 'delete any basic block content'.",
+      'DELETE' => "The 'delete any basic block content' permission is required.",
       default => parent::getExpectedUnauthorizedAccessMessage($method),
     };
   }
@@ -238,7 +238,7 @@ class BlockContentTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedCacheTags(array $sparse_fieldset = NULL) {
+  protected function getExpectedCacheTags(?array $sparse_fieldset = NULL) {
     $tags = parent::getExpectedCacheTags($sparse_fieldset);
     if ($sparse_fieldset === NULL || in_array('body', $sparse_fieldset)) {
       $tags = Cache::mergeTags($tags, ['config:filter.format.plain_text']);
@@ -249,7 +249,7 @@ class BlockContentTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedCacheContexts(array $sparse_fieldset = NULL) {
+  protected function getExpectedCacheContexts(?array $sparse_fieldset = NULL) {
     $contexts = parent::getExpectedCacheContexts($sparse_fieldset);
     if ($sparse_fieldset === NULL || in_array('body', $sparse_fieldset)) {
       $contexts = Cache::mergeContexts($contexts, ['languages:language_interface', 'theme']);
@@ -260,7 +260,7 @@ class BlockContentTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function testCollectionFilterAccess() {
+  public function testCollectionFilterAccess(): void {
     $this->entity->setPublished()->save();
     $this->doTestCollectionFilterAccessForPublishableEntities('info', NULL, 'administer block content');
   }

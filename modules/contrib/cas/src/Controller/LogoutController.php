@@ -4,12 +4,12 @@ namespace Drupal\cas\Controller;
 
 use Drupal\cas\CasRedirectResponse;
 use Drupal\cas\CasServerConfig;
+use Drupal\cas\Service\CasHelper;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\cas\Service\CasHelper;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;

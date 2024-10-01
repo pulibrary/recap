@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Entity\EntityInterface;
@@ -21,9 +23,7 @@ abstract class EntityKernelTestBase extends KernelTestBase {
   }
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'user',
@@ -63,8 +63,6 @@ abstract class EntityKernelTestBase extends KernelTestBase {
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');
     $this->state = $this->container->get('state');
-
-    $this->installSchema('system', 'sequences');
 
     $this->installEntitySchema('user');
     $this->installEntitySchema('entity_test');

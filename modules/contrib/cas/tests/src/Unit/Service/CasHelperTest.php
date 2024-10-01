@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\cas\Unit\Service;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\cas\Service\CasHelper;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\Core\Utility\Token;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Request;
 

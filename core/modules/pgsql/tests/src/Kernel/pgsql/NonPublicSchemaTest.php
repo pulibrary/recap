@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\pgsql\Kernel\pgsql;
 
 use Drupal\Core\Database\Database;
@@ -37,6 +39,7 @@ class NonPublicSchemaTest extends DriverSpecificKernelTestBase {
     // Create a connection to the non-public schema.
     $info = Database::getConnectionInfo('default');
     $info['default']['schema'] = 'testing_fake';
+    Database::getConnection()->query('CREATE SCHEMA IF NOT EXISTS testing_fake');
     Database::addConnectionInfo('default', 'testing_fake', $info['default']);
 
     $this->testingFakeConnection = Database::getConnection('testing_fake', 'default');

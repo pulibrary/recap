@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Session;
 
 use Drupal\Tests\UnitTestCase;
@@ -44,7 +46,7 @@ class WriteSafeSessionHandlerTest extends UnitTestCase {
    * @covers ::isSessionWritable
    * @covers ::write
    */
-  public function testConstructWriteSafeSessionHandlerDefaultArgs() {
+  public function testConstructWriteSafeSessionHandlerDefaultArgs(): void {
     $session_id = 'some-id';
     $session_data = 'serialized-session-data';
 
@@ -70,7 +72,7 @@ class WriteSafeSessionHandlerTest extends UnitTestCase {
    * @covers ::isSessionWritable
    * @covers ::write
    */
-  public function testConstructWriteSafeSessionHandlerDisableWriting() {
+  public function testConstructWriteSafeSessionHandlerDisableWriting(): void {
     $session_id = 'some-id';
     $session_data = 'serialized-session-data';
 
@@ -89,7 +91,7 @@ class WriteSafeSessionHandlerTest extends UnitTestCase {
    * @covers ::setSessionWritable
    * @covers ::write
    */
-  public function testSetSessionWritable() {
+  public function testSetSessionWritable(): void {
     $session_id = 'some-id';
     $session_data = 'serialized-session-data';
 
@@ -134,7 +136,7 @@ class WriteSafeSessionHandlerTest extends UnitTestCase {
    * @covers ::gc
    * @dataProvider providerTestOtherMethods
    */
-  public function testOtherMethods($method, $expected_result, $args) {
+  public function testOtherMethods($method, $expected_result, $args): void {
     $invocation = $this->wrappedSessionHandler->expects($this->exactly(2))
       ->method($method)
       ->willReturn($expected_result);
@@ -160,7 +162,7 @@ class WriteSafeSessionHandlerTest extends UnitTestCase {
    * @return array
    *   Test data.
    */
-  public function providerTestOtherMethods() {
+  public static function providerTestOtherMethods() {
     return [
       ['open', TRUE, ['/some/path', 'some-session-id']],
       ['read', 'some-session-data', ['a-session-id']],

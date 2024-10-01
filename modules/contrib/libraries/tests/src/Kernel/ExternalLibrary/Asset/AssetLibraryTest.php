@@ -66,7 +66,7 @@ class AssetLibraryTest extends AssetLibraryTestBase {
       ]],
       'dependencies' => [],
       'license' => [
-        'name' => 'GNU-GPL-2.0-or-later',
+        'name' => $this->getLicenseName(),
         'url' => 'https://www.drupal.org/licensing/faq',
         'gpl-compatible' => TRUE,
       ]
@@ -103,7 +103,7 @@ class AssetLibraryTest extends AssetLibraryTestBase {
       ]],
       'dependencies' => [],
       'license' => [
-        'name' => 'GNU-GPL-2.0-or-later',
+        'name' => $this->getLicenseName(),
         'url' => 'https://www.drupal.org/licensing/faq',
         'gpl-compatible' => TRUE,
       ]

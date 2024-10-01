@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Command;
 
 use Drupal\sqlite\Driver\Database\sqlite\Install\Tasks;
@@ -54,7 +56,6 @@ class QuickStartTest extends TestCase {
     $php_executable_finder = new PhpExecutableFinder();
     $this->php = $php_executable_finder->find();
     $this->root = dirname(substr(__DIR__, 0, -strlen(__NAMESPACE__)), 2);
-    chdir($this->root);
     if (!is_writable("{$this->root}/sites/simpletest")) {
       $this->markTestSkipped('This test requires a writable sites/simpletest directory');
     }
@@ -84,7 +85,7 @@ class QuickStartTest extends TestCase {
   /**
    * Tests the quick-start command.
    */
-  public function testQuickStartCommand() {
+  public function testQuickStartCommand(): void {
     $sqlite = (new \PDO('sqlite::memory:'))->query('select sqlite_version()')->fetch()[0];
     if (version_compare($sqlite, Tasks::SQLITE_MINIMUM_VERSION) < 0) {
       $this->markTestSkipped();
@@ -140,7 +141,7 @@ class QuickStartTest extends TestCase {
   /**
    * Tests the quick-start commands.
    */
-  public function testQuickStartInstallAndServerCommands() {
+  public function testQuickStartInstallAndServerCommands(): void {
     $sqlite = (new \PDO('sqlite::memory:'))->query('select sqlite_version()')->fetch()[0];
     if (version_compare($sqlite, Tasks::SQLITE_MINIMUM_VERSION) < 0) {
       $this->markTestSkipped();
@@ -222,7 +223,7 @@ class QuickStartTest extends TestCase {
   /**
    * Tests the install command with an invalid profile.
    */
-  public function testQuickStartCommandProfileValidation() {
+  public function testQuickStartCommandProfileValidation(): void {
     // Install a site using the standard profile to ensure the one time login
     // link generation works.
     $install_command = [
@@ -234,13 +235,13 @@ class QuickStartTest extends TestCase {
     ];
     $process = new Process($install_command, NULL, ['DRUPAL_DEV_SITE_PATH' => $this->testDb->getTestSitePath()]);
     $process->run();
-    $this->assertStringContainsString('\'umami\' is not a valid install profile. Did you mean \'demo_umami\'?', $process->getErrorOutput());
+    $this->assertMatchesRegularExpression("/'umami' is not a valid install profile or recipe\. Did you mean \W*'demo_umami'?/", $process->getErrorOutput());
   }
 
   /**
    * Tests the server command when there is no installation.
    */
-  public function testServerWithNoInstall() {
+  public function testServerWithNoInstall(): void {
     $server_command = [
       $this->php,
       'core/scripts/drupal',

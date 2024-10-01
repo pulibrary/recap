@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\PhpStorage;
 
 use Drupal\Component\PhpStorage\FileStorage;
@@ -51,7 +53,7 @@ class FileStorageReadOnlyTest extends PhpStorageTestBase {
   /**
    * Tests writing with one class and reading with another.
    */
-  public function testReadOnly() {
+  public function testReadOnly(): void {
     // Random generator.
     $random = new Random();
 
@@ -84,7 +86,7 @@ class FileStorageReadOnlyTest extends PhpStorageTestBase {
    * @covers ::writeable
    * @group legacy
    */
-  public function testWritable() {
+  public function testWritable(): void {
     $this->expectDeprecation('Drupal\Component\PhpStorage\FileReadOnlyStorage::writeable() is deprecated in drupal:10.1.0 and will be removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3155413');
     $php_read = new FileReadOnlyStorage($this->readonlyStorage);
     $this->assertFalse($php_read->writeable());
@@ -93,7 +95,7 @@ class FileStorageReadOnlyTest extends PhpStorageTestBase {
   /**
    * @covers ::deleteAll
    */
-  public function testDeleteAll() {
+  public function testDeleteAll(): void {
     // Random generator.
     $random = new Random();
 

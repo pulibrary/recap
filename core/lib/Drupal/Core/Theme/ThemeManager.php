@@ -90,7 +90,7 @@ class ThemeManager implements ThemeManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getActiveTheme(RouteMatchInterface $route_match = NULL) {
+  public function getActiveTheme(?RouteMatchInterface $route_match = NULL) {
     if (!isset($this->activeTheme)) {
       $this->initTheme($route_match);
     }
@@ -182,6 +182,9 @@ class ThemeManager implements ThemeManagerInterface {
     }
 
     $info = $theme_registry->get($hook);
+    if (isset($info['deprecated'])) {
+      @trigger_error($info['deprecated'], E_USER_DEPRECATED);
+    }
 
     // If a renderable array is passed as $variables, then set $variables to
     // the arguments expected by the theme function.
@@ -214,34 +217,7 @@ class ThemeManager implements ThemeManagerInterface {
       'theme_hook_original' => $original_hook,
     ];
 
-    // Set base hook for later use. For example if '#theme' => 'node__article'
-    // is called, we run hook_theme_suggestions_node_alter() rather than
-    // hook_theme_suggestions_node__article_alter(), and also pass in the base
-    // hook as the last parameter to the suggestions alter hooks.
-    if (isset($info['base hook'])) {
-      $base_theme_hook = $info['base hook'];
-    }
-    else {
-      $base_theme_hook = $hook;
-    }
-
-    // Invoke hook_theme_suggestions_HOOK().
-    $suggestions = $this->moduleHandler->invokeAll('theme_suggestions_' . $base_theme_hook, [$variables]);
-    // If the theme implementation was invoked with a direct theme suggestion
-    // like '#theme' => 'node__article', add it to the suggestions array before
-    // invoking suggestion alter hooks.
-    if (isset($info['base hook'])) {
-      $suggestions[] = $hook;
-    }
-
-    // Invoke hook_theme_suggestions_alter() and
-    // hook_theme_suggestions_HOOK_alter().
-    $hooks = [
-      'theme_suggestions',
-      'theme_suggestions_' . $base_theme_hook,
-    ];
-    $this->moduleHandler->alter($hooks, $suggestions, $variables, $base_theme_hook);
-    $this->alter($hooks, $suggestions, $variables, $base_theme_hook);
+    $suggestions = $this->buildThemeHookSuggestions($hook, $info['base hook'] ?? '', $variables);
 
     // Check if each suggestion exists in the theme registry, and if so,
     // use it instead of the base hook. For example, a function may use
@@ -374,12 +350,59 @@ class ThemeManager implements ThemeManagerInterface {
   }
 
   /**
+   * Builds theme hook suggestions for a theme hook with variables.
+   *
+   * @param string $hook
+   *   Theme hook that was called.
+   * @param string $info_base_hook
+   *   Theme registry info for $hook['base hook'] key or empty string.
+   * @param array $variables
+   *   Theme variables that were passed along with the call.
+   *
+   * @return string[]
+   *   Suggested theme hook names to use instead of $hook, in the order of
+   *   ascending specificity.
+   *   The caller will pick the last of those suggestions that has a known theme
+   *   registry entry.
+   *
+   * @internal
+   *   This method may change at any time. It is not for use outside this class.
+   */
+  protected function buildThemeHookSuggestions(string $hook, string $info_base_hook, array &$variables): array {
+    // Set base hook for later use. For example if '#theme' => 'node__article'
+    // is called, we run hook_theme_suggestions_node_alter() rather than
+    // hook_theme_suggestions_node__article_alter(), and also pass in the base
+    // hook as the last parameter to the suggestions alter hooks.
+    $base_theme_hook = $info_base_hook ?: $hook;
+
+    // Invoke hook_theme_suggestions_HOOK().
+    $suggestions = $this->moduleHandler->invokeAll('theme_suggestions_' . $base_theme_hook, [$variables]);
+    // If the theme implementation was invoked with a direct theme suggestion
+    // like '#theme' => 'node__article', add it to the suggestions array before
+    // invoking suggestion alter hooks.
+    if ($info_base_hook) {
+      $suggestions[] = $hook;
+    }
+
+    // Invoke hook_theme_suggestions_alter() and
+    // hook_theme_suggestions_HOOK_alter().
+    $hooks = [
+      'theme_suggestions',
+      'theme_suggestions_' . $base_theme_hook,
+    ];
+    $this->moduleHandler->alter($hooks, $suggestions, $variables, $base_theme_hook);
+    $this->alter($hooks, $suggestions, $variables, $base_theme_hook);
+
+    return $suggestions;
+  }
+
+  /**
    * Initializes the active theme for a given route match.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route match.
    */
-  protected function initTheme(RouteMatchInterface $route_match = NULL) {
+  protected function initTheme(?RouteMatchInterface $route_match = NULL) {
     // Determine the active theme for the theme negotiator service. This includes
     // the default theme as well as really specific ones like the ajax base theme.
     if (!$route_match) {
@@ -413,7 +436,7 @@ class ThemeManager implements ThemeManagerInterface {
       }
     }
 
-    $theme_keys = array_keys($theme->getBaseThemeExtensions());
+    $theme_keys = array_reverse(array_keys($theme->getBaseThemeExtensions()));
     $theme_keys[] = $theme->getName();
     $functions = [];
     foreach ($theme_keys as $theme_key) {

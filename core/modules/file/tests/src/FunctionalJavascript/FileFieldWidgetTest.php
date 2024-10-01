@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\FunctionalJavascript;
 
 use Drupal\file\Entity\File;
@@ -60,7 +62,7 @@ class FileFieldWidgetTest extends WebDriverTestBase {
   /**
    * Tests upload and remove buttons for multiple multi-valued File fields.
    */
-  public function testMultiValuedWidget() {
+  public function testMultiValuedWidget(): void {
     $type_name = 'article';
     $field_name = 'test_file_field_1';
     $field_name2 = 'test_file_field_2';
@@ -135,7 +137,7 @@ class FileFieldWidgetTest extends WebDriverTestBase {
   /**
    * Tests uploading and remove buttons for a single-valued File field.
    */
-  public function testSingleValuedWidget() {
+  public function testSingleValuedWidget(): void {
     $type_name = 'article';
     $field_name = 'test_file_field_1';
     $cardinality = 1;
@@ -185,7 +187,7 @@ class FileFieldWidgetTest extends WebDriverTestBase {
   /**
    * Tests uploading more files than allowed at once.
    */
-  public function testUploadingMoreFilesThanAllowed() {
+  public function testUploadingMoreFilesThanAllowed(): void {
     $type_name = 'article';
     $field_name = 'test_file_field_1';
     $cardinality = 2;

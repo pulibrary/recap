@@ -38,7 +38,7 @@ class CasRedirectorTest extends UnitTestCase {
   /**
    * The mocked event dispatcher.
    *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $eventDispatcher;
 
@@ -82,7 +82,7 @@ class CasRedirectorTest extends UnitTestCase {
       ->willReturnCallback([$this, 'getServiceUrl']);
 
     // Mock event dispatcher to dispatch events.
-    $this->eventDispatcher = $this->createMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
+    $this->eventDispatcher = $this->createMock('\Symfony\Contracts\EventDispatcher\EventDispatcherInterface');
 
     // We have to mock the cache context manager which is called when we
     // add cache contexts to a cacheable metadata.

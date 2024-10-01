@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Controller;
 
 use Drupal\Tests\UnitTestCase;
@@ -30,7 +32,7 @@ class ControllerBaseTest extends UnitTestCase {
   /**
    * Tests the config method.
    */
-  public function testGetConfig() {
+  public function testGetConfig(): void {
     $config_factory = $this->getConfigFactoryStub([
       'config_name' => [
         'key' => 'value',

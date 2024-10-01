@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\DrupalKernel;
-use Drupal\Core\Extension\ModuleHandler;
 use Drupal\libraries\ExternalLibrary\Asset\AttachableAssetLibraryRegistrationInterface;
 use Drupal\libraries\ExternalLibrary\Utility\LibraryAccessorInterface;
 use Drupal\libraries\ExternalLibrary\Utility\LibraryIdAccessorInterface;
@@ -36,7 +35,7 @@ function libraries_library_info_build() {
       // the build process, but should be logged.
       if ($e instanceof LibraryIdAccessorInterface || $e instanceof LibraryAccessorInterface) {
         $libraries_with_errors[] = $external_library_id;
-        watchdog_exception('libraries', $e);
+        \Drupal::logger('libraries')->error($e->getMessage());
       }
       else {
         // Re-throw exceptions that are not library-specific.

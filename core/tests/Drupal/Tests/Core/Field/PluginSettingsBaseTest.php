@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Field;
 
 use Drupal\Core\Field\PluginSettingsBase;
@@ -14,7 +16,7 @@ class PluginSettingsBaseTest extends UnitTestCase {
   /**
    * @covers ::getThirdPartySettings
    */
-  public function testGetThirdPartySettings() {
+  public function testGetThirdPartySettings(): void {
     $plugin_settings = new TestPluginSettingsBase();
     $this->assertSame([], $plugin_settings->getThirdPartySettings());
     $this->assertSame([], $plugin_settings->getThirdPartySettings('test'));

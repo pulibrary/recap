@@ -2,6 +2,7 @@
 
 namespace Drupal\cas\Service;
 
+use Drupal\cas\CasPropertyBag;
 use Drupal\cas\CasServerConfig;
 use Drupal\cas\Event\CasPostValidateEvent;
 use Drupal\cas\Event\CasPreValidateEvent;
@@ -12,9 +13,8 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Drupal\cas\CasPropertyBag;
 use Psr\Log\LogLevel;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * The CAS ticket validator service.
@@ -67,7 +67,7 @@ class CasValidator {
    *   The configuration factory.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The URL generator.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The EventDispatcher service.
    */
   public function __construct(Client $http_client, CasHelper $cas_helper, ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, EventDispatcherInterface $event_dispatcher) {

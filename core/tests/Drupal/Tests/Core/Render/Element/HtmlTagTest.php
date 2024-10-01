@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Render\Element;
 
 use Drupal\Core\Render\Markup;
@@ -15,7 +17,7 @@ class HtmlTagTest extends RendererTestBase {
   /**
    * @covers ::getInfo
    */
-  public function testGetInfo() {
+  public function testGetInfo(): void {
     $htmlTag = new HtmlTag([], 'test', 'test');
     $info = $htmlTag->getInfo();
     $this->assertArrayHasKey('#pre_render', $info);
@@ -27,7 +29,7 @@ class HtmlTagTest extends RendererTestBase {
    * @covers ::preRenderHtmlTag
    * @dataProvider providerPreRenderHtmlTag
    */
-  public function testPreRenderHtmlTag($element, $expected) {
+  public function testPreRenderHtmlTag($element, $expected): void {
     $result = HtmlTag::preRenderHtmlTag($element);
     foreach ($result as &$child) {
       if (is_array($child) && isset($child['#tag'])) {
@@ -40,7 +42,7 @@ class HtmlTagTest extends RendererTestBase {
   /**
    * Data provider for preRenderHtmlTag test.
    */
-  public function providerPreRenderHtmlTag() {
+  public static function providerPreRenderHtmlTag() {
     $tags = [];
 
     // Value prefix/suffix.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
@@ -10,6 +12,7 @@ use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
  * Tests the JavaScript functionality of the block add filter.
  *
  * @group layout_builder
+ * @group legacy
  */
 class BlockFilterTest extends WebDriverTestBase {
 
@@ -21,6 +24,7 @@ class BlockFilterTest extends WebDriverTestBase {
     'node',
     'datetime',
     'layout_builder',
+    'layout_builder_expose_all_field_blocks',
     'user',
   ];
 
@@ -49,7 +53,7 @@ class BlockFilterTest extends WebDriverTestBase {
   /**
    * Tests block filter.
    */
-  public function testBlockFilter() {
+  public function testBlockFilter(): void {
     $assert_session = $this->assertSession();
     $session = $this->getSession();
     $page = $session->getPage();
@@ -89,9 +93,9 @@ class BlockFilterTest extends WebDriverTestBase {
     $fewer_blocks_message = ' blocks are available in the modified list';
     $this->assertAnnounceContains($fewer_blocks_message);
     $visible_rows = $this->filterVisibleElements($blocks);
-    $this->assertCount(4, $visible_rows);
+    $this->assertCount(3, $visible_rows);
     $visible_categories = $this->filterVisibleElements($categories);
-    $this->assertCount(4, $visible_categories);
+    $this->assertCount(3, $visible_categories);
 
     // Test Drupal.announce() message when multiple matches are present.
     $expected_message = count($visible_rows) . $fewer_blocks_message;
@@ -100,16 +104,16 @@ class BlockFilterTest extends WebDriverTestBase {
     // Test 3 letter search.
     $filter->setValue('adm');
     $visible_rows = $this->filterVisibleElements($blocks);
-    $this->assertCount(3, $visible_rows);
+    $this->assertCount(2, $visible_rows);
     $visible_categories = $this->filterVisibleElements($categories);
-    $this->assertCount(3, $visible_categories);
+    $this->assertCount(2, $visible_categories);
 
     // Retest that blocks appear when reducing letters.
     $filter->setValue('ad');
     $visible_rows = $this->filterVisibleElements($blocks);
-    $this->assertCount(4, $visible_rows);
+    $this->assertCount(3, $visible_rows);
     $visible_categories = $this->filterVisibleElements($categories);
-    $this->assertCount(4, $visible_categories);
+    $this->assertCount(3, $visible_categories);
 
     // Test blocks reappear after being filtered by repeating search for "a"
     $filter->setValue('a');

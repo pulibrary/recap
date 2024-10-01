@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Update;
 
 use Drupal\FunctionalTests\Update\UpdatePathTestBase;
@@ -90,10 +92,21 @@ class Y2038TimestampUpdateTest extends UpdatePathTestBase {
   /**
    * Tests update of time fields.
    */
-  public function testUpdate() {
+  public function testUpdate(): void {
     if (\Drupal::service('database')->databaseType() == 'sqlite') {
       $this->markTestSkipped("This test does not support the SQLite database driver.");
     }
+
+    // Create a table starting with cache that is not a cache bin.
+    \Drupal::service('database')->schema()->createTable('cache_bogus', [
+      'fields' => [
+        'id'  => [
+          'type' => 'int',
+          'not null' => TRUE,
+        ],
+      ],
+      'primary key' => ['id'],
+    ]);
 
     $this->collectTimestampFieldsFromDatabase();
     // PostgreSQL returns the value 'integer' instead of 'int' when queried
@@ -120,7 +133,7 @@ class Y2038TimestampUpdateTest extends UpdatePathTestBase {
     }
     $tables = $connection->schema()->findTables('cache_%');
     $tables = array_filter($tables, function ($table) {
-      return str_starts_with($table, 'cache_');
+      return str_starts_with($table, 'cache_') && $table !== 'cache_bogus';
     });
     $this->assertNotEmpty($tables);
     foreach ($tables as $table) {

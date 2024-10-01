@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Test\RunTests;
 
 use Drupal\Core\Test\RunTests\TestFileParser;
@@ -12,7 +14,7 @@ use Drupal\Tests\UnitTestCase;
  */
 class TestFileParserTest extends UnitTestCase {
 
-  public function provideTestFileContents() {
+  public static function provideTestFileContents() {
     return [
       'empty' => [[], ''],
       'no-namespace' => [['ConcreteClass'],
@@ -67,7 +69,7 @@ COMPOUND
    * @covers ::parseContents
    * @dataProvider provideTestFileContents
    */
-  public function testParseContents($expected, $contents) {
+  public function testParseContents($expected, $contents): void {
     $parser = new TestFileParser();
 
     $ref_parse = new \ReflectionMethod($parser, 'parseContents');
@@ -78,7 +80,7 @@ COMPOUND
   /**
    * @covers ::getTestListFromFile
    */
-  public function testGetTestListFromFile() {
+  public function testGetTestListFromFile(): void {
     $parser = new TestFileParser();
     $this->assertEquals(
       ['Drupal\Tests\Core\Test\RunTests\TestFileParserTest'],
